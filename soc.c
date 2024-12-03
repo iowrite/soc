@@ -89,21 +89,28 @@ void mysocEKF(struct SOC_Info *SOCinfo, float cur, uint16_t vol, uint16_t tempra
     float SOCcal = SOCinfo->soc + diffAH;
     float SOCer2Cal = SOCinfo->socEr2 + EKF_Q;
 
-    uint16_t H = 0, Hprev = 0, Hnext = 0;
+    float H = 0, Hprev = 0, Hnext = 0;
     uint16_t estVol = 0, estVolPrev = 0, estVolNext = 0;
     float SOCerCal = sqrt(SOCer2Cal);
-    if(SOCcal < 0)
+    if(SOCcal < 0.01)
     {
         float newSOCerCal = fabs(SOCerCal-fabs(SOCcal));
         SOCcal = 0;
-        SOCer2Cal = newSOCerCal*newSOCerCal;
-    }
+        if(SOCer2Cal > newSOCerCal*newSOCerCal)
+        {
+            SOCer2Cal = newSOCerCal*newSOCerCal;
+        }
 
-    if(SOCcal > 100)
+        estVol = curve[0];
+        H = curveK[0];
+    }else if(SOCcal > 99.99)
     {
         float newSOCerCal = fabs(SOCerCal-fabs(SOCcal-100));
         SOCcal = 100;
-        SOCer2Cal = newSOCerCal*newSOCerCal;
+        if(SOCer2Cal > newSOCerCal*newSOCerCal)
+        {
+            SOCer2Cal = newSOCerCal*newSOCerCal;
+        }
 
         estVol = curve[SOC_POINT_NUM-1];
         H = curveK[SOC_POINT_NUM-1];
@@ -120,14 +127,63 @@ void mysocEKF(struct SOC_Info *SOCinfo, float cur, uint16_t vol, uint16_t tempra
     float resEr2 = (1-K*H)*SOCer2Cal;
     float SOCerRes = sqrt(resEr2);
 
+    static int callCount = 0;  
+    callCount++;
+    if(callCount < 1096){
+        printf("777777777 %f \n", res);
+    }
+   
+
+    if(res < 0.01)
+    {
+        float newSOCerRes = fabs(SOCerRes-fabs(res));
+        res = 0;
+        if(resEr2 > newSOCerRes*newSOCerRes)
+        {
+            resEr2 = newSOCerRes*newSOCerRes;
+        }
+
+    }else if(res > 99.99)
+    {
+        float newSOCerRes = fabs(SOCerRes-fabs(res-100));
+        res = 100;
+        if(resEr2 > newSOCerRes*newSOCerRes)
+        {
+            resEr2 = newSOCerRes*newSOCerRes;
+        }
+    }
+
+    float modkH = 0;
+    if(vol < curve[0]){
+        modkH = curveK[0];
+    }else if(vol > curve[SOC_POINT_NUM-1]){
+        modkH = curveK[SOC_POINT_NUM-1];
+    }else{
+        int i=0;
+        for(; i<SOC_POINT_NUM; i++)
+        {
+            if(vol >= curve[i] && vol < curve[i+1])
+            {
+                break;
+            }
+        }
+        float modkHprev = curveK[i];
+        float modkHnext = curveK[i];
+        modkH = modkHprev + 1.0*(vol-curve[i])/(curve[i+1]-curve[i])*(modkHnext-modkHprev);
+    }
+
+    if(callCount == 1090)
+    {
+        printf("66666666666666666\n");
+    }
     if(cur > 0){
         if(res < SOCinfo->soc)
         {
-            float modk = 1/(SOCinfo->soc-res);
+            float modk = 1/(modkH);
             if(modk > 1){
                 modk = 1;
             }
-            printf("4444444 %f\n", modk);
+            printf("4444444 %f %d %f %f \n", modk, callCount, res, SOCinfo->soc);
 
             float tres = res;
             res = SOCinfo->soc + modk*diffAH;
@@ -138,7 +194,7 @@ void mysocEKF(struct SOC_Info *SOCinfo, float cur, uint16_t vol, uint16_t tempra
     {
         if(res > SOCinfo->soc)
         {
-            float modk = 1/(res-SOCinfo->soc);
+            float modk = 1/(modkH);
             if(modk > 1){
                 modk = 1;
             }
@@ -154,12 +210,18 @@ void mysocEKF(struct SOC_Info *SOCinfo, float cur, uint16_t vol, uint16_t tempra
     {
         float newSOCerRes = fabs(SOCerRes-fabs(res));
         res = 0;
-        resEr2 = newSOCerRes*newSOCerRes;
+        if(resEr2 > newSOCerRes*newSOCerRes)
+        {
+            resEr2 = newSOCerRes*newSOCerRes;
+        } 
     }else if(res > 100)
     {
         float newSOCerRes = fabs(SOCerRes-fabs(res-100));
         res = 100;
-        resEr2 = newSOCerRes*newSOCerRes;
+        if(resEr2 > newSOCerRes*newSOCerRes)
+        {
+            resEr2 = newSOCerRes*newSOCerRes;
+        }
     }
 
 
@@ -202,8 +264,8 @@ static void gropuSOC(void)
 
 
 
-#define SOC0            0
-#define SOC0_ER2        100
+#define SOC0            30
+#define SOC0_ER2        900
 
 
 void SOC_Init(float *cur, uint16_t *vol, uint16_t *tmp, uint16_t *soc, uint16_t *grpSOC)
@@ -218,7 +280,7 @@ void SOC_Init(float *cur, uint16_t *vol, uint16_t *tmp, uint16_t *soc, uint16_t 
     {
         g_socInfo[i].soc = SOC0;
         g_socInfo[i].socEr2 = SOC0_ER2;
-        g_celSOC[i] = SOC0;
+        g_celSOC[i] = round(SOC0*10);
     }
     
     
@@ -227,7 +289,7 @@ void SOC_Init(float *cur, uint16_t *vol, uint16_t *tmp, uint16_t *soc, uint16_t 
 
 void SOC_Task(void)
 {
-    for (size_t i = 0; i < 16; i++)
+    for (size_t i = 0; i < 1; i++)
     {
         mysoc(&g_socInfo[i], *g_cur, g_celVol[i], g_celTmp[i]);
         g_celSOC[i] = round(fabs(g_socInfo[i].soc)*10);

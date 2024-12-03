@@ -5,28 +5,37 @@ import matplotlib.pyplot as plt
 import numpy as np
 from matplotlib.ticker import MaxNLocator
 
-# 指定Excel文件的路径
-file_path = 'cellchgl.xlsx'
+
 
 # 读取Excel文件
 try:
 
     # 使用pandas读取Excel文件，默认读取第一个工作表
-    df = pd.read_excel(file_path)
+    df = pd.read_excel('cellchgl.xlsx')
 
     # # 将DataFrame转换为二维列表
     # data_list = data_range.values.tolist()
     data_list = df.values.tolist()
 
 except FileNotFoundError:
-    print(f"Error: The file '{file_path}' was not found.")
+    print(f"Error: The file '{'cellchgl.xlsx'}' was not found.")
 except Exception as e:
     print(f"An error occurred: {e}")
 
-
-
 print(len(data_list))
 
+
+try:
+    # 使用pandas读取Excel文件中的特定列
+    df = pd.read_excel('std_chg_0.5c.xlsx', usecols=['cap'])
+    # 将DataFrame转换为一维列表
+    stdData = df['cap'].tolist()
+except FileNotFoundError:
+    print(f"Error: The file '{'std_chg_0.5c.xlsx'}' was not found.")
+except Exception as e:
+    print(f"An error occurred: {e}")
+
+print(len(stdData))
 
 
 #############################################################################################333
@@ -108,12 +117,14 @@ soc_output = [row[0] for row in two_dimensional_list]
 output_x = list(range(0, len(two_dimensional_list)))
 
 # 创建图形和轴对象
-
+stdData_multiplied_rounded = [round(x * 10) for x in stdData]
 y_ticks = np.arange(-50, 1051, 50)
 # 绘制散点图
 for i in range(0, 16):
     plt.subplot(4, 4, i+1)
     plt.plot(output_x, [row[i] for row in two_dimensional_list], label=f"soc cel {i+1}")
+    plt.plot(stdData_multiplied_rounded, label=f"std")
+    
     # 显示网格
     plt.grid(True)
     plt.yticks(y_ticks)

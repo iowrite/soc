@@ -93,20 +93,12 @@ int main() {
     for(size_t i = 0; i < input_row_len; i++)
     {
         cur = inputData[i].cur;
-
-
         for (size_t j = 0; j < 16; j++)
         {
             vol[j] = inputData[i].vol[j];
         }
-
         SOC_Task();
-        printf("2222222222%d\n", soc[0]);
-
         memcpy(outputData[i+1].soc, soc, 32);
-
-
-
     }
 
 
