@@ -1,3 +1,6 @@
 .venv/
 .vscode/
 codegen/
+
+a.out
+mysoc

@@ -83,10 +83,11 @@ int main() {
     uint16_t vol[16];  
     uint16_t tmp[16];
     uint16_t soc[16];
+    uint16_t grpSOC;
 
     memset(soc, 0, sizeof soc);
 
-    SOC_Init(&cur, vol, tmp, soc);
+    SOC_Init(&cur, vol, tmp, soc, &grpSOC);
     memcpy(outputData[0].soc, soc, 32);
 
     for(size_t i = 0; i < input_row_len; i++)

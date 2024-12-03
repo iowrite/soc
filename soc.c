@@ -20,6 +20,7 @@ uint16_t *g_celVol;
 uint16_t *g_celTmp;
 // output
 uint16_t *g_celSOC;
+uint16_t *g_grpSOC;
 
 struct SOC_Info
 {
@@ -186,19 +187,38 @@ void mysoc(struct SOC_Info *SOCinfo, float cur, uint16_t vol, uint16_t tempra)
 
 
 
+static void gropuSOC(void)
+{
 
-void SOC_Init(float *cur, uint16_t *vol, uint16_t *tmp, uint16_t *soc)
+
+
+
+
+
+
+}
+
+
+
+
+
+#define SOC0            0
+#define SOC0_ER2        100
+
+
+void SOC_Init(float *cur, uint16_t *vol, uint16_t *tmp, uint16_t *soc, uint16_t *grpSOC)
 {
     g_cur = cur;
     g_celVol = vol;
     g_celTmp = tmp;
     g_celSOC = soc;
+    g_grpSOC = grpSOC;
     // todo ocv calibration,set init soc and soc_er2
     for (size_t i = 0; i < CELL_NUMS; i++)
     {
-        g_socInfo[i].soc = 10;
-        g_socInfo[i].socEr2 = 100;
-        soc[i] = 100;
+        g_socInfo[i].soc = SOC0;
+        g_socInfo[i].socEr2 = SOC0_ER2;
+        g_celSOC[i] = SOC0;
     }
     
     
@@ -207,15 +227,10 @@ void SOC_Init(float *cur, uint16_t *vol, uint16_t *tmp, uint16_t *soc)
 
 void SOC_Task(void)
 {
-    for (size_t i = 0; i < 1; i++)
+    for (size_t i = 0; i < 16; i++)
     {
-        printf("%f %d\n", *g_cur, g_celVol[i]);
-
         mysoc(&g_socInfo[i], *g_cur, g_celVol[i], g_celTmp[i]);
-        
-        printf("3333333 %f \n", g_socInfo[i].soc);
-
-        g_celSOC[i] = fabs(g_socInfo[i].soc)*10;
+        g_celSOC[i] = round(fabs(g_socInfo[i].soc)*10);
     }
 }
 

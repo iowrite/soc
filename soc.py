@@ -2,6 +2,8 @@ import os
 import struct
 import pandas as pd
 import matplotlib.pyplot as plt
+import numpy as np
+from matplotlib.ticker import MaxNLocator
 
 # 指定Excel文件的路径
 file_path = 'cellchgl.xlsx'
@@ -106,22 +108,23 @@ soc_output = [row[0] for row in two_dimensional_list]
 output_x = list(range(0, len(two_dimensional_list)))
 
 # 创建图形和轴对象
-plt.figure(figsize=(8, 6))
 
+y_ticks = np.arange(-50, 1051, 50)
 # 绘制散点图
-plt.plot(output_x, soc_output, label="soc cel 1")
+for i in range(0, 16):
+    plt.subplot(4, 4, i+1)
+    plt.plot(output_x, [row[i] for row in two_dimensional_list], label=f"soc cel {i+1}")
+    # 显示网格
+    plt.grid(True)
+    plt.yticks(y_ticks)
 
-# 添加标题和标签
-plt.title('Scatter Plot of Two-Column Data')
-plt.xlabel('X Coordinate')
-plt.ylabel('Y Coordinate')
+
+    # 显示图例
+    plt.legend()
+
 plt.ylim(-50, 1050)
 
-# 显示网格
-plt.grid(True)
 
-# 显示图例
-plt.legend()
 
 plt.show()
 
