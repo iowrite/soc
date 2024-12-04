@@ -5,7 +5,7 @@
 #include <stdio.h>
 #include "soc.h"
 
-#define EKF_Q                       ((CUR_SAMPLE_ERR_A/CAPACITY_AH)*(CUR_SAMPLE_ERR_A/CAPACITY_AH))     
+#define EKF_Q                       ((CUR_SAMPLE_ERR_A/3600)*(CUR_SAMPLE_ERR_A/3600))     
 #define EKF_R                       (VOL_SAMPLE_ERR_MV*VOL_SAMPLE_ERR_MV)
 
 #define TEMP_POINT_NUM              12      // 0 5 10 15 20 25 30 35 40 45 50 55   
@@ -114,23 +114,13 @@ void mysocEKF(struct SOC_Info *SOCinfo, float cur, uint16_t vol, uint16_t tempra
     float SOCerCal = sqrt(SOCer2Cal);
     if(SOCcal < 0.01)
     {
-        float newSOCerCal = fabs(SOCerCal-fabs(SOCcal));
         SOCcal = 0;
-        if(SOCer2Cal > newSOCerCal*newSOCerCal)
-        {
-            SOCer2Cal = newSOCerCal*newSOCerCal;
-        }
 
         estVol = curve[0];
         H = curveK[0];
     }else if(SOCcal > 99.99)
     {
-        float newSOCerCal = fabs(SOCerCal-fabs(SOCcal-100));
         SOCcal = 100;
-        if(SOCer2Cal > newSOCerCal*newSOCerCal)
-        {
-            SOCer2Cal = newSOCerCal*newSOCerCal;
-        }
 
         estVol = curve[SOC_POINT_NUM-1];
         H = curveK[SOC_POINT_NUM-1];
@@ -147,30 +137,12 @@ void mysocEKF(struct SOC_Info *SOCinfo, float cur, uint16_t vol, uint16_t tempra
     float resEr2 = (1-K*H)*SOCer2Cal;
     float SOCerRes = sqrt(resEr2);
 
-    static int callCount = 0;  
-    callCount++;
-    if(callCount < 1085){
-        printf("777777777 %f \n", res);
-    }
-   
-
     if(res < 0.01)
     {
-        float newSOCerRes = fabs(SOCerRes-fabs(res));
         res = 0;
-        if(resEr2 > newSOCerRes*newSOCerRes)
-        {
-            resEr2 = newSOCerRes*newSOCerRes;
-        }
-
     }else if(res > 99.99)
     {
-        float newSOCerRes = fabs(SOCerRes-fabs(res-100));
         res = 100;
-        if(resEr2 > newSOCerRes*newSOCerRes)
-        {
-            resEr2 = newSOCerRes*newSOCerRes;
-        }
     }
 
     float modkH = 0;
@@ -192,10 +164,6 @@ void mysocEKF(struct SOC_Info *SOCinfo, float cur, uint16_t vol, uint16_t tempra
         modkH = modkHprev + 1.0*(vol-curve[i])/(curve[i+1]-curve[i])*(modkHnext-modkHprev);
     }
 
-    if(callCount == 1085)
-    {
-        printf("66666666666666666\n");
-    }
     if(cur > 0){
         if(res < SOCinfo->soc)
         {
@@ -203,12 +171,7 @@ void mysocEKF(struct SOC_Info *SOCinfo, float cur, uint16_t vol, uint16_t tempra
             if(modk > 1){
                 modk = 1;
             }
-            printf("4444444 %f %d %f %f \n", modk, callCount, res, SOCinfo->soc);
-
-            float tres = res;
             res = SOCinfo->soc + modk*diffAH;
-            SOCerRes = fabs(tres-SOCinfo->soc);
-            resEr2 = SOCerRes * SOCerRes;
         }
     }else if(cur < 0)
     {
@@ -218,38 +181,20 @@ void mysocEKF(struct SOC_Info *SOCinfo, float cur, uint16_t vol, uint16_t tempra
             if(modk > 1){
                 modk = 1;
             }
-            float tres = res;
             res = SOCinfo->soc + modk*diffAH;
-            SOCerRes = fabs(tres-SOCinfo->soc);
-            resEr2 = SOCerRes * SOCerRes;
         }
     }
-
 
     if(res < 0)
     {
-        float newSOCerRes = fabs(SOCerRes-fabs(res));
         res = 0;
-        if(resEr2 > newSOCerRes*newSOCerRes)
-        {
-            resEr2 = newSOCerRes*newSOCerRes;
-        } 
     }else if(res > 100)
     {
-        float newSOCerRes = fabs(SOCerRes-fabs(res-100));
         res = 100;
-        if(resEr2 > newSOCerRes*newSOCerRes)
-        {
-            resEr2 = newSOCerRes*newSOCerRes;
-        }
     }
-
-
 
     SOCinfo->soc = res;
     SOCinfo->socEr2 = resEr2;
-
-    
 }
 
 
@@ -284,8 +229,8 @@ static void gropuSOC(void)
 
 
 
-#define SOC0            30
-#define SOC0_ER2        900
+#define SOC0            20
+#define SOC0_ER2        400
 
 
 void SOC_Init(float *cur, uint16_t *vol, uint16_t *tmp, uint16_t *soc, uint16_t *grpSOC)

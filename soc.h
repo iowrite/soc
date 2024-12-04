@@ -7,7 +7,7 @@
 
 #define DIFF_T_MSEC                  1           //second
 #define CAPACITY_AH                 100         //AH
-#define CUR_SAMPLE_ERR_A            0.5         //A
+#define CUR_SAMPLE_ERR_A            1.0         //A
 #define VOL_SAMPLE_ERR_MV           10          //mv
 #define CUR_WINDOW_A                0.5         //A
 
