@@ -11,7 +11,7 @@ from matplotlib.ticker import MaxNLocator
 try:
 
     # 使用pandas读取Excel文件，默认读取第一个工作表
-    df = pd.read_excel('cellchgl.xlsx')
+    df = pd.read_excel('data/not_fix_temp/cellchgl.xlsx')
 
     # # 将DataFrame转换为二维列表
     # data_list = data_range.values.tolist()
@@ -27,7 +27,7 @@ print(len(data_list))
 
 try:
     # 使用pandas读取Excel文件中的特定列
-    df = pd.read_excel('std_chg_0.5c.xlsx', usecols=['cap'])
+    df = pd.read_excel('data/not_fix_temp/std_chg_0.5c.xlsx', usecols=['cap'])
     # 将DataFrame转换为一维列表
     stdData = df['cap'].tolist()
 except FileNotFoundError:

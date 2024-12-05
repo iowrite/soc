@@ -65,32 +65,43 @@ def fit_quadratic_and_get_slopes(voltage_list):
     slopes = []
     n = len(voltage_list)
     
-    for i in range(n - 2):
-        x = np.array([i, i+1, i+2])
-        y = np.array([voltage_list[i], voltage_list[i+1], voltage_list[i+2]])
+
+    sfirst = voltage_list[1]-voltage_list[0]
+    slopes.append(sfirst)
+
+    for i in range(1, n - 1):
+        x = np.array([i-1, i, i+1])
+        y = np.array([voltage_list[i-1], voltage_list[i], voltage_list[i+1]])
         
-        # 拟合二次函数
+        # 拟合一次函数
         quad_fit = Polynomial.fit(x, y, 1)
+
+        # print(f"拟合后的多项式函数 f(x) = {quad_fit}")
+        fit_value_at_i = quad_fit(i-1)
+        fit_value_at_i1 = quad_fit(i)
+        fit_value_at_i2 = quad_fit(i+1)
+        # print(f"f({i-1}) = {fit_value_at_i}, f({i}) = {fit_value_at_i1}, f({i+1}) = {fit_value_at_i2}")
         
         # 计算导数
         quad_fit_derivative = quad_fit.deriv()
         
         # 计算三个点处的斜率
         slope_at_i = quad_fit_derivative(i)
-        slope_at_i1 = quad_fit_derivative(i+1)
-        slope_at_i2 = quad_fit_derivative(i+2)
+
         
-        slopes.extend([slope_at_i, slope_at_i1, slope_at_i2])
+        slopes.append(slope_at_i)
     
     # print("斜率列表: (每个点处的斜率) ", slopes)
     # 去除重复的斜率（每个点会被计算两次）
-    unique_slopes = slopes[::3]
-    unique_slopes = [max(slope, 0.5) for slope in unique_slopes]
-    # print(len(unique_slopes))
-    unique_slopes.append(unique_slopes[-1])
-    unique_slopes.append(unique_slopes[-1])
 
-    voltage_list_py = [float(item) for item in unique_slopes]
+    
+
+    slast = voltage_list[-1]-voltage_list[-2]
+    slopes.append(slast)
+
+    slopes = [max(slope, 0.2) for slope in slopes]
+
+    voltage_list_py = [float(item) for item in slopes]
     return voltage_list_py
 
 
@@ -101,7 +112,7 @@ def fit_quadratic_and_get_slopes(voltage_list):
 
 # 示例调用
 if __name__ == "__main__":
-    filepath = 'data/25d5.xlsx'
+    filepath = 'data/not_fix_temp/25d5c.xlsx'
     plt.subplot(2,2,1)
     voltage_list = process_curve(filepath, 101)
     plt.plot(voltage_list)
@@ -112,7 +123,7 @@ if __name__ == "__main__":
     plt.subplot(2,2,2)
     slopes = fit_quadratic_and_get_slopes(voltage_list)
     formatted_slopes = [f"{s:.1f}" for s in slopes]
-    print("斜率列表: (101 points)\n", slopes)
+    print("斜率列表: (101 points)\n", formatted_slopes)
     plt.plot(slopes)
 
 
@@ -123,7 +134,7 @@ if __name__ == "__main__":
     plt.plot([0,5,10,15,20,25,30,35,40,45,50,55,60,65,70,75,80,85,90,95,100],voltage_list_21)
     plt.scatter([0,5,10,15,20,25,30,35,40,45,50,55,60,65,70,75,80,85,90,95,100],voltage_list_21)
     formatted_voltage_list_21 = [f"{v:.1f}" for v in voltage_list_21]
-    print("斜率列表: (21 points)\n", voltage_list_21)
+    print("斜率列表: (21 points)\n", formatted_voltage_list_21)
 
     print("\n============================\n")
 
