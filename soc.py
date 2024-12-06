@@ -98,7 +98,29 @@ with open('socfifo_output', 'rb') as fifo:
     # Unpack the binary data into an array of integers
     received_array = list(struct.unpack('H' *16* (len(data_list)+1), binary_data))
 
-print("recv output")
+print("cel soc recv output")
+
+
+
+
+
+# Wait until the FIFO exists
+while not os.path.exists('grpsocfifo_output'):
+    pass
+
+# Open the FIFO for reading
+with open('grpsocfifo_output', 'rb') as fifo:
+    # Read the binary data from the FIFO
+    binary_data = fifo.read((len(data_list)+1) * 8)  
+
+    # Unpack the binary data into an array of integers
+    received_array_grp = list(struct.unpack('HHHH' * (len(data_list)+1), binary_data))
+
+print("grp soc recv output")
+
+
+
+
 
 
 
@@ -107,7 +129,10 @@ def list_to_2d(input_list, cols):
 
 
 two_dimensional_list = list_to_2d(received_array, 16)
-print(two_dimensional_list)
+# print(two_dimensional_list)
+
+two_dimensional_list_grp = list_to_2d(received_array_grp, 4)
+print(two_dimensional_list_grp)
 
 
 soc_output = [row[0] for row in two_dimensional_list]
@@ -123,7 +148,7 @@ y_ticks = np.arange(-50, 1051, 50)
 for i in range(0, 16):
     plt.subplot(4, 4, i+1)
     plt.plot(output_x, [row[i] for row in two_dimensional_list], label=f"soc cel {i+1}")
-    plt.plot(stdData_multiplied_rounded, label=f"std")
+    # plt.plot(stdData_multiplied_rounded, label=f"std", linestyle='--', color='gray')
     
     # 显示网格
     plt.grid(True)
@@ -136,7 +161,16 @@ for i in range(0, 16):
 plt.ylim(-50, 1050)
 
 
+plt.figure()
 
+plt.grid(True)
+plt.yticks(y_ticks)
+plt.plot(output_x, [row[0] for row in two_dimensional_list_grp], label="grp soc")
+plt.plot(output_x, [row[1] for row in two_dimensional_list_grp], label="max soc")
+plt.plot(output_x, [row[2] for row in two_dimensional_list_grp], label="min soc")
+plt.plot(output_x, [row[3] for row in two_dimensional_list_grp], label="avg soc")
+plt.ylim(-50, 1050)
+plt.legend()
 plt.show()
 
 # # 保存图形到文件

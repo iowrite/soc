@@ -3,18 +3,20 @@
 #include <stdbool.h>
 #include <stddef.h>
 #include <stdio.h>
+#include <string.h>
 #include "soc.h"
 
 #define DIFF_T_MSEC                  1           //second
 #define CAPACITY_AH                 100         //AH
+#define CAP_ERR_AH                  5           
 #define CUR_SAMPLE_ERR_A            1.0         //A
 #define VOL_SAMPLE_ERR_MV           10          //mv
 #define CUR_WINDOW_A                0.5         //A
 
-#define CELL_NUMS                   1        
+#define CELL_NUMS                   16        
 
 
-#define EKF_Q                       ((CUR_SAMPLE_ERR_A/3600)*(CUR_SAMPLE_ERR_A/3600))     
+#define EKF_Q                       ((CUR_SAMPLE_ERR_A/180)*(CUR_SAMPLE_ERR_A/180))     
 #define EKF_R                       (VOL_SAMPLE_ERR_MV*VOL_SAMPLE_ERR_MV)
 
 #define TEMP_POINT_NUM              12      // 0 5 10 15 20 25 30 35 40 45 50 55   
@@ -22,8 +24,8 @@
 #define SOC_POINT_STEP              5
 #define SOC_POINT_NUM               (100/SOC_POINT_STEP+1)
 
-#define SOC0            40
-#define SOC0_ER2        1600
+#define SOC0            50
+#define SOC0_ER2        2500
 
 // input 
 float *g_cur;
@@ -37,8 +39,6 @@ struct SOC_Info
 {
     float soc;
     float socEr2;
-    float soc_last_res;
-    bool init;
 };
 struct SOC_Info g_socInfo[CELL_NUMS];
 
@@ -146,14 +146,6 @@ void mysocEKF(struct SOC_Info *SOCinfo, float cur, uint16_t vol, uint16_t tempra
     float resEr2 = (1-K*H)*SOCer2Cal;
     float SOCerRes = sqrt(resEr2);
 
-    if(!SOCinfo->init){
-        SOCinfo->soc_last_res = res;
-        SOCinfo->init = true;
-    }
-
-    float res_k = (res-SOCinfo->soc_last_res);
-    SOCinfo->soc_last_res = res;
-    
 
     if(res < 0.01)
     {
@@ -163,56 +155,18 @@ void mysocEKF(struct SOC_Info *SOCinfo, float cur, uint16_t vol, uint16_t tempra
         res = 100;
     }
 
-    float modkH = 0;
-    if(vol < curve[0]){
-        modkH = (float)curveK[0]/10;
-    }else if(vol > curve[SOC_POINT_NUM-1]){
-        modkH = (float)curveK[SOC_POINT_NUM-1]/10;
-    }else{
-        int i=0;
-        for(; i<SOC_POINT_NUM-1; i++)
-        {
-            if(vol >= curve[i] && vol < curve[i+1])
-            {
-                break;
-            }
-        }
-        float modkHprev = (float)curveK[i]/10;
-        float modkHnext = (float)curveK[i+1]/10;
-        float t = 1.0*(vol-curve[i])/(curve[i+1]-curve[i]);
-        modkH = modkHprev + t*(modkHnext-modkHprev);
-        // printf("%f %f\n", t, modkH);
-    }
+
 
     if(cur > 0){
         if(res < SOCinfo->soc)
         {
-            float modk = 1/(modkH);
-
-
-
-
-            float slowk = SOCinfo->soc - SOCinfo->soc_last_res;
-
-            // modk = 1/slowk;
-
-            if(modk > 1){
-                modk = 1;
-            }
-
-            res = SOCinfo->soc + modk*diffAH;
-            printf("%d %f %f %f %f\n", callCount, modk, slowk, SOCinfo->soc_last_res, SOCerRes);
-            // printf("%d %f %f %f %f\n", callCount, modk, modkH, SOCinfo->soc_last_res, SOCerRes);
+            res = SOCinfo->soc;
         }
     }else if(cur < 0)
     {
         if(res > SOCinfo->soc)
         {
-            float modk = 1/(modkH);
-            if(modk > 1){
-                modk = 1;
-            }
-            res = SOCinfo->soc + modk*diffAH;
+            res = SOCinfo->soc;
         }
     }
 
@@ -245,21 +199,37 @@ void mysoc(struct SOC_Info *SOCinfo, float cur, uint16_t vol, uint16_t tempra)
 
 
 
-static void gropuSOC(void)
+/* bubble sort : ascending */
+static void bubbleSort_ascend(uint16_t *inputArr, uint16_t *outputArr, uint16_t size)
 {
-
-
-
-
-
-
-
+    memcpy(outputArr, inputArr, size*sizeof(uint16_t));
+    for (size_t i = 0; i < size-1; i++)
+    {
+        for (size_t j = 0; j < size-i-1; j++)
+        {
+            if(outputArr[j] > outputArr[j+1])
+            {
+                uint16_t tmp = outputArr[j];
+                outputArr[j] = outputArr[j+1];
+                outputArr[j+1] = tmp;
+            }
+        }
+    }
 }
 
+static void gropuSOC()
+{
+    uint16_t sortedSOC[CELL_NUMS];
+    bubbleSort_ascend(g_celSOC, sortedSOC, CELL_NUMS);
+    uint16_t maxSOC = sortedSOC[CELL_NUMS-1];
+    uint16_t minSOC = sortedSOC[0];
 
+    uint16_t hSOC = maxSOC*(maxSOC/1000.0)+minSOC*(1-maxSOC/1000.0);
+    uint16_t lSOC= minSOC*(minSOC/1000.0)+maxSOC*(1-minSOC/1000.0);
+    *g_grpSOC = (*g_grpSOC)/1000.0*hSOC+(1000-*g_grpSOC)/1000.0*lSOC;
+    printf("hSOC:%d, lSOC:%d, grpSOC:%d\n", hSOC, lSOC, *g_grpSOC);
 
-
-
+}
 
 
 
@@ -274,11 +244,11 @@ void SOC_Init(float *cur, uint16_t *vol, uint16_t *tmp, uint16_t *soc, uint16_t 
     for (size_t i = 0; i < CELL_NUMS; i++)
     {
         g_socInfo[i].soc = SOC0;
-        // g_socInfo[i].soc_last_res = SOC0;
         g_socInfo[i].socEr2 = SOC0_ER2;
         g_celSOC[i] = round(SOC0*10);
 
     }
+    *g_grpSOC = round(SOC0*10);
     
     
 }
@@ -288,9 +258,14 @@ void SOC_Task(void)
 {
     for (size_t i = 0; i < CELL_NUMS; i++)
     {
+
         mysoc(&g_socInfo[i], *g_cur, g_celVol[i], g_celTmp[i]);
+
         g_celSOC[i] = round(fabs(g_socInfo[i].soc)*10);
     }
+    gropuSOC();
+
+
 }
 
 

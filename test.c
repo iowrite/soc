@@ -11,7 +11,23 @@
 #define FIFO_NAME "myfifo"
 #define ARRAY_SIZE 5
 
-
+/* bubble sort : ascending */
+static void bubbleSort_ascend(uint16_t *inputArr, uint16_t *outputArr, uint16_t size)
+{
+    memcpy(outputArr, inputArr, size*sizeof(uint16_t));
+    for (size_t i = 0; i < size-1; i++)
+    {
+        for (size_t j = 0; j < size-i-1; j++)
+        {
+            if(outputArr[j] > outputArr[j+1])
+            {
+                uint16_t tmp = outputArr[j];
+                outputArr[j] = outputArr[j+1];
+                outputArr[j+1] = tmp;
+            }
+        }
+    }
+}
 
 
 
@@ -63,9 +79,16 @@ int main() {
     {
         uint16_t soc[16];
     };
+    struct GrpSOC
+    {
+        uint16_t grpSOC;
+        uint16_t maxcelsoc;
+        uint16_t mincelsoc;
+        uint16_t avgcelsoc;
+    };
 
     struct SOC_Info *outputData = malloc(sizeof(struct SOC_Info)*(input_row_len+1));
-
+    struct GrpSOC *outputDataGrp = malloc(sizeof(struct GrpSOC)*(input_row_len+1));
 
     // struct SOC_Info info = {
     //     .soc = 20,
@@ -83,12 +106,25 @@ int main() {
     uint16_t vol[16];  
     uint16_t tmp[16];
     uint16_t soc[16];
-    uint16_t grpSOC;
+    struct GrpSOC grpSOC;
 
     memset(soc, 0, sizeof soc);
 
-    SOC_Init(&cur, vol, tmp, soc, &grpSOC);
+    SOC_Init(&cur, vol, tmp, soc, &grpSOC.grpSOC);
     memcpy(outputData[0].soc, soc, 32);
+    memcpy(outputDataGrp, &grpSOC.grpSOC, 2);
+    uint16_t soc_sorted[16];
+    bubbleSort_ascend(soc, soc_sorted, 16);
+    outputDataGrp[0].maxcelsoc = soc_sorted[15];
+    outputDataGrp[0].mincelsoc = soc_sorted[0];
+
+    for (size_t i = 0; i < 16; i++)
+    {
+        outputDataGrp[0].avgcelsoc += soc[i];
+    }
+    outputDataGrp[0].avgcelsoc /= 16;
+    
+
 
     for(size_t i = 0; i < input_row_len; i++)
     {
@@ -97,8 +133,19 @@ int main() {
         {
             vol[j] = inputData[i].vol[j];
         }
+
         SOC_Task();
+
         memcpy(outputData[i+1].soc, soc, 32);
+        memcpy(&outputDataGrp[i+1], &grpSOC.grpSOC, 2);
+        bubbleSort_ascend(soc, soc_sorted, 16);
+        outputDataGrp[i+1].maxcelsoc = soc_sorted[15];
+        outputDataGrp[i+1].mincelsoc = soc_sorted[0];
+        for (size_t k = 0; k < 16; k++)
+        {
+            outputDataGrp[i+1].avgcelsoc += soc[k];
+        }
+        outputDataGrp[i+1].avgcelsoc /= 16;
     }
 
 
@@ -108,7 +155,7 @@ int main() {
 
 
 
-    /************************************* output  ************************************************ */
+    /************************************* output  cell soc************************************************ */
     int fd3;
 
     // Create the FIFO if it doesn't exist
@@ -133,7 +180,42 @@ int main() {
     close(fd3);
     unlink("socfifo_output");
 
-    printf("Array sent successfully\n");
+    printf("cell soc Array sent successfully\n");
+
+    /************************************* output  grp soc************************************************ */
+    int fd4;
+
+    // Create the FIFO if it doesn't exist
+    mkfifo("grpsocfifo_output", 0666);
+
+    // Open the FIFO for writing
+    fd4 = open("grpsocfifo_output", O_WRONLY);
+    if (fd4 == -1) {
+        perror("open");
+        exit(EXIT_FAILURE);
+    }
+
+    // Write the array to the FIFO
+    if (write(fd4, outputDataGrp, sizeof( struct GrpSOC)*(input_row_len+1)) != sizeof(struct GrpSOC)*(input_row_len+1)) {
+        perror("write");
+        close(fd4);
+        unlink("grpsocfifo_output");  // Remove the FIFO file
+        exit(EXIT_FAILURE);
+    }
+
+    // Close the FIFO and remove the FIFO file
+    close(fd4);
+    unlink("grpsocfifo_output");
+
+    printf("grp soc Array sent successfully\n");
+
+
+
+
+
+
+
+
 
 
 
