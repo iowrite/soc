@@ -134,7 +134,7 @@ int main() {
             vol[j] = inputData[i].vol[j];
         }
 
-        SOC_Task();
+        SOC_Task(0, 0);
 
         memcpy(outputData[i+1].soc, soc, 32);
         memcpy(&outputDataGrp[i+1], &grpSOC.grpSOC, 2);

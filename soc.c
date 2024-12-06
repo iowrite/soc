@@ -19,7 +19,7 @@
 #define EKF_Q                       ((CUR_SAMPLE_ERR_A/180)*(CUR_SAMPLE_ERR_A/180))     
 #define EKF_R                       (VOL_SAMPLE_ERR_MV*VOL_SAMPLE_ERR_MV)
 
-#define TEMP_POINT_NUM              12      // 0 5 10 15 20 25 30 35 40 45 50 55   
+#define TEMP_POINT_NUM              7      // 0 5  15 25   35  45  55   
 #define CUR_POINT_NUM               5       // 0.1 0.2 0.3 0.4 0.5
 #define SOC_POINT_STEP              5
 #define SOC_POINT_NUM               (100/SOC_POINT_STEP+1)
@@ -43,37 +43,61 @@ struct SOC_Info
 struct SOC_Info g_socInfo[CELL_NUMS];
 
 
-
-
-const uint16_t s_chg_curve[TEMP_POINT_NUM][CUR_POINT_NUM][SOC_POINT_NUM] = 
-{
-    [0][0] = {
-        3090, 3298, 3319, 3348,         // 0 5 10 15
-        3370, 3380, 3382, 3383,         // 20 25 30 35
-        3384, 3386, 3390, 3395,         // 40 45 50 55
-        3400, 3404, 3407, 3411,         // 60 65 70 75
-        3416, 3422, 3431, 3448, 3534},  // 80 85 90 95 100
+const uint16_t vol_dregree25point5[SOC_POINT_NUM] = {        
+    3090, 3298, 3319, 3348,         // 0 5 10 15
+    3370, 3380, 3382, 3383,         // 20 25 30 35
+    3384, 3386, 3390, 3395,         // 40 45 50 55
+    3400, 3404, 3407, 3411,         // 60 65 70 75
+    3416, 3422, 3431, 3448, 3534    // 80 85 90 95 100
+};
+const uint16_t k_dregree25point5[SOC_POINT_NUM] = {        
+    1270,   35,     55,     50,                     // 0 5 10 15
+    35,     10,     2,      5,                      // 20 25 30 35
+    2,      5,      10,     10,                     // 40 45 50 55
+    10,     10,     5,      10,                     // 60 65 70 75
+    10,     15,     25,     50,     400             // 80 85 90 95 100
 };
 
-const uint16_t s_chg_curve_k[TEMP_POINT_NUM][CUR_POINT_NUM][SOC_POINT_NUM] = 
+
+
+
+
+
+
+
+const uint16_t* s_chg_curve[TEMP_POINT_NUM][CUR_POINT_NUM]= 
 {
-    [0][0] = {
-        1270, 35, 55, 50, 
-        35, 10, 2, 5, 
-        2, 5, 10, 10, 
-        10, 10, 5, 10, 
-        10, 15, 25, 50, 400},
+    /*  0.1C             0.2 C                0.3 C                0.4 C                    0.5C*/
+    [0][0] = NULL,      [0][1] = NULL,      [0][2] = NULL,      [0][3] = NULL,      [0][4] = NULL,                          // 0
+    [1][0] = NULL,      [1][1] = NULL,      [1][2] = NULL,      [1][3] = NULL,      [1][4] = NULL,                          //5
+    [2][0] = NULL,      [2][1] = NULL,      [2][2] = NULL,      [2][3] = NULL,      [2][4] = NULL,                          //15
+    [3][0] = NULL,      [3][1] = NULL,      [3][2] = NULL,      [3][3] = NULL,      [3][4] = vol_dregree25point5,           //25    
+    [4][0] = NULL,      [4][1] = NULL,      [4][2] = NULL,      [4][3] = NULL,      [4][4] = NULL,                          //35
+    [5][0] = NULL,      [5][1] = NULL,      [5][2] = NULL,      [5][3] = NULL,      [5][4] = NULL,                          //45
+    [6][0] = NULL,      [6][1] = NULL,      [6][2] = NULL,      [6][3] = NULL,      [6][4] = NULL,                          //55
+};
+
+const uint16_t* s_chg_curve_k[TEMP_POINT_NUM][CUR_POINT_NUM] = 
+{
+        /*  0.1C             0.2 C                0.3 C                0.4 C                    0.5C*/
+    [0][0] = NULL,      [0][1] = NULL,      [0][2] = NULL,      [0][3] = NULL,      [0][4] = NULL,                          // 0
+    [1][0] = NULL,      [1][1] = NULL,      [1][2] = NULL,      [1][3] = NULL,      [1][4] = NULL,                          //5
+    [2][0] = NULL,      [2][1] = NULL,      [2][2] = NULL,      [2][3] = NULL,      [2][4] = NULL,                          //15
+    [3][0] = NULL,      [3][1] = NULL,      [3][2] = NULL,      [3][3] = NULL,      [3][4] = k_dregree25point5,             //25    
+    [4][0] = NULL,      [4][1] = NULL,      [4][2] = NULL,      [4][3] = NULL,      [4][4] = NULL,                          //35
+    [5][0] = NULL,      [5][1] = NULL,      [5][2] = NULL,      [5][3] = NULL,      [5][4] = NULL,                          //45
+    [6][0] = NULL,      [6][1] = NULL,      [6][2] = NULL,      [6][3] = NULL,      [6][4] = NULL,                          //55
 
 };
 
-const uint16_t s_dsg_curve[TEMP_POINT_NUM][CUR_POINT_NUM][SOC_POINT_NUM] = 
+const uint16_t* s_dsg_curve[TEMP_POINT_NUM][CUR_POINT_NUM] = 
 {
-    [0][0] = {}
+    [0][0] = NULL,
 };
 
-const uint16_t s_dsg_curve_k[TEMP_POINT_NUM][CUR_POINT_NUM][SOC_POINT_NUM] = 
+const uint16_t* s_dsg_curve_k[TEMP_POINT_NUM][CUR_POINT_NUM] = 
 {
-    [0][0] = {}
+    [0][0] = NULL,
 };
 
 
@@ -82,7 +106,27 @@ static const uint16_t * get_curve(float cur, uint16_t tempra)
 {
     if(cur > 0)
     {
-        return s_chg_curve[0][0];
+        float t = tempra/10.0;
+        int tidx = 0;
+        if(t<2.5)
+        {
+            tidx = 0;
+        }
+        else if(t<10)
+        {
+            tidx = 2;
+        }
+        else if(t<50)
+        {
+            tidx = (int)t+1;
+        }else{
+            t = 6;
+        }
+        float c = cur/50*10;
+        int cidx = round(c);
+
+        return s_chg_curve[tidx][cidx];
+
     }else if(cur < 0)
     {
         return s_dsg_curve[0][0];
@@ -254,7 +298,7 @@ void SOC_Init(float *cur, uint16_t *vol, uint16_t *tmp, uint16_t *soc, uint16_t 
 }
 
 
-void SOC_Task(void)
+void SOC_Task(bool full, bool empty)
 {
     for (size_t i = 0; i < CELL_NUMS; i++)
     {
@@ -262,6 +306,22 @@ void SOC_Task(void)
         mysoc(&g_socInfo[i], *g_cur, g_celVol[i], g_celTmp[i]);
 
         g_celSOC[i] = round(fabs(g_socInfo[i].soc)*10);
+    }
+    if(full)
+    {
+        for (size_t i = 0; i < CELL_NUMS; i++)
+        {
+            g_socInfo[i].soc = 100;
+            g_celSOC[i] = 1000;
+        }
+    }
+    if(empty)
+    {
+        for (size_t i = 0; i < CELL_NUMS; i++)
+        {
+            g_socInfo[i].soc = 0;
+            g_celSOC[i] = 0;
+        }
     }
     gropuSOC();
 
