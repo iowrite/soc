@@ -6,6 +6,14 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import numpy as np
 from matplotlib.ticker import MaxNLocator
+import warnings
+import argparse
+warnings.filterwarnings("ignore", category=UserWarning, module="openpyxl")
+
+
+parser = argparse.ArgumentParser(description='Process some SOC data.')
+parser.add_argument('filepath', type=str, help='The path to the Excel file')
+args = parser.parse_args()
 
 
 
@@ -13,31 +21,39 @@ from matplotlib.ticker import MaxNLocator
 try:
 
     # 使用pandas读取Excel文件，默认读取第一个工作表
-    df = pd.read_excel('data/not_fix_temp/cellchgl.xlsx')
+    df = pd.read_excel(args.filepath)
 
     # # 将DataFrame转换为二维列表
     # data_list = data_range.values.tolist()
     data_list = df.values.tolist()
 
 except FileNotFoundError:
-    print(f"Error: The file '{'cellchgl.xlsx'}' was not found.")
+    print(f"Error: The file  was not found.")
 except Exception as e:
     print(f"An error occurred: {e}")
 
 print(len(data_list))
 
+# 提取第 12 列和第 73 到 98 列
+combined_list = [[row[11]] + row[77:93] for row in data_list]
 
-try:
-    # 使用pandas读取Excel文件中的特定列
-    df = pd.read_excel('data/not_fix_temp/std_chg_0.5c.xlsx', usecols=['cap'])
-    # 将DataFrame转换为一维列表
-    stdData = df['cap'].tolist()
-except FileNotFoundError:
-    print(f"Error: The file '{'std_chg_0.5c.xlsx'}' was not found.")
-except Exception as e:
-    print(f"An error occurred: {e}")
+# 打印结果以验证
+print(combined_list)
 
-print(len(stdData))
+
+
+
+# try:
+#     # 使用pandas读取Excel文件中的特定列
+#     df = pd.read_excel('data/not_fix_temp/std_chg_0.5c.xlsx', usecols=['cap'])
+#     # 将DataFrame转换为一维列表
+#     stdData = df['cap'].tolist()
+# except FileNotFoundError:
+#     print(f"Error: The file '{'std_chg_0.5c.xlsx'}' was not found.")
+# except Exception as e:
+#     print(f"An error occurred: {e}")
+
+# print(len(stdData))
 
 
 #############################################################################################333
@@ -65,7 +81,7 @@ print("send input data row len")
 if not os.path.exists("socfifo_write_input"):
     os.mkfifo("socfifo_write_input")
 
-flattened_list = [item for sublist in data_list for item in sublist]
+flattened_list = [item for sublist in combined_list for item in sublist]
 
 # print(flattened_list)
 print(len(flattened_list))
@@ -96,7 +112,7 @@ while not os.path.exists('socfifo_output'):
 with open('socfifo_output', 'rb') as fifo:
     # Read the binary data from the FIFO
     binary_data = fifo.read((len(data_list)+1) * 32)  
-
+    print(len(binary_data))
     # Unpack the binary data into an array of integers
     received_array = list(struct.unpack('H' *16* (len(data_list)+1), binary_data))
 
@@ -144,7 +160,7 @@ soc_output = [row[0] for row in two_dimensional_list]
 output_x = list(range(0, len(two_dimensional_list)))
 
 # 创建图形和轴对象
-stdData_multiplied_rounded = [round(x * 10) for x in stdData]
+# stdData_multiplied_rounded = [round(x * 10) for x in stdData]
 y_ticks = np.arange(-50, 1051, 50)
 # 绘制散点图
 for i in range(0, 16):

@@ -5,6 +5,7 @@
 #include <sys/stat.h>
 #include <unistd.h>
 #include <string.h>
+#include <assert.h>
 
 #include "soc.h"
 
@@ -71,6 +72,17 @@ int main() {
     unlink("socfifo_write_input");
     printf("recv: inputData. total bytes = %ld\n", sizeof(struct input)*input_row_len);
 
+
+
+    for (size_t i = 0; i < input_row_len; i++)
+    {
+        // printf("inputData[%d].cur = %f\n", i, inputData[i].cur);
+        // if(inputData[i].cur < 0)
+        // {
+        //     assert(0);
+        // }
+    }
+    
 
     /************************************* compute ************************************************ */
 

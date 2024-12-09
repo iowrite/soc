@@ -3,6 +3,7 @@ import warnings
 import matplotlib.pyplot as plt
 import numpy as np
 from numpy.polynomial.polynomial import Polynomial
+import argparse
 warnings.filterwarnings("ignore", category=UserWarning, module="openpyxl")
 
 
@@ -24,8 +25,8 @@ def process_curve(file_path, data_points):
     # first_value = cap_voltage_dict[first_key]
     # print(f"第一个元素: 容量: {first_key}, 平均电压: {first_value}")
     last_key = list(cap_voltage_dict.keys())[-1]
-    # last_value = cap_voltage_dict[last_key]
-    # print(f"最后一个元素: 容量: {last_key}, 平均电压: {last_value}")
+    last_value = cap_voltage_dict[last_key]
+    print(f"最后一个元素: 容量: {last_key}, 平均电压: {last_value}")
 
     # percent1 = last_key/100
     # print(f"1% per soc cap is {percent1}")
@@ -99,7 +100,7 @@ def fit_quadratic_and_get_slopes(voltage_list):
     slast = voltage_list[-1]-voltage_list[-2]
     slopes.append(slast)
 
-    slopes = [max(slope, 0.2) for slope in slopes]
+    slopes = [slope if abs(slope) >= 0.2 else (0.2 if slope > 0 else -0.2) for slope in slopes]
 
     voltage_list_py = [float(item) for item in slopes]
     return voltage_list_py
@@ -112,7 +113,11 @@ def fit_quadratic_and_get_slopes(voltage_list):
 
 # 示例调用
 if __name__ == "__main__":
-    filepath = 'data/not_fix_temp/25d5c.xlsx'
+    parser = argparse.ArgumentParser(description='Process some curve data.')
+    parser.add_argument('filepath', type=str, help='The path to the Excel file')
+    args = parser.parse_args()
+
+    filepath = args.filepath
     plt.subplot(2,2,1)
     voltage_list = process_curve(filepath, 101)
     plt.plot(voltage_list)
@@ -133,8 +138,13 @@ if __name__ == "__main__":
     voltage_list_21 = slopes[::5]
     plt.plot([0,5,10,15,20,25,30,35,40,45,50,55,60,65,70,75,80,85,90,95,100],voltage_list_21)
     plt.scatter([0,5,10,15,20,25,30,35,40,45,50,55,60,65,70,75,80,85,90,95,100],voltage_list_21)
+    voltage_list_21 = [v * 10 for v in voltage_list_21]
     formatted_voltage_list_21 = [f"{v:.1f}" for v in voltage_list_21]
-    print("斜率列表: (21 points)\n", formatted_voltage_list_21)
+    if float(formatted_voltage_list_21[0]) < 0:
+        formatted_voltage_list_21.reverse()
+        print("斜率列表(乘10,从小到大): (21 points)\n", formatted_voltage_list_21)
+    else:
+        print("斜率列表(乘10): (21 points)\n", formatted_voltage_list_21)
 
     print("\n============================\n")
 
@@ -142,7 +152,11 @@ if __name__ == "__main__":
     voltage_list = process_curve(filepath, 21)
     plt.plot([0,5,10,15,20,25,30,35,40,45,50,55,60,65,70,75,80,85,90,95,100], voltage_list)
     plt.scatter([0,5,10,15,20,25,30,35,40,45,50,55,60,65,70,75,80,85,90,95,100],voltage_list)
-    print("平均电压列表: (21 points)\n", voltage_list)
+    if float(formatted_voltage_list_21[0]) < 0:
+        voltage_list.reverse()
+        print("平均电压列表(从小到大): (21 points)\n", voltage_list)
+    else:
+        print("平均电压列表: (21 points)\n", voltage_list)
 
     print("\n============================\n")
 

@@ -4,28 +4,34 @@
 #include <stddef.h>
 #include <stdio.h>
 #include <string.h>
+#include <assert.h>
 #include "soc.h"
 
-#define DIFF_T_MSEC                  1           //second
-#define CAPACITY_AH                 100         //AH
-#define CAP_ERR_AH                  5           
-#define CUR_SAMPLE_ERR_A            1.0         //A
-#define VOL_SAMPLE_ERR_MV           10          //mv
-#define CUR_WINDOW_A                0.5         //A
 
-#define CELL_NUMS                   16        
+#define CAPACITY_AH                     100             //AH
+#define DIFF_T_SEC                      1               //second
+
+#define DIFF_T_MSEC_ERR                 50              // ms
+#define CAP_ERR_AH                      5.0           
+#define CUR_SAMPLE_ERR_A                1.0             //A
+#define VOL_SAMPLE_ERR_MV               10              //mv
+
+#define CUR_WINDOW_A                    0.5             //A
+
+#define CELL_NUMS                   16     
 
 
-#define EKF_Q                       ((CUR_SAMPLE_ERR_A/180)*(CUR_SAMPLE_ERR_A/180))     
-#define EKF_R                       (VOL_SAMPLE_ERR_MV*VOL_SAMPLE_ERR_MV)
+#define EKF_W(diffAH, cap, cur)                 (((1+50.0/(DIFF_T_SEC*1000)) * (1+1/cur) *(1+ CAP_ERR_AH/cap) - 1) *  diffAH)      
+#define EKF_Q(diffAH, cap, cur)                 (EKF_W(diffAH, cap, cur)*EKF_W(diffAH, cap, cur))                 
+#define EKF_R                                   (VOL_SAMPLE_ERR_MV*VOL_SAMPLE_ERR_MV)
 
 #define TEMP_POINT_NUM              7      // 0 5  15 25   35  45  55   
 #define CUR_POINT_NUM               5       // 0.1 0.2 0.3 0.4 0.5
 #define SOC_POINT_STEP              5
 #define SOC_POINT_NUM               (100/SOC_POINT_STEP+1)
 
-#define SOC0            50
-#define SOC0_ER2        2500
+#define SOC0            100
+#define SOC0_ER2        100
 
 // input 
 float *g_cur;
@@ -43,19 +49,34 @@ struct SOC_Info
 struct SOC_Info g_socInfo[CELL_NUMS];
 
 
-const uint16_t vol_dregree25point5[SOC_POINT_NUM] = {        
-    3090, 3298, 3319, 3348,         // 0 5 10 15
-    3370, 3380, 3382, 3383,         // 20 25 30 35
-    3384, 3386, 3390, 3395,         // 40 45 50 55
-    3400, 3404, 3407, 3411,         // 60 65 70 75
-    3416, 3422, 3431, 3448, 3534    // 80 85 90 95 100
+const uint16_t v_25d5c_chg[SOC_POINT_NUM] = {        
+    3047, 3289, 3305, 3329, 
+    3351, 3365, 3369, 3370, 
+    3372, 3374, 3378, 3384, 
+    3391, 3396, 3399, 3403, 
+    3408, 3414, 3423, 3440, 3574
 };
-const uint16_t k_dregree25point5[SOC_POINT_NUM] = {        
-    1270,   35,     55,     50,                     // 0 5 10 15
-    35,     10,     2,      5,                      // 20 25 30 35
-    2,      5,      10,     10,                     // 40 45 50 55
-    10,     10,     5,      10,                     // 60 65 70 75
-    10,     15,     25,     50,     400             // 80 85 90 95 100
+const int16_t k_25d5c_chg[SOC_POINT_NUM] = {        
+    1090.0,     95.0,   40.0,   50.0, 
+    35.0,       15.0,   2.0,    5.0, 
+    5.0,        5.0,    10.0,   15.0, 
+    10.0,       10.0,   5.0,    10.0, 
+    10.0,       15.0,   20.0,   55.0, 800.0
+};
+
+const uint16_t v_25d5c_dsg[SOC_POINT_NUM] = {        
+    2870, 3102, 3134, 3158, 
+    3179, 3193, 3204, 3213, 
+    3221, 3227, 3232, 3236, 
+    3241, 3246, 3251, 3256, 
+    3261, 3264, 3266, 3267, 3308
+};
+const int16_t k_25d5c_dsg[SOC_POINT_NUM] = {        
+    -840.0,     -140.0,     -40.0,      -50.0, 
+    -35.0,      -25.0,      -20.0,      -15.0, 
+    -15.0,      -15.0,      -5.0,       -10.0, 
+    -15.0,      -10.0,      -10.0,      -10.0, 
+    -5.0,       -5.0,       -5.0,       -2.0,   -400.0
 };
 
 
@@ -65,61 +86,133 @@ const uint16_t k_dregree25point5[SOC_POINT_NUM] = {
 
 
 
+
+
+const uint16_t s_cap_list_chg[] = {
+    1000,                           // 0
+    1000,                           // 5
+    1000,                           // 15
+    1026,                           // 25
+    1000,                           // 35
+    1000,                           // 45
+    1000                            // 55
+};
+const uint16_t s_cap_list_dsg[] = {
+    1000,                           // 0
+    1000,                           // 5
+    1000,                           // 15
+    992,                            // 25
+    1000,                           // 35
+    1000,                           // 45
+    1000                            // 55
+};
+
+/* ********************************************************************************************************************************
+                                                 charge curve table 
+************************************************************************************************************************************/
 const uint16_t* s_chg_curve[TEMP_POINT_NUM][CUR_POINT_NUM]= 
 {
     /*  0.1C             0.2 C                0.3 C                0.4 C                    0.5C*/
-    [0][0] = NULL,      [0][1] = NULL,      [0][2] = NULL,      [0][3] = NULL,      [0][4] = NULL,                          // 0
-    [1][0] = NULL,      [1][1] = NULL,      [1][2] = NULL,      [1][3] = NULL,      [1][4] = NULL,                          //5
-    [2][0] = NULL,      [2][1] = NULL,      [2][2] = NULL,      [2][3] = NULL,      [2][4] = NULL,                          //15
-    [3][0] = NULL,      [3][1] = NULL,      [3][2] = NULL,      [3][3] = NULL,      [3][4] = vol_dregree25point5,           //25    
-    [4][0] = NULL,      [4][1] = NULL,      [4][2] = NULL,      [4][3] = NULL,      [4][4] = NULL,                          //35
-    [5][0] = NULL,      [5][1] = NULL,      [5][2] = NULL,      [5][3] = NULL,      [5][4] = NULL,                          //45
-    [6][0] = NULL,      [6][1] = NULL,      [6][2] = NULL,      [6][3] = NULL,      [6][4] = NULL,                          //55
+    [0][0] = NULL,      [0][1] = NULL,      [0][2] = NULL,      [0][3] = NULL,              [0][4] = NULL,                          // 0
+    [1][0] = NULL,      [1][1] = NULL,      [1][2] = NULL,      [1][3] = NULL,              [1][4] = NULL,                          //5
+    [2][0] = NULL,      [2][1] = NULL,      [2][2] = NULL,      [2][3] = NULL,              [2][4] = NULL,                          //15
+    [3][0] = NULL,      [3][1] = NULL,      [3][2] = NULL,      [3][3] = v_25d5c_chg,       [3][4] = v_25d5c_chg,                   //25    
+    [4][0] = NULL,      [4][1] = NULL,      [4][2] = NULL,      [4][3] = NULL,              [4][4] = NULL,                          //35
+    [5][0] = NULL,      [5][1] = NULL,      [5][2] = NULL,      [5][3] = NULL,              [5][4] = NULL,                          //45
+    [6][0] = NULL,      [6][1] = NULL,      [6][2] = NULL,      [6][3] = NULL,              [6][4] = NULL,                          //55
 };
 
-const uint16_t* s_chg_curve_k[TEMP_POINT_NUM][CUR_POINT_NUM] = 
+const int16_t* s_chg_curve_k[TEMP_POINT_NUM][CUR_POINT_NUM] = 
 {
         /*  0.1C             0.2 C                0.3 C                0.4 C                    0.5C*/
     [0][0] = NULL,      [0][1] = NULL,      [0][2] = NULL,      [0][3] = NULL,      [0][4] = NULL,                          // 0
     [1][0] = NULL,      [1][1] = NULL,      [1][2] = NULL,      [1][3] = NULL,      [1][4] = NULL,                          //5
     [2][0] = NULL,      [2][1] = NULL,      [2][2] = NULL,      [2][3] = NULL,      [2][4] = NULL,                          //15
-    [3][0] = NULL,      [3][1] = NULL,      [3][2] = NULL,      [3][3] = NULL,      [3][4] = k_dregree25point5,             //25    
+    [3][0] = NULL,      [3][1] = NULL,      [3][2] = NULL,      [3][3] = k_25d5c_chg,      [3][4] = k_25d5c_chg,             //25    
     [4][0] = NULL,      [4][1] = NULL,      [4][2] = NULL,      [4][3] = NULL,      [4][4] = NULL,                          //35
     [5][0] = NULL,      [5][1] = NULL,      [5][2] = NULL,      [5][3] = NULL,      [5][4] = NULL,                          //45
     [6][0] = NULL,      [6][1] = NULL,      [6][2] = NULL,      [6][3] = NULL,      [6][4] = NULL,                          //55
 
 };
 
+/* ********************************************************************************************************************************
+                                                 discharge curve table 
+************************************************************************************************************************************/
 const uint16_t* s_dsg_curve[TEMP_POINT_NUM][CUR_POINT_NUM] = 
 {
-    [0][0] = NULL,
+    [0][0] = NULL,    /*  0.1C             0.2 C                0.3 C                0.4 C                    0.5C*/
+    [0][0] = NULL,      [0][1] = NULL,      [0][2] = NULL,      [0][3] = NULL,              [0][4] = NULL,                          // 0
+    [1][0] = NULL,      [1][1] = NULL,      [1][2] = NULL,      [1][3] = NULL,              [1][4] = NULL,                          //5
+    [2][0] = NULL,      [2][1] = NULL,      [2][2] = NULL,      [2][3] = NULL,              [2][4] = NULL,                          //15
+    [3][0] = NULL,      [3][1] = NULL,      [3][2] = NULL,      [3][3] = v_25d5c_dsg,       [3][4] = v_25d5c_dsg,                   //25    
+    [4][0] = NULL,      [4][1] = NULL,      [4][2] = NULL,      [4][3] = NULL,              [4][4] = NULL,                          //35
+    [5][0] = NULL,      [5][1] = NULL,      [5][2] = NULL,      [5][3] = NULL,              [5][4] = NULL,                          //45
+    [6][0] = NULL,      [6][1] = NULL,      [6][2] = NULL,      [6][3] = NULL,              [6][4] = NULL,                          //55
 };
 
-const uint16_t* s_dsg_curve_k[TEMP_POINT_NUM][CUR_POINT_NUM] = 
+const int16_t* s_dsg_curve_k[TEMP_POINT_NUM][CUR_POINT_NUM] = 
 {
-    [0][0] = NULL,
+        /*  0.1C             0.2 C                0.3 C                0.4 C                    0.5C*/
+    [0][0] = NULL,      [0][1] = NULL,      [0][2] = NULL,      [0][3] = NULL,      [0][4] = NULL,                          // 0
+    [1][0] = NULL,      [1][1] = NULL,      [1][2] = NULL,      [1][3] = NULL,      [1][4] = NULL,                          //5
+    [2][0] = NULL,      [2][1] = NULL,      [2][2] = NULL,      [2][3] = NULL,      [2][4] = NULL,                          //15
+    [3][0] = NULL,      [3][1] = NULL,      [3][2] = NULL,      [3][3] = k_25d5c_dsg,      [3][4] = k_25d5c_dsg,             //25    
+    [4][0] = NULL,      [4][1] = NULL,      [4][2] = NULL,      [4][3] = NULL,      [4][4] = NULL,                          //35
+    [5][0] = NULL,      [5][1] = NULL,      [5][2] = NULL,      [5][3] = NULL,      [5][4] = NULL,                          //45
+    [6][0] = NULL,      [6][1] = NULL,      [6][2] = NULL,      [6][3] = NULL,      [6][4] = NULL,                          //55
 };
 
-static const uint16_t * get_k_or_v(const uint16_t *chg_curve[TEMP_POINT_NUM][CUR_POINT_NUM], const uint16_t *dsg_curve[TEMP_POINT_NUM][CUR_POINT_NUM], float cur, uint16_t tempra)
+static const uint16_t get_cap(float cur, uint16_t tempra)
 {
+    float t = tempra/10.0;
+    int tidx = 0;
+    if(t<2.5)
+    {
+        tidx = 0;
+    }
+    else if(t<10)
+    {
+        tidx = 2;
+    }
+    else if(t<50)
+    {
+        tidx = (int)t/10+1;
+    }else{
+        tidx = 6;
+    }
+    if(cur > 0){
+        return s_cap_list_chg[tidx];
+    }else{
+        return s_cap_list_dsg[tidx];
+    }
+
+}
+
+
+
+
+static const uint16_t * get_v(const uint16_t *chg_curve[TEMP_POINT_NUM][CUR_POINT_NUM], const uint16_t *dsg_curve[TEMP_POINT_NUM][CUR_POINT_NUM], float cur, uint16_t tempra)
+{
+
+    float t = tempra/10.0;
+    int tidx = 0;
+    if(t<2.5)
+    {
+        tidx = 0;
+    }
+    else if(t<10)
+    {
+        tidx = 2;
+    }
+    else if(t<50)
+    {
+        tidx = (int)t/10+1;
+    }else{
+        tidx = 6;
+    }
+
     if(cur > 0)
     {
-        float t = tempra/10.0;
-        int tidx = 0;
-        if(t<2.5)
-        {
-            tidx = 0;
-        }
-        else if(t<10)
-        {
-            tidx = 2;
-        }
-        else if(t<50)
-        {
-            tidx = (int)t/10+1;
-        }else{
-            tidx = 6;
-        }
         float c = cur/100*10;
         int cidx = round(c)-1;
         if(cidx < 0)
@@ -130,23 +223,87 @@ static const uint16_t * get_k_or_v(const uint16_t *chg_curve[TEMP_POINT_NUM][CUR
         {
             cidx = 4;
         }
-
+        assert(chg_curve[tidx][cidx] != NULL);
         return chg_curve[tidx][cidx];
 
     }else if(cur < 0)
     {
-        return dsg_curve[0][0];
+        float c = cur/100*10;
+        int cidx = -round(c)-1;
+        if(cidx < 0)
+        {
+            cidx = 0;
+        }
+        if(cidx > 4)
+        {
+            cidx = 4;
+        }
+        assert(dsg_curve[tidx][cidx] != NULL);
+        return dsg_curve[tidx][cidx];
     }
 }
 
-static const uint16_t * get_curve_v(float cur, uint16_t tempra)
+
+static const int16_t * get_k(const int16_t *chg_curve[TEMP_POINT_NUM][CUR_POINT_NUM], const int16_t *dsg_curve[TEMP_POINT_NUM][CUR_POINT_NUM], float cur, uint16_t tempra)
 {
-    return get_k_or_v(s_chg_curve, s_dsg_curve, cur, tempra);
+    float t = tempra/10.0;
+    int tidx = 0;
+    if(t<2.5)
+    {
+        tidx = 0;
+    }
+    else if(t<10)
+    {
+        tidx = 2;
+    }
+    else if(t<50)
+    {
+        tidx = (int)t/10+1;
+    }else{
+        tidx = 6;
+    }
+    if(cur > 0)
+    {
+        float c = cur/100*10;
+        int cidx = round(c)-1;
+        if(cidx < 0)
+        {
+            cidx = 0;
+        }
+        if(cidx > 4)
+        {
+            cidx = 4;
+        }
+        assert(chg_curve[tidx][cidx] != NULL);
+        return chg_curve[tidx][cidx];
+
+    }else if(cur < 0)
+    {
+        float c = cur/100*10;
+        int cidx = -round(c)-1;
+        if(cidx < 0)
+        {
+            cidx = 0;
+        }
+        if(cidx > 4)
+        {
+            cidx = 4;
+        }
+        assert(dsg_curve[tidx][cidx] != NULL);
+        return dsg_curve[tidx][cidx];
+    }
 }
 
-static const uint16_t * get_curve_k(float cur, uint16_t tempra)
+
+
+static const uint16_t * get_curve_v(float cur, uint16_t tempra)
 {
-    return get_k_or_v(s_chg_curve_k, s_dsg_curve_k, cur, tempra);
+    return get_v(s_chg_curve, s_dsg_curve, cur, tempra);
+}
+
+static const int16_t * get_curve_k(float cur, uint16_t tempra)
+{
+    return get_k(s_chg_curve_k, s_dsg_curve_k, cur, tempra);
 }
 
 
@@ -157,25 +314,28 @@ void mysocEKF(struct SOC_Info *SOCinfo, float cur, uint16_t vol, uint16_t tempra
 {
     static int callCount = 0;
     callCount++;
-
+    static float pureAHSUM = 0;
 
     const uint16_t *curve = get_curve_v(cur, 250);
-    const uint16_t *curveK = get_curve_k(cur, 250);
+    const int16_t *curveK = get_curve_k(cur, 250);
+    const uint16_t cap = get_cap(cur, 250);
 
-    float diffAH = DIFF_T_MSEC/3600.0*cur/CAPACITY_AH*100;
+    const float capf = cap/10.0;
+    float diffAH = DIFF_T_SEC/3600.0*cur/capf*100;
     float SOCcal = SOCinfo->soc + diffAH;
-    float SOCer2Cal = SOCinfo->socEr2 + EKF_Q;
-
+    float SOCer2Cal = SOCinfo->socEr2 + EKF_Q(diffAH,capf, cur);
+    pureAHSUM += diffAH;
+    // printf("diffAH : %f, EKF_W : %f pureAH: %f\n", diffAH, EKF_W(diffAH,capf, cur), pureAHSUM);
     float H = 0, Hprev = 0, Hnext = 0;
     float estVol = 0, estVolPrev = 0, estVolNext = 0;
     float SOCerCal = sqrt(SOCer2Cal);
-    if(SOCcal < 0.01)
+    if(SOCcal < 0)
     {
         SOCcal = 0;
 
         estVol = curve[0];
         H = (float)curveK[0]/10;
-    }else if(SOCcal > 99.99)
+    }else if(SOCcal > 100)
     {
         SOCcal = 100;
 
@@ -186,20 +346,25 @@ void mysocEKF(struct SOC_Info *SOCinfo, float cur, uint16_t vol, uint16_t tempra
         estVolNext = curve[(int)SOCcal/SOC_POINT_STEP+1];
         estVol = estVolPrev+((int)SOCcal%SOC_POINT_STEP+SOCcal-(int)SOCcal)/SOC_POINT_STEP*(estVolNext-estVolPrev);
 
+        
         Hprev = (float)curveK[((int)SOCcal)/SOC_POINT_STEP]/10;
         Hnext = (float)curveK[(int)SOCcal/SOC_POINT_STEP+1]/10;
         H = Hprev + ((int)SOCcal%SOC_POINT_STEP+SOCcal-(int)SOCcal)/SOC_POINT_STEP*(Hnext-Hprev);
+        H = fabs(H);
+        
+        // printf("callcount %d hprev :%f  H : %f  hnext :%f \n", callCount, Hprev, H, Hnext);
     }
     float K = SOCer2Cal*H/(H*SOCer2Cal*H+EKF_R);
     float res = SOCcal+K*((float)vol-estVol);
+    // printf("callcount %d K :%f  kcal : %f \n", callCount, K, K*((float)vol-estVol));
     float resEr2 = (1-K*H)*SOCer2Cal;
     float SOCerRes = sqrt(resEr2);
 
 
-    if(res < 0.01)
+    if(res < 0)
     {
         res = 0;
-    }else if(res > 99.99)
+    }else if(res > 100)
     {
         res = 100;
     }
@@ -268,15 +433,21 @@ static void bubbleSort_ascend(uint16_t *inputArr, uint16_t *outputArr, uint16_t 
 
 static void gropuSOC()
 {
+    static int callCount = 0;
+    callCount++;
     uint16_t sortedSOC[CELL_NUMS];
     bubbleSort_ascend(g_celSOC, sortedSOC, CELL_NUMS);
     uint16_t maxSOC = sortedSOC[CELL_NUMS-1];
     uint16_t minSOC = sortedSOC[0];
-
+    // if(callCount == 3560){
+    //     printf("change\n");
+    // }
     uint16_t hSOC = maxSOC*(maxSOC/1000.0)+minSOC*(1-maxSOC/1000.0);
     uint16_t lSOC= minSOC*(minSOC/1000.0)+maxSOC*(1-minSOC/1000.0);
-    *g_grpSOC = (*g_grpSOC)/1000.0*hSOC+(1000-*g_grpSOC)/1000.0*lSOC;
-    printf("hSOC:%d, lSOC:%d, grpSOC:%d\n", hSOC, lSOC, *g_grpSOC);
+    uint16_t h = hSOC>lSOC?hSOC:lSOC;
+    uint16_t l = lSOC<hSOC?lSOC:hSOC;
+    *g_grpSOC = (*g_grpSOC)/1000.0*h+(1000-*g_grpSOC)/1000.0*l;
+    // printf("call: %d, hSOC:%d, lSOC:%d, grpSOC:%d\n",callCount, hSOC, lSOC, *g_grpSOC);
 
 }
 
