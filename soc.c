@@ -100,9 +100,7 @@ const uint16_t* s_dsg_curve_k[TEMP_POINT_NUM][CUR_POINT_NUM] =
     [0][0] = NULL,
 };
 
-
-
-static const uint16_t * get_curve(float cur, uint16_t tempra)
+static const uint16_t * get_k_or_v(const uint16_t *chg_curve[TEMP_POINT_NUM][CUR_POINT_NUM], const uint16_t *dsg_curve[TEMP_POINT_NUM][CUR_POINT_NUM], float cur, uint16_t tempra)
 {
     if(cur > 0)
     {
@@ -118,30 +116,37 @@ static const uint16_t * get_curve(float cur, uint16_t tempra)
         }
         else if(t<50)
         {
-            tidx = (int)t+1;
+            tidx = (int)t/10+1;
         }else{
-            t = 6;
+            tidx = 6;
         }
-        float c = cur/50*10;
-        int cidx = round(c);
+        float c = cur/100*10;
+        int cidx = round(c)-1;
+        if(cidx < 0)
+        {
+            cidx = 0;
+        }
+        if(cidx > 4)
+        {
+            cidx = 4;
+        }
 
-        return s_chg_curve[tidx][cidx];
+        return chg_curve[tidx][cidx];
 
     }else if(cur < 0)
     {
-        return s_dsg_curve[0][0];
+        return dsg_curve[0][0];
     }
+}
+
+static const uint16_t * get_curve_v(float cur, uint16_t tempra)
+{
+    return get_k_or_v(s_chg_curve, s_dsg_curve, cur, tempra);
 }
 
 static const uint16_t * get_curve_k(float cur, uint16_t tempra)
 {
-    if(cur > 0)
-    {
-        return s_chg_curve_k[0][0];
-    }else if(cur < 0)
-    {
-        return s_dsg_curve_k[0][0];
-    }
+    return get_k_or_v(s_chg_curve_k, s_dsg_curve_k, cur, tempra);
 }
 
 
@@ -154,8 +159,8 @@ void mysocEKF(struct SOC_Info *SOCinfo, float cur, uint16_t vol, uint16_t tempra
     callCount++;
 
 
-    const uint16_t *curve = get_curve(cur, tempra);
-    const uint16_t *curveK = get_curve_k(cur, tempra);
+    const uint16_t *curve = get_curve_v(cur, 250);
+    const uint16_t *curveK = get_curve_k(cur, 250);
 
     float diffAH = DIFF_T_MSEC/3600.0*cur/CAPACITY_AH*100;
     float SOCcal = SOCinfo->soc + diffAH;
