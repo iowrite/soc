@@ -7,7 +7,7 @@
 #include <string.h>
 #include <assert.h>
 
-#include "soc.h"
+#include "../src/soc.h"
 
 #define FIFO_NAME "myfifo"
 #define ARRAY_SIZE 5
