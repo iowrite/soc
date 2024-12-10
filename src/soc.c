@@ -107,7 +107,7 @@ const int16_t* s_chg_curve_k[TEMP_POINT_NUM][CUR_POINT_NUM] =
 ************************************************************************************************************************************/
 const uint16_t* s_dsg_curve[TEMP_POINT_NUM][CUR_POINT_NUM] = 
 {
-    [0][0] = NULL,    /*  0.1C             0.2 C                0.3 C                0.4 C                    0.5C*/
+   /*  0.1C             0.2 C                0.3 C                0.4 C                    0.5C*/
     [0][0] = NULL,      [0][1] = NULL,      [0][2] = NULL,      [0][3] = NULL,              [0][4] = NULL,                          // 0
     [1][0] = NULL,      [1][1] = NULL,      [1][2] = NULL,      [1][3] = NULL,              [1][4] = NULL,                          //5
     [2][0] = NULL,      [2][1] = NULL,      [2][2] = NULL,      [2][3] = NULL,              [2][4] = NULL,                          //15
