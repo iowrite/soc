@@ -139,11 +139,12 @@ if __name__ == "__main__":
     plt.plot([0,5,10,15,20,25,30,35,40,45,50,55,60,65,70,75,80,85,90,95,100],voltage_list_21)
     plt.scatter([0,5,10,15,20,25,30,35,40,45,50,55,60,65,70,75,80,85,90,95,100],voltage_list_21)
     voltage_list_21 = [v * 10 for v in voltage_list_21]
-    formatted_voltage_list_21 = [f"{v:.1f}" for v in voltage_list_21]
-    if float(formatted_voltage_list_21[0]) < 0:
-        formatted_voltage_list_21.reverse()
-        print("斜率列表(乘10,从小到大): (21 points)\n", formatted_voltage_list_21)
+    if float(voltage_list_21[0]) < 0:
+        reversed_abs_voltage_list = [abs(v) for v in reversed(voltage_list_21)]
+        formatted_voltage_list_21 = [f"{v:.1f}" for v in reversed_abs_voltage_list]
+        print("斜率列表(乘10,从小到大, 取绝对值): (21 points)\n", formatted_voltage_list_21)
     else:
+        formatted_voltage_list_21 = [f"{v:.1f}" for v in voltage_list_21]
         print("斜率列表(乘10): (21 points)\n", formatted_voltage_list_21)
 
     print("\n============================\n")
@@ -152,9 +153,9 @@ if __name__ == "__main__":
     voltage_list = process_curve(filepath, 21)
     plt.plot([0,5,10,15,20,25,30,35,40,45,50,55,60,65,70,75,80,85,90,95,100], voltage_list)
     plt.scatter([0,5,10,15,20,25,30,35,40,45,50,55,60,65,70,75,80,85,90,95,100],voltage_list)
-    if float(formatted_voltage_list_21[0]) < 0:
+    if float(voltage_list_21[0]) < 0:
         voltage_list.reverse()
-        print("平均电压列表(从小到大): (21 points)\n", voltage_list)
+        print("平均电压列表(从小到大, 取绝对值): (21 points)\n", voltage_list)
     else:
         print("平均电压列表: (21 points)\n", voltage_list)
 

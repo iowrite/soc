@@ -72,11 +72,11 @@ const uint16_t v_25d5c_dsg[SOC_POINT_NUM] = {
     3261, 3264, 3266, 3267, 3308
 };
 const int16_t k_25d5c_dsg[SOC_POINT_NUM] = {        
-    -840.0,     -140.0,     -40.0,      -50.0, 
-    -35.0,      -25.0,      -20.0,      -15.0, 
-    -15.0,      -15.0,      -5.0,       -10.0, 
-    -15.0,      -10.0,      -10.0,      -10.0, 
-    -5.0,       -5.0,       -5.0,       -2.0,   -400.0
+    840.0,     140.0,     40.0,      50.0, 
+    35.0,      25.0,      20.0,      15.0, 
+    15.0,      15.0,      5.0,       10.0, 
+    15.0,      10.0,      10.0,      10.0, 
+    5.0,       5.0,       5.0,       2.0,   400.0
 };
 
 
@@ -350,7 +350,6 @@ void mysocEKF(struct SOC_Info *SOCinfo, float cur, uint16_t vol, uint16_t tempra
         Hprev = (float)curveK[((int)SOCcal)/SOC_POINT_STEP]/10;
         Hnext = (float)curveK[(int)SOCcal/SOC_POINT_STEP+1]/10;
         H = Hprev + ((int)SOCcal%SOC_POINT_STEP+SOCcal-(int)SOCcal)/SOC_POINT_STEP*(Hnext-Hprev);
-        H = fabs(H);
         
         // printf("callcount %d hprev :%f  H : %f  hnext :%f \n", callCount, Hprev, H, Hnext);
     }
