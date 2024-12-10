@@ -35,7 +35,7 @@ except Exception as e:
 print(len(data_list))
 
 # 提取第 12 列和第 73 到 98 列
-combined_list = [[row[11]] + row[77:93] for row in data_list]
+combined_list = [[row[11]] + row[76:92] for row in data_list]
 
 # 打印结果以验证
 print(combined_list)
