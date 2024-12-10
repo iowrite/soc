@@ -6,7 +6,7 @@
 #include <string.h>
 #include <assert.h>
 #include "soc.h"
-
+#include "curve.h"
 
 #define CAPACITY_AH                     100             //AH
 #define DIFF_T_SEC                      1               //second
@@ -25,10 +25,7 @@
 #define EKF_Q(diffAH, cap, cur)                 (EKF_W(diffAH, cap, cur)*EKF_W(diffAH, cap, cur))                 
 #define EKF_R                                   (VOL_SAMPLE_ERR_MV*VOL_SAMPLE_ERR_MV)
 
-#define TEMP_POINT_NUM              7      // 0 5  15 25   35  45  55   
-#define CUR_POINT_NUM               5       // 0.1 0.2 0.3 0.4 0.5
-#define SOC_POINT_STEP              5
-#define SOC_POINT_NUM               (100/SOC_POINT_STEP+1)
+
 
 #define SOC0            100
 #define SOC0_ER2        100
@@ -48,36 +45,6 @@ struct SOC_Info
 };
 struct SOC_Info g_socInfo[CELL_NUMS];
 
-
-const uint16_t v_25d5c_chg[SOC_POINT_NUM] = {        
-    3047, 3289, 3305, 3329, 
-    3351, 3365, 3369, 3370, 
-    3372, 3374, 3378, 3384, 
-    3391, 3396, 3399, 3403, 
-    3408, 3414, 3423, 3440, 3574
-};
-const int16_t k_25d5c_chg[SOC_POINT_NUM] = {        
-    1090.0,     95.0,   40.0,   50.0, 
-    35.0,       15.0,   2.0,    5.0, 
-    5.0,        5.0,    10.0,   15.0, 
-    10.0,       10.0,   5.0,    10.0, 
-    10.0,       15.0,   20.0,   55.0, 800.0
-};
-
-const uint16_t v_25d5c_dsg[SOC_POINT_NUM] = {        
-    2870, 3102, 3134, 3158, 
-    3179, 3193, 3204, 3213, 
-    3221, 3227, 3232, 3236, 
-    3241, 3246, 3251, 3256, 
-    3261, 3264, 3266, 3267, 3308
-};
-const int16_t k_25d5c_dsg[SOC_POINT_NUM] = {        
-    840.0,     140.0,     40.0,      50.0, 
-    35.0,      25.0,      20.0,      15.0, 
-    15.0,      15.0,      5.0,       10.0, 
-    15.0,      10.0,      10.0,      10.0, 
-    5.0,       5.0,       5.0,       2.0,   400.0
-};
 
 
 
