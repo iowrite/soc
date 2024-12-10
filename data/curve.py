@@ -99,8 +99,12 @@ def fit_quadratic_and_get_slopes(voltage_list):
 
     slast = voltage_list[-1]-voltage_list[-2]
     slopes.append(slast)
-
-    slopes = [slope if abs(slope) >= 0.2 else (0.2 if slope > 0 else -0.2) for slope in slopes]
+    for i, slope in enumerate(slopes):
+        if(abs(slope) < 0.2):
+            if(slopes[0] > 0):
+                slopes[i] = 0.2
+            else:
+                slopes[i] = -0.2
 
     voltage_list_py = [float(item) for item in slopes]
     return voltage_list_py
