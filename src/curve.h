@@ -9,13 +9,25 @@
 #define SOC_POINT_NUM               (100/SOC_POINT_STEP+1)
 
 
-extern const uint16_t s_cap_list_chg[TEMP_POINT_NUM];
-extern const uint16_t s_cap_list_dsg[TEMP_POINT_NUM];
+extern const uint16_t s_cap_list_chg[TEMP_POINT_NUM][CUR_POINT_NUM];
+extern const uint16_t s_cap_list_dsg[TEMP_POINT_NUM][CUR_POINT_NUM];
 
 extern const uint16_t v_25d5c_chg[SOC_POINT_NUM];
 extern const int16_t k_25d5c_chg[SOC_POINT_NUM];
 extern const uint16_t v_25d5c_dsg[SOC_POINT_NUM];
 extern const int16_t k_25d5c_dsg[SOC_POINT_NUM];
+
+extern const uint16_t v_25d3c_chg[SOC_POINT_NUM];
+extern const int16_t k_25d3c_chg[SOC_POINT_NUM];
+
+
+extern const uint16_t* s_chg_curve[TEMP_POINT_NUM][CUR_POINT_NUM];
+extern const int16_t* s_chg_curve_k[TEMP_POINT_NUM][CUR_POINT_NUM];
+extern const uint16_t* s_dsg_curve[TEMP_POINT_NUM][CUR_POINT_NUM];
+extern const int16_t* s_dsg_curve_k[TEMP_POINT_NUM][CUR_POINT_NUM];
+
+
+
 
 #endif 
 

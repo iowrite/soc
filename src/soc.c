@@ -18,7 +18,7 @@
 
 #define CUR_WINDOW_A                    0.5             //A
 
-#define CELL_NUMS                   16     
+#define CELL_NUMS                   16    
 
 
 #define EKF_W(diffAH, cap, cur)                 (((1+50.0/(DIFF_T_SEC*1000)) * (1+1/cur) *(1+ CAP_ERR_AH/cap) - 1) *  diffAH)      
@@ -48,60 +48,7 @@ struct SOC_Info g_socInfo[CELL_NUMS];
 
 
 
-/* ********************************************************************************************************************************
-                                                 charge curve table 
-************************************************************************************************************************************/
-const uint16_t* s_chg_curve[TEMP_POINT_NUM][CUR_POINT_NUM]= 
-{
-    /*  0.1C             0.2 C                0.3 C                0.4 C                    0.5C*/
-    [0][0] = NULL,      [0][1] = NULL,      [0][2] = NULL,      [0][3] = NULL,              [0][4] = NULL,                          // 0
-    [1][0] = NULL,      [1][1] = NULL,      [1][2] = NULL,      [1][3] = NULL,              [1][4] = NULL,                          //5
-    [2][0] = NULL,      [2][1] = NULL,      [2][2] = NULL,      [2][3] = NULL,              [2][4] = NULL,                          //15
-    [3][0] = NULL,      [3][1] = NULL,      [3][2] = NULL,      [3][3] = v_25d5c_chg,       [3][4] = v_25d5c_chg,                   //25    
-    [4][0] = NULL,      [4][1] = NULL,      [4][2] = NULL,      [4][3] = NULL,              [4][4] = NULL,                          //35
-    [5][0] = NULL,      [5][1] = NULL,      [5][2] = NULL,      [5][3] = NULL,              [5][4] = NULL,                          //45
-    [6][0] = NULL,      [6][1] = NULL,      [6][2] = NULL,      [6][3] = NULL,              [6][4] = NULL,                          //55
-};
 
-const int16_t* s_chg_curve_k[TEMP_POINT_NUM][CUR_POINT_NUM] = 
-{
-        /*  0.1C             0.2 C                0.3 C                0.4 C                    0.5C*/
-    [0][0] = NULL,      [0][1] = NULL,      [0][2] = NULL,      [0][3] = NULL,      [0][4] = NULL,                          // 0
-    [1][0] = NULL,      [1][1] = NULL,      [1][2] = NULL,      [1][3] = NULL,      [1][4] = NULL,                          //5
-    [2][0] = NULL,      [2][1] = NULL,      [2][2] = NULL,      [2][3] = NULL,      [2][4] = NULL,                          //15
-    [3][0] = NULL,      [3][1] = NULL,      [3][2] = NULL,      [3][3] = k_25d5c_chg,      [3][4] = k_25d5c_chg,             //25    
-    [4][0] = NULL,      [4][1] = NULL,      [4][2] = NULL,      [4][3] = NULL,      [4][4] = NULL,                          //35
-    [5][0] = NULL,      [5][1] = NULL,      [5][2] = NULL,      [5][3] = NULL,      [5][4] = NULL,                          //45
-    [6][0] = NULL,      [6][1] = NULL,      [6][2] = NULL,      [6][3] = NULL,      [6][4] = NULL,                          //55
-
-};
-
-/* ********************************************************************************************************************************
-                                                 discharge curve table 
-************************************************************************************************************************************/
-const uint16_t* s_dsg_curve[TEMP_POINT_NUM][CUR_POINT_NUM] = 
-{
-   /*  0.1C             0.2 C                0.3 C                0.4 C                    0.5C*/
-    [0][0] = NULL,      [0][1] = NULL,      [0][2] = NULL,      [0][3] = NULL,              [0][4] = NULL,                          // 0
-    [1][0] = NULL,      [1][1] = NULL,      [1][2] = NULL,      [1][3] = NULL,              [1][4] = NULL,                          //5
-    [2][0] = NULL,      [2][1] = NULL,      [2][2] = NULL,      [2][3] = NULL,              [2][4] = NULL,                          //15
-    [3][0] = NULL,      [3][1] = NULL,      [3][2] = NULL,      [3][3] = v_25d5c_dsg,       [3][4] = v_25d5c_dsg,                   //25    
-    [4][0] = NULL,      [4][1] = NULL,      [4][2] = NULL,      [4][3] = NULL,              [4][4] = NULL,                          //35
-    [5][0] = NULL,      [5][1] = NULL,      [5][2] = NULL,      [5][3] = NULL,              [5][4] = NULL,                          //45
-    [6][0] = NULL,      [6][1] = NULL,      [6][2] = NULL,      [6][3] = NULL,              [6][4] = NULL,                          //55
-};
-
-const int16_t* s_dsg_curve_k[TEMP_POINT_NUM][CUR_POINT_NUM] = 
-{
-        /*  0.1C             0.2 C                0.3 C                0.4 C                    0.5C*/
-    [0][0] = NULL,      [0][1] = NULL,      [0][2] = NULL,      [0][3] = NULL,      [0][4] = NULL,                          // 0
-    [1][0] = NULL,      [1][1] = NULL,      [1][2] = NULL,      [1][3] = NULL,      [1][4] = NULL,                          //5
-    [2][0] = NULL,      [2][1] = NULL,      [2][2] = NULL,      [2][3] = NULL,      [2][4] = NULL,                          //15
-    [3][0] = NULL,      [3][1] = NULL,      [3][2] = NULL,      [3][3] = k_25d5c_dsg,      [3][4] = k_25d5c_dsg,             //25    
-    [4][0] = NULL,      [4][1] = NULL,      [4][2] = NULL,      [4][3] = NULL,      [4][4] = NULL,                          //35
-    [5][0] = NULL,      [5][1] = NULL,      [5][2] = NULL,      [5][3] = NULL,      [5][4] = NULL,                          //45
-    [6][0] = NULL,      [6][1] = NULL,      [6][2] = NULL,      [6][3] = NULL,      [6][4] = NULL,                          //55
-};
 
 static const uint16_t get_cap(float cur, uint16_t tempra)
 {
@@ -121,11 +68,44 @@ static const uint16_t get_cap(float cur, uint16_t tempra)
     }else{
         tidx = 6;
     }
-    if(cur > 0){
-        return s_cap_list_chg[tidx];
-    }else{
-        return s_cap_list_dsg[tidx];
+
+    if(cur > 0)
+    {
+        float c = cur/100*10;
+        int cidx = round(c)-1;
+        if(cidx < 0)
+        {
+            cidx = 0;
+        }
+        if(cidx > 4)
+        {
+            cidx = 4;
+        }
+        // if(s_cap_list_chg[tidx][cidx] == 1000){
+        //     assert(0);
+        // }
+        return s_cap_list_chg[tidx][cidx];
+
+    }else if(cur < 0)
+    {
+        float c = cur/100*10;
+        int cidx = -round(c)-1;
+        if(cidx < 0)
+        {
+            cidx = 0;
+        }
+        if(cidx > 4)
+        {
+            cidx = 4;
+        }
+        if(s_cap_list_dsg[tidx][cidx] == 1000){
+            assert(0);
+        }
+        return s_cap_list_dsg[tidx][cidx];
     }
+
+
+
 
 }
 
@@ -266,7 +246,7 @@ void mysocEKF(struct SOC_Info *SOCinfo, float cur, uint16_t vol, uint16_t tempra
     float SOCcal = SOCinfo->soc + diffAH;
     float SOCer2Cal = SOCinfo->socEr2 + EKF_Q(diffAH,capf, cur);
     pureAHSUM += diffAH;
-    // printf("diffAH : %f, EKF_W : %f pureAH: %f\n", diffAH, EKF_W(diffAH,capf, cur), pureAHSUM);
+    printf("diffAH : %f, EKF_W : %f pureAH: %f\n", diffAH, EKF_W(diffAH,capf, cur), pureAHSUM);
     float H = 0, Hprev = 0, Hnext = 0;
     float estVol = 0, estVolPrev = 0, estVolNext = 0;
     float SOCerCal = sqrt(SOCer2Cal);
@@ -287,16 +267,27 @@ void mysocEKF(struct SOC_Info *SOCinfo, float cur, uint16_t vol, uint16_t tempra
         estVolNext = curve[(int)SOCcal/SOC_POINT_STEP+1];
         estVol = estVolPrev+((int)SOCcal%SOC_POINT_STEP+SOCcal-(int)SOCcal)/SOC_POINT_STEP*(estVolNext-estVolPrev);
 
-        
         Hprev = (float)curveK[((int)SOCcal)/SOC_POINT_STEP]/10;
         Hnext = (float)curveK[(int)SOCcal/SOC_POINT_STEP+1]/10;
-        H = Hprev + ((int)SOCcal%SOC_POINT_STEP+SOCcal-(int)SOCcal)/SOC_POINT_STEP*(Hnext-Hprev);
-        
+        float sock = ((int)SOCcal%SOC_POINT_STEP+SOCcal-(int)SOCcal)/SOC_POINT_STEP;
+        if(SOCcal < 5)
+        {
+            float sock3 = sock*sock*sock;
+            H = Hprev + sock3*(Hnext-Hprev);       
+        }else if(SOCcal < 95)
+        {
+            H = Hprev + sock*(Hnext-Hprev);
+        }    
+        else{
+            float sock3 = sock*sock*sock;
+            H = Hprev + (1-sock3)*(Hnext-Hprev);
+
+        }
         // printf("callcount %d hprev :%f  H : %f  hnext :%f \n", callCount, Hprev, H, Hnext);
     }
     float K = SOCer2Cal*H/(H*SOCer2Cal*H+EKF_R);
     float res = SOCcal+K*((float)vol-estVol);
-    // printf("callcount %d K :%f  kcal : %f \n", callCount, K, K*((float)vol-estVol));
+    printf("callcount %d  H: %f K :%f  kcal : %f \n", callCount, H, K, K*((float)vol-estVol));
     float resEr2 = (1-K*H)*SOCer2Cal;
     float SOCerRes = sqrt(resEr2);
 
@@ -334,6 +325,7 @@ void mysocEKF(struct SOC_Info *SOCinfo, float cur, uint16_t vol, uint16_t tempra
 
     SOCinfo->soc = res;
     SOCinfo->socEr2 = resEr2;
+    printf("soc : %f \n", res);
 }
 
 
