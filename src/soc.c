@@ -7,6 +7,8 @@
 #include <assert.h>
 #include "soc.h"
 #include "curve.h"
+#include "sox_private.h"
+#include "sox.h"
 
 #define CAPACITY_AH                     100             //AH
 #define DIFF_T_SEC                      1               //second
@@ -18,7 +20,7 @@
 
 #define CUR_WINDOW_A                    0.5             //A
 
-#define CELL_NUMS                   16
+
 
 
 #define EKF_W(diffAH, cap, cur)                 (((1+50.0/(DIFF_T_SEC*1000)) * (1+1/cur) *(1+ CAP_ERR_AH/cap) - 1) *  diffAH)      
@@ -30,13 +32,7 @@
 #define SOC0            50
 #define SOC0_ER2        2500
 
-// input 
-float *g_cur;
-uint16_t *g_celVol;
-uint16_t *g_celTmp;
-// output
-uint16_t *g_celSOC;
-uint16_t *g_grpSOC;
+
 
 struct SOC_Info
 {
@@ -406,13 +402,9 @@ static void gropuSOC()
 
 
 
-void SOC_Init(float *cur, uint16_t *vol, uint16_t *tmp, uint16_t *soc, uint16_t *grpSOC)
+void soc_init()
 {
-    g_cur = cur;
-    g_celVol = vol;
-    g_celTmp = tmp;
-    g_celSOC = soc;
-    g_grpSOC = grpSOC;
+
     // todo ocv calibration,set init soc and soc_er2
     for (size_t i = 0; i < CELL_NUMS; i++)
     {
@@ -427,7 +419,7 @@ void SOC_Init(float *cur, uint16_t *vol, uint16_t *tmp, uint16_t *soc, uint16_t 
 }
 
 
-void SOC_Task(bool full, bool empty)
+void soc_task(bool full, bool empty)
 {
     for (size_t i = 0; i < CELL_NUMS; i++)
     {

@@ -7,7 +7,7 @@
 #include <string.h>
 #include <assert.h>
 
-#include "../src/soc.h"
+#include "sox.h"
 
 #define FIFO_NAME "myfifo"
 #define ARRAY_SIZE 5
@@ -118,11 +118,18 @@ int main() {
     uint16_t vol[16];  
     uint16_t tmp[16];
     uint16_t soc[16];
+    uint16_t soh[16];
+    uint16_t grpsoh;
+    for (size_t i = 0; i < 16; i++)
+    {
+        soh[i] = 1000;
+    }
+    
     struct GrpSOC grpSOC;
 
     memset(soc, 0, sizeof soc);
 
-    SOC_Init(&cur, vol, tmp, soc, &grpSOC.grpSOC);
+    sox_init(&cur, vol, tmp, soc, &grpSOC.grpSOC, soh, &grpsoh);
     memcpy(outputData[0].soc, soc, 32);
     memcpy(outputDataGrp, &grpSOC.grpSOC, 2);
     uint16_t soc_sorted[16];
@@ -146,7 +153,7 @@ int main() {
             vol[j] = inputData[i].vol[j];
         }
 
-        SOC_Task(0, 0);
+        sox_task(0, 0);
 
         memcpy(outputData[i+1].soc, soc, 32);
         memcpy(&outputDataGrp[i+1], &grpSOC.grpSOC, 2);
