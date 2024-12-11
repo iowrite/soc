@@ -5,8 +5,7 @@
 
 #define TEMP_POINT_NUM              7      // 0 5  15 25   35  45  55   
 #define CUR_POINT_NUM               5       // 0.1 0.2 0.3 0.4 0.5
-#define SOC_POINT_STEP              5
-#define SOC_POINT_NUM               (100/SOC_POINT_STEP+1)
+#define SOC_POINT_NUM               29
 
 
 extern const uint16_t s_cap_list_chg[TEMP_POINT_NUM][CUR_POINT_NUM];

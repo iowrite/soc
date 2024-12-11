@@ -27,8 +27,8 @@
 
 
 
-#define SOC0            100
-#define SOC0_ER2        100
+#define SOC0            50
+#define SOC0_ER2        2500
 
 // input 
 float *g_cur;
@@ -263,45 +263,45 @@ void mysocEKF(struct SOC_Info *SOCinfo, float cur, uint16_t vol, uint16_t tempra
         estVol = curve[SOC_POINT_NUM-1];
         H = (float)curveK[SOC_POINT_NUM-1]/10;
     }else{
-        float sock = ((int)SOCcal%SOC_POINT_STEP+SOCcal-(int)SOCcal)/SOC_POINT_STEP;
-        estVolPrev = curve[(int)SOCcal/SOC_POINT_STEP];
-        estVolNext = curve[(int)SOCcal/SOC_POINT_STEP+1];
         if(SOCcal < 5)
         {
-            float sock3 = sock*sock*sock;
-            if(cur > 0){
-                estVol = estVolPrev + (1-sock3)*(estVolNext-estVolPrev);
-            }else{
-                estVol = estVolPrev + sock3*(estVolNext-estVolPrev);
-            }   
+            float sock = SOCcal-(int)SOCcal;
+            estVolPrev = curve[(int)SOCcal];
+            estVolNext = curve[(int)SOCcal+1];
+            estVol = estVolPrev + sock*(estVolNext-estVolPrev);
         }else if(SOCcal < 95)
         {
+            float sock = ((int)SOCcal%5+SOCcal-(int)SOCcal)/5;
+            estVolPrev = curve[(int)SOCcal/5+4];
+            estVolNext = curve[(int)SOCcal/5+1+4];
             estVol = estVolPrev + sock*(estVolNext-estVolPrev);
         }    
         else{
-            float sock3 = sock*sock*sock;
-
-            estVol = estVolPrev + sock3*(estVolNext-estVolPrev);
-
-
-
+            float sock = SOCcal-(int)SOCcal;
+            estVolPrev = curve[23+(int)SOCcal-95];
+            estVolNext = curve[23+(int)SOCcal-95+1];
+            estVol = estVolPrev + sock*(estVolNext-estVolPrev);
         }
-        printf("callcount %d soccal : %f  estVolPrev :%f  estVol : %f  estVolNext :%f \n", callCount, SOCcal, estVolPrev, estVol, estVolNext);
+        // printf("callcount %d soccal : %f  estVolPrev :%f  estVol : %f  estVolNext :%f \n", callCount, SOCcal, estVolPrev, estVol, estVolNext);
 
-        Hprev = (float)curveK[((int)SOCcal)/SOC_POINT_STEP]/10;
-        Hnext = (float)curveK[(int)SOCcal/SOC_POINT_STEP+1]/10;
         if(SOCcal < 5)
         {
-            float sock3 = sock*sock*sock;
-            H = Hprev + sock3*(Hnext-Hprev);       
+            float Hk = SOCcal-(int)SOCcal;
+            Hprev = (float)curveK[((int)SOCcal)]/10;
+            Hnext = (float)curveK[(int)SOCcal+1]/10;
+            H = Hprev + Hk*(Hnext-Hprev); 
         }else if(SOCcal < 95)
         {
-            H = Hprev + sock*(Hnext-Hprev);
+            float Hk = ((int)SOCcal%5+SOCcal-(int)SOCcal)/5;
+            Hprev = (float)curveK[((int)SOCcal/5+4)]/10;
+            Hnext = (float)curveK[(int)SOCcal/5+1+4]/10;
+            H = Hprev + Hk*(Hnext-Hprev); 
         }    
         else{
-            float sock3 = sock*sock*sock;
-            H = Hprev + (1-sock3)*(Hnext-Hprev);
-
+            float Hk = SOCcal-(int)SOCcal;
+            Hprev = (float)curveK[23+(int)SOCcal-95]/10;
+            Hnext = (float)curveK[23+(int)SOCcal-95+1]/10;
+            H = Hprev + Hk*(Hnext-Hprev); 
         }
         // printf("callcount %d hprev :%f  H : %f  hnext :%f \n", callCount, Hprev, H, Hnext);
     }
@@ -326,7 +326,7 @@ void mysocEKF(struct SOC_Info *SOCinfo, float cur, uint16_t vol, uint16_t tempra
         if(res < SOCinfo->soc)
         {
             res = SOCinfo->soc;
-            printf("soc underflow\n");
+            // printf("soc underflow\n");
         }
     }else if(cur < 0)
     {
@@ -346,7 +346,7 @@ void mysocEKF(struct SOC_Info *SOCinfo, float cur, uint16_t vol, uint16_t tempra
 
     SOCinfo->soc = res;
     SOCinfo->socEr2 = resEr2;
-    // printf("soc : %f \n", res);
+    // printf("soc : %f \n", 100-res);
 }
 
 

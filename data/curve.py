@@ -5,7 +5,8 @@ import numpy as np
 from numpy.polynomial.polynomial import Polynomial
 import argparse
 warnings.filterwarnings("ignore", category=UserWarning, module="openpyxl")
-
+RED = "\033[91m"
+RESET = "\033[0m"
 
 def process_curve(file_path, data_points):
     columns_to_read = ['时间', '组端电流', "平均电压"]  # 替换为你要读取的具体列名
@@ -124,16 +125,23 @@ if __name__ == "__main__":
     filepath = args.filepath
     plt.subplot(2,2,1)
     voltage_list = process_curve(filepath, 101)
+    voltage_list_cp = voltage_list.copy()
     plt.plot(voltage_list)
-    print("平均电压列表: (101 points)\n", voltage_list)
+    plt.scatter([0,5,10,15,20,25,30,35,40,45,50,55,60,65,70,75,80,85,90,95,100], voltage_list[::5])
+    if(voltage_list[0] > voltage_list[1]):
+        voltage_list.reverse()
+        print("平均电压列表(从小到大): (101 points)\n", voltage_list)
+    else:
+        print("平均电压列表: (101 points)\n", voltage_list)
 
     print("\n============================\n")
 
     plt.subplot(2,2,2)
     slopes = fit_quadratic_and_get_slopes(voltage_list)
-    formatted_slopes = [f"{s:.1f}" for s in slopes]
-    print("斜率列表: (101 points)\n", formatted_slopes)
+    slopes_round = [round(slope * 10) for slope in slopes]
+    print("斜率列表: (101 points)\n", slopes_round)
     plt.plot(slopes)
+    plt.scatter([0,5,10,15,20,25,30,35,40,45,50,55,60,65,70,75,80,85,90,95,100], slopes[::5])
 
 
     print("\n============================\n")
@@ -142,27 +150,46 @@ if __name__ == "__main__":
     voltage_list_21 = slopes[::5]
     plt.plot([0,5,10,15,20,25,30,35,40,45,50,55,60,65,70,75,80,85,90,95,100],voltage_list_21)
     plt.scatter([0,5,10,15,20,25,30,35,40,45,50,55,60,65,70,75,80,85,90,95,100],voltage_list_21)
-    voltage_list_21 = [v * 10 for v in voltage_list_21]
-    if float(voltage_list_21[0]) < 0:
-        reversed_abs_voltage_list = [abs(v) for v in reversed(voltage_list_21)]
-        formatted_voltage_list_21 = [f"{v:.1f}" for v in reversed_abs_voltage_list]
-        print("斜率列表(乘10,从小到大, 取绝对值): (21 points)\n", formatted_voltage_list_21)
-    else:
-        formatted_voltage_list_21 = [f"{v:.1f}" for v in voltage_list_21]
-        print("斜率列表(乘10): (21 points)\n", formatted_voltage_list_21)
+    voltage_list_21 = [round(v * 10) for v in voltage_list_21]
+    print("斜率列表(乘10): (21 points)\n", voltage_list_21)
+    voltage_list_29 = voltage_list_21.copy()
+    voltage_list_29.insert(1, slopes_round[1])
+    voltage_list_29.insert(2, slopes_round[2])
+    voltage_list_29.insert(3, slopes_round[3])
+    voltage_list_29.insert(4, slopes_round[4])
+    voltage_list_29.insert(24, slopes_round[96])
+    voltage_list_29.insert(25, slopes_round[97])
+    voltage_list_29.insert(26, slopes_round[98])
+    voltage_list_29.insert(27, slopes_round[99])
+    print("斜率列表(乘10): (29 points)\n", voltage_list_29)
 
+
+    # 检查 voltage_list 中是否有负值
+    has_negative = any(v < 0 for v in voltage_list_29)
+    if has_negative:
+        print(f"{RED}斜率有负值{RESET}")
     print("\n============================\n")
 
     plt.subplot(2,2,4)
-    voltage_list = process_curve(filepath, 21)
-    plt.plot([0,5,10,15,20,25,30,35,40,45,50,55,60,65,70,75,80,85,90,95,100], voltage_list)
-    plt.scatter([0,5,10,15,20,25,30,35,40,45,50,55,60,65,70,75,80,85,90,95,100],voltage_list)
-    if float(voltage_list_21[0]) < 0:
-        voltage_list.reverse()
-        print("平均电压列表(从小到大, 取绝对值): (21 points)\n", voltage_list)
-    else:
-        print("平均电压列表: (21 points)\n", voltage_list)
-
+    voltage_list21 = voltage_list_cp[::5]
+    plt.plot([0,5,10,15,20,25,30,35,40,45,50,55,60,65,70,75,80,85,90,95,100], voltage_list21)
+    plt.scatter([0,5,10,15,20,25,30,35,40,45,50,55,60,65,70,75,80,85,90,95,100],voltage_list21)
+    print("平均电压列表: (21 points)\n", voltage_list21)
+    voltage_list29 = voltage_list21.copy()
+    if(voltage_list29[0] > voltage_list[1]):
+        voltage_list29.reverse()
+    voltage_list29.insert(1, voltage_list[1])
+    voltage_list29.insert(2, voltage_list[2])
+    voltage_list29.insert(3, voltage_list[3])
+    voltage_list29.insert(4, voltage_list[4])
+    voltage_list29.insert(24, voltage_list[96])
+    voltage_list29.insert(25, voltage_list[97])
+    voltage_list29.insert(26, voltage_list[98])
+    voltage_list29.insert(27, voltage_list[99])
+    print("平均电压列表: (29 points)\n", voltage_list29)
+    unique_values = set(voltage_list29)
+    if len(unique_values) != len(voltage_list29):
+        print(f"{RED}平均电压列表中有相同的值{RESET}")
     print("\n============================\n")
 
 
