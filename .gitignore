@@ -4,3 +4,4 @@ codegen/
 
 a.out
 mysoc
+**/*.o
