@@ -5,28 +5,30 @@
 #include "soh.h"
 #include "soe.h"
 #include "sop.h"
+#include "sox.h"
 
 
-// input 
+
 float *g_cur;
 uint16_t *g_celVol;
-uint16_t *g_celTmp;
-// output
+int16_t *g_celTmp;
 uint16_t *g_celSOC;
 uint16_t *g_grpSOC;
-uint16_t *g_celSOH;
-uint16_t *g_grpSOH;
+float  *g_celSOH;
+float  *g_grpSOH;
+uint16_t *g_cycleCount;
 
 
 
 int8_t sox_init( 
     float *cur, 
     uint16_t *vol, 
-    uint16_t *tmp, 
+    int16_t *tmp, 
     uint16_t *soc, 
     uint16_t *grpSOC , 
-    uint16_t *soh, 
-    uint16_t *grpSOH)
+    float *soh, 
+    float *grpSOH,
+    uint16_t *cycleCount)
 {
     g_cur = cur;
     g_celVol = vol;
@@ -35,6 +37,7 @@ int8_t sox_init(
     g_grpSOC = grpSOC;
     g_celSOH = soh;
     g_grpSOH = grpSOH;
+    g_cycleCount = cycleCount;
 
     soc_init();
     soh_init();

@@ -117,10 +117,11 @@ int main() {
 
     float cur;
     uint16_t vol[16];  
-    uint16_t tmp[16];
+    int16_t tmp[16];
     uint16_t soc[16];
-    uint16_t soh[16];
-    uint16_t grpsoh;
+    float soh[16];
+    float grpsoh;
+    uint16_t cycleCount;
     for (size_t i = 0; i < 16; i++)
     {
         soh[i] = 1000;
@@ -130,7 +131,7 @@ int main() {
 
     memset(soc, 0, sizeof soc);
 
-    sox_init(&cur, vol, tmp, soc, &grpSOC.grpSOC, soh, &grpsoh);
+    sox_init(&cur, vol, tmp, soc, &grpSOC.grpSOC, soh, &grpsoh, &cycleCount);
     memcpy(outputData[0].soc, soc, 32);
     memcpy(outputDataGrp, &grpSOC.grpSOC, 2);
     uint16_t soc_sorted[16];
