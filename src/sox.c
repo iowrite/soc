@@ -7,6 +7,15 @@
 #include "sop.h"
 
 
+// input 
+float *g_cur;
+uint16_t *g_celVol;
+uint16_t *g_celTmp;
+// output
+uint16_t *g_celSOC;
+uint16_t *g_grpSOC;
+uint16_t *g_celSOH;
+uint16_t *g_grpSOH;
 
 
 

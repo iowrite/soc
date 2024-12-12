@@ -8,6 +8,7 @@
 #include <assert.h>
 
 #include "sox.h"
+#include "test.h"
 
 #define FIFO_NAME "myfifo"
 #define ARRAY_SIZE 5
