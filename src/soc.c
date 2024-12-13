@@ -30,8 +30,8 @@
 
 
 
-#define SOC0            0
-#define SOC0_ER2        100
+#define SOC0            50
+#define SOC0_ER2        2500
 
 
 
