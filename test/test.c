@@ -118,13 +118,17 @@ int main() {
     float cur;
     uint16_t vol[16];  
     int16_t tmp[16];
+    for(size_t i = 0; i < 16; i++)
+    {
+        tmp[i] = 250;
+    }
     uint16_t soc[16];
-    float soh[16];
-    float grpsoh;
-    uint16_t cycleCount;
+    double soh[16];
+    double grpsoh = 100;
+    uint32_t cycleCount = 0;
     for (size_t i = 0; i < 16; i++)
     {
-        soh[i] = 1000;
+        soh[i] = 100;
     }
     
     struct GrpSOC grpSOC;

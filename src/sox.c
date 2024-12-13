@@ -9,14 +9,14 @@
 
 
 
-float *g_cur;
-uint16_t *g_celVol;
-int16_t *g_celTmp;
-uint16_t *g_celSOC;
-uint16_t *g_grpSOC;
-float  *g_celSOH;
-float  *g_grpSOH;
-uint16_t *g_cycleCount;
+float *g_cur;                       // A            *1
+uint16_t *g_celVol;                 // mv           *1
+int16_t *g_celTmp;                  // dregree      *10
+uint16_t *g_celSOC;                 // %            *10
+uint16_t *g_grpSOC;                 // %            *10
+double  *g_celSOH;                  // %            *1
+double  *g_grpSOH;                  // %            *1
+uint32_t *g_cycleCount;             // times        *1000
 
 
 
@@ -26,9 +26,9 @@ int8_t sox_init(
     int16_t *tmp, 
     uint16_t *soc, 
     uint16_t *grpSOC , 
-    float *soh, 
-    float *grpSOH,
-    uint16_t *cycleCount)
+    double *soh, 
+    double *grpSOH,
+    uint32_t *cycleCount)
 {
     g_cur = cur;
     g_celVol = vol;
