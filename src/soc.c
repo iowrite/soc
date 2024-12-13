@@ -19,7 +19,7 @@
 #define VOL_SAMPLE_ERR_MV               10              //mv
 #define SOH_ERR_PERCENT                 5
 
-#define CUR_WINDOW_A                    0.5             //A
+
 
 
 

@@ -10,6 +10,7 @@
 
 
 float *g_cur;                       // A            *1
+float *g_grpVol;                    // v            *1
 uint16_t *g_celVol;                 // mv           *1
 int16_t *g_celTmp;                  // dregree      *10
 uint16_t *g_celSOC;                 // %            *10
@@ -17,6 +18,10 @@ uint16_t *g_grpSOC;                 // %            *10
 double  *g_celSOH;                  // %            *1
 double  *g_grpSOH;                  // %            *1
 uint32_t *g_cycleCount;             // times        *1000
+float *g_accChgWH;                // AH           *1
+float *g_accDsgWH;                // AH           *1
+float *g_sigChgWH;                // AH           *1
+float *g_sigDsgWH;                // AH           *1
 
 
 
