@@ -25,6 +25,7 @@ float *g_sigDsgWH;                // AH           *1
 
 
 
+
 int8_t sox_init( 
     float *cur, 
     uint16_t *vol, 
@@ -33,7 +34,13 @@ int8_t sox_init(
     uint16_t *grpSOC , 
     double *soh, 
     double *grpSOH,
-    uint32_t *cycleCount)
+    uint32_t *cycleCount,
+    float *grpVol,
+    float *sigChgWH,
+    float *sigDsgWH,
+    float *accChgAH,
+    float *accDsgAH
+    )
 {
     g_cur = cur;
     g_celVol = vol;
@@ -43,9 +50,15 @@ int8_t sox_init(
     g_celSOH = soh;
     g_grpSOH = grpSOH;
     g_cycleCount = cycleCount;
+    g_grpVol = grpVol;
+    g_sigChgWH = sigChgWH;
+    g_sigDsgWH = sigDsgWH;
+    g_accChgWH = accChgAH;
+    g_accDsgWH = accDsgAH;
 
     soc_init();
     soh_init();
+    soe_init();
 
 
 
@@ -58,6 +71,7 @@ int8_t sox_task(bool full, bool empty)
 {
     soc_task(full, empty);
     soh_task();
+    soe_task();
 
 
     return 0;

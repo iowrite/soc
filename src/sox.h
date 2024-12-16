@@ -15,7 +15,12 @@ int8_t sox_init(
     uint16_t *soc, 
     uint16_t *grpSOC , 
     double *soh, double *grpSOH, 
-    uint32_t *cycleCount);
+    uint32_t *cycleCount,
+    float *grpVol,
+    float *sigChgWH,
+    float *sigDsgWH,
+    float *accChgAH,
+    float *accDsgAH);
 int8_t sox_task(bool full, bool empty);
 #endif
 

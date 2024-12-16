@@ -53,6 +53,7 @@ int main() {
 
     int fd2 = open("socfifo_write_input", O_RDONLY);
     struct input{
+        float grpVol;
         float cur;
         float vol[16];
     };
@@ -126,6 +127,11 @@ int main() {
     double soh[16];
     double grpsoh = 100;
     uint32_t cycleCount = 0;
+    float grpVol = 0;
+    float sigChgWH = 0;
+    float accChgAH = 0;
+    float sigDsgWH = 0;
+    float accDsgAH = 0;
     for (size_t i = 0; i < 16; i++)
     {
         soh[i] = 100;
@@ -135,7 +141,7 @@ int main() {
 
     memset(soc, 0, sizeof soc);
 
-    sox_init(&cur, vol, tmp, soc, &grpSOC.grpSOC, soh, &grpsoh, &cycleCount);
+    sox_init(&cur, vol, tmp, soc, &grpSOC.grpSOC, soh, &grpsoh, &cycleCount, &grpVol, &sigChgWH, &sigDsgWH, &accChgAH, &accDsgAH);
     memcpy(outputData[0].soc, soc, 32);
     memcpy(outputDataGrp, &grpSOC.grpSOC, 2);
     uint16_t soc_sorted[16];
@@ -153,6 +159,8 @@ int main() {
 
     for(size_t i = 0; i < input_row_len; i++)
     {
+        grpVol = inputData[i].grpVol;
+        // printf("inputData[%d].grpVol = %f\n", i, grpVol);
         cur = inputData[i].cur;
         for (size_t j = 0; j < 16; j++)
         {
