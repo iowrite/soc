@@ -30,8 +30,8 @@
 
 
 
-#define SOC0            0
-#define SOC0_ER2        100
+#define SOC0            50
+#define SOC0_ER2        2500
 
 
 
@@ -234,9 +234,9 @@ void mysocEKF(struct SOC_Info *SOCinfo, float cur, uint16_t vol, uint16_t tempra
     callCount++;
     static double pureAHSUM = 0;
 
-    const uint16_t *curve = get_curve_v(cur, 250);
-    const int16_t *curveK = get_curve_k(cur, 250);
-    const uint16_t cap = get_cap(cur, 250);
+    const uint16_t *curve = get_curve_v(cur, tempra);
+    const int16_t *curveK = get_curve_k(cur, tempra);
+    const uint16_t cap = get_cap(cur, tempra);
 
     const double capf = cap/10.0*(soh/100);
 
