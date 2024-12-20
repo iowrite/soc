@@ -121,7 +121,7 @@ int main() {
     int16_t tmp[16];
     for(size_t i = 0; i < 16; i++)
     {
-        tmp[i] = 150;
+        tmp[i] = 250;
     }
     uint16_t soc[16];
     double soh[16];
