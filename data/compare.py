@@ -6,21 +6,61 @@ d25c1_dsg = [2816, 2929, 3005, 3061, 3106, 3139, 3170, 3194, 3217, 3231, 3245, 3
 d25c3_dsg = [2935, 3007, 3058, 3094, 3115, 3127, 3150, 3177, 3197, 3210, 3221, 3230, 3237, 3242, 3246, 3250, 3254, 3259, 3266, 3272, 3277, 3280, 3281, 3282, 3283, 3284, 3285, 3286, 3344]
 d25c5_dsg = [2950, 3010, 3053, 3084, 3101, 3112, 3137, 3162, 3181, 3195, 3206, 3214, 3221, 3227, 3232, 3236, 3241, 3246, 3252, 3257, 3261, 3263, 3266, 3267, 3268, 3269, 3270, 3271, 3308]
 
+
+d15c1_chg = [3059, 3149, 3195, 3231, 3254, 3261, 3278, 3304, 3326, 3340, 3342, 3343, 3344, 3346, 3349, 3356, 3369, 3377, 3380, 3383, 3386, 3391, 3398, 3412, 3417, 3424, 3435, 3458, 3562]
+d15c1_dsg = [2920, 2995, 3050, 3092, 3121, 3137, 3160, 3186, 3208, 3223, 3235, 3243, 3249, 3253, 3256, 3259, 3263, 3269, 3279, 3288, 3293, 3295, 3296, 3297, 3298, 3299, 3300, 3301, 3315]
+
+d5c1_chg = [3217, 3287, 3290, 3293, 3296, 3300, 3326, 3347, 3358, 3360, 3361, 3362, 3363, 3367, 3374, 3381, 3386, 3390, 3395, 3399, 3405, 3412, 3424, 3445, 3451, 3460, 3474, 3499, 3576]
+d5c1_dsg = [2962, 3008, 3044, 3070, 3089, 3103, 3145, 3170, 3188, 3200, 3209, 3216, 3222, 3227, 3231, 3236, 3240, 3245, 3252, 3258, 3264, 3268, 3271, 3272, 3273, 3274, 3275, 3276, 3314]
+
 import matplotlib.pyplot as plt
+import mplcursors
 
 x = [0, 1, 2, 3, 4, 5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 55, 60, 65, 70, 75, 80, 85, 90, 95, 96, 97, 98, 99, 100]
+
 
 plt.figure()
 plt.plot(x, d25c1_chg, label='d25c1_chg')
 plt.plot(x, d25c3_chg, label='d25c3_chg')
 plt.plot(x, d25c5_chg, label='d25c5_chg')
+plt.scatter(x, d25c1_chg)
+plt.scatter(x, d25c3_chg)
+plt.scatter(x, d25c5_chg)
 plt.legend()
+mplcursors.cursor(hover=True)
 
 plt.figure()
 plt.plot(x, d25c1_dsg[::-1], label='d25c1_dsg')
 plt.plot(x, d25c3_dsg[::-1], label='d25c3_dsg')
 plt.plot(x, d25c5_dsg[::-1], label='d25c5_dsg')
+plt.scatter(x, d25c1_dsg[::-1])
+plt.scatter(x, d25c3_dsg[::-1])
+plt.scatter(x, d25c5_dsg[::-1])
 plt.legend()
+mplcursors.cursor(hover=True)
+
+plt.figure()
+plt.plot(x, d25c1_chg, label='d25c1_chg')
+plt.plot(x, d15c1_chg, label='d15c1_chg')
+plt.plot(x, d5c1_chg, label='d5c1_chg')
+plt.scatter(x, d25c1_chg)
+plt.scatter(x, d15c1_chg)
+plt.scatter(x, d5c1_chg)
+plt.legend()
+mplcursors.cursor(hover=True)
+
+
+plt.figure()
+plt.plot(x, d25c1_dsg[::-1], label='d25c1_dsg')
+plt.plot(x, d15c1_dsg[::-1], label='d15c1_dsg')
+plt.plot(x, d5c1_dsg[::-1], label='d5c1_dsg')
+plt.scatter(x, d25c1_dsg[::-1])
+plt.scatter(x, d15c1_dsg[::-1])
+plt.scatter(x, d5c1_dsg[::-1])
+plt.legend()
+mplcursors.cursor(hover=True)
+
+
 
 
 plt.show()
