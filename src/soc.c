@@ -30,8 +30,8 @@
 
 
 
-#define SOC0            100
-#define SOC0_ER2        100
+#define SOC0            50
+#define SOC0_ER2        2500
 
 
 
@@ -120,7 +120,7 @@ static const uint16_t * get_v(const uint16_t *chg_curve[TEMP_POINT_NUM][CUR_POIN
     }
     else if(t<10)
     {
-        tidx = 2;
+        tidx = 1;
     }
     else if(t<50)
     {
