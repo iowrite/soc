@@ -55,6 +55,7 @@ int main() {
     struct input{
         float grpVol;
         float cur;
+        float avgTmp;
         float vol[16];
     };
 
@@ -119,10 +120,10 @@ int main() {
     float cur;
     uint16_t vol[16];  
     int16_t tmp[16];
-    for(size_t i = 0; i < 16; i++)
-    {
-        tmp[i] = 50;
-    }
+    // for(size_t i = 0; i < 16; i++)
+    // {
+    //     tmp[i] = 250;
+    // }
     uint16_t soc[16];
     double soh[16];
     double grpsoh = 100;
@@ -165,6 +166,7 @@ int main() {
         for (size_t j = 0; j < 16; j++)
         {
             vol[j] = inputData[i].vol[j];
+            tmp[j] = inputData[i].avgTmp*10;
         }
 
         sox_task(0, 0);

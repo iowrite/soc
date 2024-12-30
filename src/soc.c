@@ -95,7 +95,7 @@ static const uint16_t get_cap(float cur, uint16_t tempra)
         {
             cidx = 4;
         }
-        if(s_cap_list_dsg[tidx][cidx] == 1000){
+        if(s_cap_list_dsg[tidx][cidx] == 0){
             assert(0);
         }
         return s_cap_list_dsg[tidx][cidx];

@@ -35,7 +35,7 @@ except Exception as e:
 print(len(data_list))
 
 # 提取第 12 列和第 73 到 98 列
-combined_list = [[row[9]] + [row[11]] + row[76:92] for row in data_list]
+combined_list = [[row[9]] + [row[11]] + [row[38]] + row[76:92] for row in data_list]
 
 # 打印结果以验证
 print(combined_list)
@@ -90,7 +90,7 @@ print(len(data_list))
 # Open the FIFO for writing
 with open("socfifo_write_input", 'wb') as fifo:
     # Pack the array of integers into binary data
-    binary_data = struct.pack('ffffffffffffffffff' * len(data_list), *flattened_list)
+    binary_data = struct.pack('fffffffffffffffffff' * len(data_list), *flattened_list)
     # Write the binary data to the FIFO
     fifo.write(binary_data)
 
