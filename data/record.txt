@@ -2,7 +2,7 @@
 
 chg     -5         5         15         25                      35                      45
 0.1c    x          v         v          v                       v                       v
-0.2c    x          /         v            
+0.2c    x          /         v                                                          v
 0.3c    x          /         /          v                       v                       v
 0.4c    x          /         /                                                          /
 0.5c    x          /         /          x(最后温升过高)         x(最后温升过高)         /                                            
@@ -11,7 +11,7 @@ chg     -5         5         15         25                      35              
 
 dsg     -5         5         15         25                      35                      45
 0.1c    x          v         v          v                       v                       v
-0.2c    x                    v          v                       v                       
+0.2c    x                    v          v                       y(同温度系列差异大)     v               
 0.3c    x                               v                       v                       v
-0.4c    x                               v                                               /
+0.4c    x                               v                       y(同温度系列差异大)     /
 0.5c    x                               v                       v                       /
