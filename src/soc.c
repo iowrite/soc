@@ -16,7 +16,8 @@
 #define DIFF_T_MSEC_ERR                 50              // ms
 #define CAP_ERR_AH                      5.0             // AH          
 #define CUR_SAMPLE_ERR_A                1.0             //A
-#define VOL_SAMPLE_ERR_MV               10              //mv
+#define VOL_SAMPLE_ERR_MV_1             10              //mv
+#define VOL_SAMPLE_ERR_MV_2             5               //mv
 #define SOH_ERR_PERCENT                 5
 
 
@@ -26,12 +27,12 @@
 
 #define EKF_W(diffAH, cap, cur)                 ((50.0/(DIFF_T_SEC*1000) + CUR_SAMPLE_ERR_A/cur + CAP_ERR_AH/cap+SOH_ERR_PERCENT/100.0) *  diffAH)      
 #define EKF_Q(diffAH, cap, cur)                 (EKF_W(diffAH, cap, cur)*EKF_W(diffAH, cap, cur))                 
-#define EKF_R                                   (VOL_SAMPLE_ERR_MV*VOL_SAMPLE_ERR_MV)
-
+#define EKF_R_1                                 (VOL_SAMPLE_ERR_MV_1*VOL_SAMPLE_ERR_MV_1)
+#define EKF_R_2                                 (VOL_SAMPLE_ERR_MV_2*VOL_SAMPLE_ERR_MV_2)
 
 
 #define SOC0            100
-#define SOC0_ER2        0
+#define SOC0_ER2        100
 
 
 
@@ -303,9 +304,15 @@ void mysocEKF(struct SOC_Info *SOCinfo, float cur, uint16_t vol, uint16_t tempra
         }
         // printf("callcount %d hprev :%f  H : %f  hnext :%f \n", callCount, Hprev, H, Hnext);
     }
-    double K = SOCer2Cal*H/(H*SOCer2Cal*H+EKF_R);
+    double K = 0;
+    if(SOCinfo->soc<5 || SOCinfo->soc>95){
+        K = SOCer2Cal*H/(H*SOCer2Cal*H+EKF_R_2);
+    }else{
+        K = SOCer2Cal*H/(H*SOCer2Cal*H+EKF_R_1);
+    }
+    
     double res = SOCcal+K*((double)vol-estVol);
-    // printf("callcount %d  H: %f K :%f  kcal : %f \n", callCount, H, K, K*((double)vol-estVol));
+    // printf("callcount %d  H: %f K :%f  kcal : %f , vol: %d, estvol: %lf\n", callCount, H, K, K*((double)vol-estVol), vol, estVol);
     double resEr2 = (1-K*H)*SOCer2Cal;
     double SOCerRes = sqrt(resEr2);
 
@@ -324,6 +331,7 @@ void mysocEKF(struct SOC_Info *SOCinfo, float cur, uint16_t vol, uint16_t tempra
         if(res < SOCinfo->soc)
         {
             res = SOCinfo->soc;
+            // resEr2 = SOCinfo->socEr2;
             // printf("soc underflow\n");
         }
     }else if(cur < 0)
@@ -345,6 +353,7 @@ void mysocEKF(struct SOC_Info *SOCinfo, float cur, uint16_t vol, uint16_t tempra
     SOCinfo->soc = res;
     SOCinfo->socEr2 = resEr2;
     // printf("soc : %f \n", 100-res);
+    // printf("soc error2: %f \n", SOCinfo->socEr2);
 }
 
 
@@ -431,6 +440,10 @@ void soc_task(bool full, bool empty)
         mysoc(&g_socInfo[i], *g_cur, g_celVol[i], g_celTmp[i], g_celSOH[i]);
 
         g_celSOC[i] = round(fabs(g_socInfo[i].soc)*10);
+        if(i == 0)
+        {
+            printf("soc error2: %f \n", g_socInfo[0].socEr2);
+        }
     }
     if(full)
     {

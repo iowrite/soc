@@ -57,7 +57,7 @@ int8_t soh_task()
     
     *g_grpSOH = sumSOH/16;
 
-    printf("cycle: %d  SOH: %f\n", *g_cycleCount, *g_grpSOH);
+    // printf("cycle: %d  SOH: %f\n", *g_cycleCount, *g_grpSOH);
 }
 
 
