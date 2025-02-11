@@ -8,7 +8,7 @@
 
 void soc_init();
 void soc_task(bool full, bool empty);
-
+void soc_save();
 
 #endif
 

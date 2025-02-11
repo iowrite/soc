@@ -72,3 +72,8 @@ int8_t soe_task()
 
 
 }
+
+void soe_save()
+{
+
+}

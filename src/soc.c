@@ -9,7 +9,7 @@
 #include "curve.h"
 #include "sox_private.h"
 #include "sox.h"
-#include "timebase.h"
+#include "port.h"
 
 
 #define CAPACITY_AH                     100             //AH
@@ -34,12 +34,15 @@
 #define EKF_R_2                                 (VOL_SAMPLE_ERR_MV_2*VOL_SAMPLE_ERR_MV_2)
 #define EKF_R_3                                 (VOL_SAMPLE_ERR_MV_3*VOL_SAMPLE_ERR_MV_3)
 
-#define SOC0            100
-#define SOC0_ER2        100
+#define SOC0                                100
+#define SOC0_ER2                            100
+#define SOC0_ER2_SAVED                      100             // 10% error
+#define SOC0_ER2_LOOKUP_TABLE               900             // 30% error
 
 
-#define GROUP_STATE_CHANGE_TIME         (30*60)         //30mins
 
+#define GROUP_STATE_CHANGE_TIME         ((uint32_t)(30*60))         //30mins
+#define SOC_SAVE_INTERVAFL              ((uint32_t)10)              //10s
 
 
 
@@ -576,11 +579,56 @@ static void gropuSOC()
 }
 
 
+static float vol2soc(uint16_t vol, uint16_t tempra)
+{
+    return 0;
+}
+
+static void vol2soc_batch(uint16_t *vol, uint16_t *tempra, float *soc)
+{
+    for(int i = 0; i < CELL_NUMS; i++)
+    {
+        soc[i] = vol2soc(vol[i], tempra[i]);
+    }
+}
 
 void soc_init()
 {
-
+    float soc_saved[CELL_NUMS];
+    float soc_lookuptable[CELL_NUMS];
+    bool soc_abnormal_flag[CELL_NUMS];
+    // read saved soc(last soc before shutdown)
+    int8_t ret = read_saved_soc(soc_saved);
     // todo ocv calibration,set init soc and soc_er2
+    vol2soc_batch(g_celVol, g_celTmp, soc_lookuptable);
+    if(ret == 0){
+        for(int i = 0; i < CELL_NUMS; i++)
+        {
+            if(fabs(soc_saved[i]-soc_lookuptable[i]) > 50)
+            {
+                soc_abnormal_flag[i] = true;
+            }else{
+                soc_abnormal_flag[i] = false;
+            }
+        }
+    }else{
+        for (size_t i = 0; i < CELL_NUMS; i++)
+        {
+            soc_abnormal_flag[i] = false;
+        }
+    }
+
+    for (size_t i = 0; i < CELL_NUMS; i++)
+    {
+        if(soc_abnormal_flag[i]){
+            g_socInfo[i].soc = soc_lookuptable[i];
+            g_socInfo[i].socEr2 = SOC0_ER2_LOOKUP_TABLE;
+        }else{
+            g_socInfo[i].soc = soc_saved[i];
+            g_socInfo[i].socEr2 = SOC0_ER2_SAVED;
+        }
+    }
+
     for (size_t i = 0; i < CELL_NUMS; i++)
     {
         g_socInfo[i].soc = SOC0;
@@ -593,6 +641,36 @@ void soc_init()
     
 }
 
+void soc_save()
+{
+    static uint32_t last_save = 0;
+    static bool save = false;
+    static float lastsoc[CELL_NUMS];
+    for(int i = 0; i < CELL_NUMS; i++)
+    {
+        if(fabs(g_socInfo[i].soc-lastsoc[i]) > 1)
+        {
+            save = true;
+        }
+    }
+    if(timebase_get_time_s() - last_save > SOC_SAVE_INTERVAFL)
+    {
+        last_save = timebase_get_time_s();
+        if(save){
+            for(int i = 0; i < CELL_NUMS; i++)
+            {
+                lastsoc[i] = g_socInfo[i].soc;
+            }
+            write_saved_soc(lastsoc);
+            save = false;
+        }
+    }
+}
+
+
+
+
+
 
 void soc_task(bool full, bool empty)
 {
@@ -601,11 +679,13 @@ void soc_task(bool full, bool empty)
 
         mysoc(&g_socInfo[i], *g_cur, g_celVol[i], g_celTmp[i], g_celSOH[i]);
 
+        // output soc
         g_celSOC[i] = round(fabs(g_socInfo[i].soc)*10);
-        if(i == 0)
-        {
-            printf("soc error2: %f \n", g_socInfo[0].socEr2);
-        }
+
+        // if(i == 0)
+        // {
+        //     printf("soc error2: %f \n", g_socInfo[0].socEr2);
+        // }
     }
     if(full)
     {

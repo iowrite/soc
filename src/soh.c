@@ -61,6 +61,9 @@ int8_t soh_task()
 }
 
 
+void soh_save()
+{
 
+}
 
 

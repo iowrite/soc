@@ -1,6 +1,6 @@
 #include <stdint.h>
 #include <time.h>
-#include "timebase.h"
+#include "port.h"
 
 
 uint32_t timebase_get_time_s(void)
@@ -13,3 +13,19 @@ uint32_t timebase_get_time_s(void)
 
 
 }
+
+
+int8_t read_saved_soc(float *soc)
+{
+
+    return 0;
+}
+int8_t write_saved_soc(float *soc)
+{
+    return 0;
+
+
+
+}
+
+

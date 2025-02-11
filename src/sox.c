@@ -18,28 +18,28 @@ uint16_t *g_grpSOC;                 // %            *10
 double  *g_celSOH;                  // %            *1
 double  *g_grpSOH;                  // %            *1
 uint32_t *g_cycleCount;             // times        *1000
-float *g_accChgWH;                // AH           *1
-float *g_accDsgWH;                // AH           *1
-float *g_sigChgWH;                // AH           *1
-float *g_sigDsgWH;                // AH           *1
+float *g_accChgWH;                  // AH           *1
+float *g_accDsgWH;                  // AH           *1
+float *g_sigChgWH;                  // AH           *1
+float *g_sigDsgWH;                  // AH           *1
 
 
 
 
 int8_t sox_init( 
-    float *cur, 
-    uint16_t *vol, 
-    int16_t *tmp, 
-    uint16_t *soc, 
-    uint16_t *grpSOC , 
-    double *soh, 
-    double *grpSOH,
-    uint32_t *cycleCount,
-    float *grpVol,
-    float *sigChgWH,
-    float *sigDsgWH,
-    float *accChgAH,
-    float *accDsgAH
+    float *cur,                         // input
+    uint16_t *vol,                      // input
+    int16_t *tmp,                       // input
+    uint16_t *soc,                      // input and output
+    uint16_t *grpSOC ,                  // input and output
+    double *soh,                        // input and output
+    double *grpSOH,                     // input and output
+    uint32_t *cycleCount,               // input and output
+    float *grpVol,                      // input
+    float *sigChgWH,                    // input and output
+    float *sigDsgWH,                    // input and output
+    float *accChgAH,                    // input and output
+    float *accDsgAH                     // input and output
     )
 {
     g_cur = cur;
@@ -69,10 +69,15 @@ int8_t sox_init(
 
 int8_t sox_task(bool full, bool empty)
 {
+    // calculate
     soc_task(full, empty);
     soh_task();
     soe_task();
 
-
+    // Periodic storage to prevent power outages
+    soc_save();
+    soh_save();
+    soe_save();
+    
     return 0;
 }

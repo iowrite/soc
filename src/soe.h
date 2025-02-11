@@ -7,4 +7,6 @@ int8_t soe_init();
 
 int8_t soe_task();
 
+void soe_save();
+
 #endif
