@@ -317,6 +317,7 @@ enum GroupState check_current_group_state(float cur)
     default:
         break;
     }
+    return g_group_state;
 }
 
 
