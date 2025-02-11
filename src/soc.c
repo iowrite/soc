@@ -9,6 +9,8 @@
 #include "curve.h"
 #include "sox_private.h"
 #include "sox.h"
+#include "timebase.h"
+
 
 #define CAPACITY_AH                     100             //AH
 #define DIFF_T_SEC                      1               //second
@@ -18,6 +20,7 @@
 #define CUR_SAMPLE_ERR_A                1.0             //A
 #define VOL_SAMPLE_ERR_MV_1             10              //mv
 #define VOL_SAMPLE_ERR_MV_2             5               //mv
+#define VOL_SAMPLE_ERR_MV_3             3               //mv
 #define SOH_ERR_PERCENT                 5
 
 
@@ -29,10 +32,22 @@
 #define EKF_Q(diffAH, cap, cur)                 (EKF_W(diffAH, cap, cur)*EKF_W(diffAH, cap, cur))                 
 #define EKF_R_1                                 (VOL_SAMPLE_ERR_MV_1*VOL_SAMPLE_ERR_MV_1)
 #define EKF_R_2                                 (VOL_SAMPLE_ERR_MV_2*VOL_SAMPLE_ERR_MV_2)
-
+#define EKF_R_3                                 (VOL_SAMPLE_ERR_MV_3*VOL_SAMPLE_ERR_MV_3)
 
 #define SOC0            100
 #define SOC0_ER2        100
+
+
+#define GROUP_STATE_CHANGE_TIME         (30*60)         //30mins
+
+
+
+
+
+
+
+
+
 
 
 
@@ -228,6 +243,143 @@ static const int16_t * get_curve_k(float cur, uint16_t tempra)
 
 
 
+enum GroupState
+{
+    GROUP_STATE_standby,
+    GROUP_STATE_charging,
+    GROUP_STATE_discharging,
+    GROUP_STATE_transfer,
+};
+static enum GroupState g_group_state;
+
+
+enum GroupState check_current_group_state(float cur)
+{
+    static enum GroupState last_group_state = GROUP_STATE_standby;
+    static uint32_t transfer_start_time = 0;
+    switch (g_group_state)
+    {
+    case GROUP_STATE_standby:
+        if(cur > CUR_WINDOW_A && last_group_state == GROUP_STATE_standby)               // initial state is standby
+        {
+            g_group_state = GROUP_STATE_charging;
+        }else if(cur < -CUR_WINDOW_A && last_group_state == GROUP_STATE_standby)
+        {
+            g_group_state = GROUP_STATE_discharging;                                    // initial state is standby
+        }
+        else if(cur>CUR_WINDOW_A && last_group_state == GROUP_STATE_discharging){
+            g_group_state = GROUP_STATE_transfer;
+            transfer_start_time = timebase_get_time_s();
+        }else if(cur<-CUR_WINDOW_A && last_group_state == GROUP_STATE_charging){
+            g_group_state = GROUP_STATE_transfer;
+            transfer_start_time = timebase_get_time_s();
+        }
+        break;
+    case GROUP_STATE_transfer:
+        if(fabs(cur) < CUR_WINDOW_A){                               // reset state logic
+            g_group_state = GROUP_STATE_standby;
+            last_group_state = GROUP_STATE_standby;
+        } 
+        else if(last_group_state == GROUP_STATE_charging)
+        {
+            if(cur > CUR_WINDOW_A && timebase_get_time_s()-transfer_start_time > GROUP_STATE_CHANGE_TIME){
+                g_group_state = GROUP_STATE_charging;
+                last_group_state = GROUP_STATE_transfer;
+            }
+        }else if(last_group_state == GROUP_STATE_discharging)
+        {
+            if(cur < -CUR_WINDOW_A && timebase_get_time_s()-transfer_start_time > GROUP_STATE_CHANGE_TIME){
+                g_group_state = GROUP_STATE_charging;
+                last_group_state = GROUP_STATE_transfer;
+            }
+        }
+        break;
+    case GROUP_STATE_charging:
+        if(fabs(cur)<CUR_WINDOW_A){
+            g_group_state = GROUP_STATE_standby;
+            last_group_state = GROUP_STATE_charging;
+        }else if(cur<-CUR_WINDOW_A){
+            g_group_state = GROUP_STATE_transfer;
+            last_group_state = GROUP_STATE_charging;
+            transfer_start_time = timebase_get_time_s();
+        }
+        break;
+    case GROUP_STATE_discharging:
+        if(fabs(cur)<CUR_WINDOW_A){
+            g_group_state = GROUP_STATE_standby;
+            last_group_state = GROUP_STATE_discharging;
+        }else if(cur>CUR_WINDOW_A){
+            g_group_state = GROUP_STATE_transfer;
+            last_group_state = GROUP_STATE_charging;
+            transfer_start_time = timebase_get_time_s();
+        }
+        break;
+    default:
+        break;
+    }
+    return g_group_state;
+}
+
+
+void mysoc_pureAH(struct SOC_Info *SOCinfo, float cur, uint16_t vol, uint16_t tempra, float soh)
+{
+    static int callCount = 0;
+    callCount++;
+    static double pureAHSUM = 0;
+
+
+    const uint16_t cap = get_cap(cur, tempra);
+
+    const double capf = cap/10.0*(soh/100);
+
+    double diffAH = DIFF_T_SEC/3600.0*cur/capf*100;
+    double SOCcal = SOCinfo->soc + diffAH;
+    double SOCer2Cal = SOCinfo->socEr2 + EKF_Q(diffAH,capf, cur);
+    pureAHSUM += diffAH;
+    // printf("diffAH : %f, EKF_W : %f pureAH: %f\n", diffAH, EKF_W(diffAH,capf, cur), pureAHSUM);
+
+
+    if(SOCcal < 0)
+    {
+        SOCcal = 0;
+    }else if(SOCcal > 100)
+    {
+        SOCcal = 100;
+    }
+
+    SOCinfo->soc = SOCcal;
+    SOCinfo->socEr2 = SOCer2Cal;
+
+}
+
+
+uint32_t getEKF_R(double soc)
+{
+    if(g_group_state == GROUP_STATE_charging)
+    {
+        if(soc < 10)
+        {
+            return EKF_R_3;         // 3mv error
+        }else if(soc < 20){
+            return EKF_R_2;         // 5mv error
+        }else if(soc > 95){
+            return EKF_R_3;         // 3mv error
+        }else{
+            return EKF_R_1;         // 10mv error
+        }
+    }else if(g_group_state == GROUP_STATE_discharging){
+        if(soc < 10){
+            return EKF_R_3;         // 3mv error
+        }else if(soc < 20){
+            return EKF_R_2;         // 5mv error
+        }else{
+            return EKF_R_1;         // 10mv error
+        }
+    }
+}
+
+
+
 
 void mysocEKF(struct SOC_Info *SOCinfo, float cur, uint16_t vol, uint16_t tempra, float soh)
 {
@@ -305,11 +457,10 @@ void mysocEKF(struct SOC_Info *SOCinfo, float cur, uint16_t vol, uint16_t tempra
         // printf("callcount %d hprev :%f  H : %f  hnext :%f \n", callCount, Hprev, H, Hnext);
     }
     double K = 0;
-    if(SOCinfo->soc<5 || SOCinfo->soc>95){
-        K = SOCer2Cal*H/(H*SOCer2Cal*H+EKF_R_2);
-    }else{
-        K = SOCer2Cal*H/(H*SOCer2Cal*H+EKF_R_1);
-    }
+    uint32_t ekfR = getEKF_R(SOCinfo->soc);
+
+    K = SOCer2Cal*H/(H*SOCer2Cal*H+ekfR);
+
     
     double res = SOCcal+K*((double)vol-estVol);
     // printf("callcount %d  H: %f K :%f  kcal : %f , vol: %d, estvol: %lf\n", callCount, H, K, K*((double)vol-estVol), vol, estVol);
@@ -357,12 +508,23 @@ void mysocEKF(struct SOC_Info *SOCinfo, float cur, uint16_t vol, uint16_t tempra
 }
 
 
+
+
+
+
 void mysoc(struct SOC_Info *SOCinfo, float cur, uint16_t vol, uint16_t tempra, float soh)
 {
 
     if(fabs(cur) > CUR_WINDOW_A)
     {
-        mysocEKF(SOCinfo, cur, vol, tempra, soh);
+        enum GroupState state = check_current_group_state(cur);
+        if(state == GROUP_STATE_transfer){
+            mysoc_pureAH(SOCinfo, cur, vol, tempra, soh);               // Ampere-hour Integration only
+        }else{
+            mysocEKF(SOCinfo, cur, vol, tempra, soh);                   // Ampere-hour Integration + EKF
+        }
+
+        
 
     }else{
 
