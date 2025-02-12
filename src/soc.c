@@ -569,7 +569,7 @@ static void gropuSOC()
     //     printf("change\n");
     // }
     uint16_t hSOC = maxSOC*(maxSOC/1000.0)+minSOC*(1-maxSOC/1000.0);
-    uint16_t lSOC= minSOC*(minSOC/1000.0)+maxSOC*(1-minSOC/1000.0);
+    uint16_t lSOC= minSOC*(1-minSOC/1000.0)+maxSOC*(minSOC/1000.0);
     uint16_t h = hSOC>lSOC?hSOC:lSOC;
     uint16_t l = lSOC<hSOC?lSOC:hSOC;
     *g_grpSOC = (*g_grpSOC)/1000.0*h+(1000-*g_grpSOC)/1000.0*l;
@@ -595,6 +595,7 @@ static void vol2soc_batch(uint16_t *vol, uint16_t *tempra, float *soc)
 void soc_init()
 {
     float soc_saved[CELL_NUMS];
+    float soc_saved_group;
     float soc_lookuptable[CELL_NUMS];
     bool soc_abnormal_flag[CELL_NUMS];
     // read saved soc(last soc before shutdown)
@@ -629,6 +630,31 @@ void soc_init()
         }
     }
 
+    // read saved group soc(last soc before shutdown)
+    ret = read_saved_soc_group(&soc_saved_group);
+    *g_grpSOC = soc_saved_group;
+    float sum_soc = 0;
+    float avg_soc = 0;
+    float unsorted_soc[CELL_NUMS];
+    float sorted_soc[CELL_NUMS];
+    for(int i = 0; i < CELL_NUMS; i++)
+    {
+        unsorted_soc[i] = g_socInfo[i].soc;
+        sum_soc += g_socInfo[i].soc;
+    }    
+    avg_soc = sum_soc/CELL_NUMS;
+    bubbleSort_ascend(unsorted_soc, sorted_soc, CELL_NUMS);
+    if(ret == 0){
+        if(soc_saved_group < sorted_soc[0] || soc_saved_group > sorted_soc[CELL_NUMS-1])
+        {
+            *g_grpSOC = round(avg_soc*10);
+        }
+    }else{
+        *g_grpSOC = round(avg_soc*10);
+    }
+
+
+
     for (size_t i = 0; i < CELL_NUMS; i++)
     {
         g_socInfo[i].soc = SOC0;
@@ -645,7 +671,10 @@ void soc_save()
 {
     static uint32_t last_save = 0;
     static bool save = false;
+    static bool grp_save = false;
     static float lastsoc[CELL_NUMS];
+    static float last_grpsoc;
+    // cell soc save check
     for(int i = 0; i < CELL_NUMS; i++)
     {
         if(fabs(g_socInfo[i].soc-lastsoc[i]) > 1)
@@ -653,6 +682,15 @@ void soc_save()
             save = true;
         }
     }
+    // group soc save check
+    if(fabs(*g_grpSOC-last_grpsoc) > 1)
+    {
+        if(timebase_get_time_s() - last_save > SOC_SAVE_INTERVAFL)
+        {
+            grp_save = true;
+        }
+    }
+
     if(timebase_get_time_s() - last_save > SOC_SAVE_INTERVAFL)
     {
         last_save = timebase_get_time_s();
@@ -664,7 +702,13 @@ void soc_save()
             write_saved_soc(lastsoc);
             save = false;
         }
+        if(grp_save){
+            write_saved_soc_group(*g_grpSOC);
+            grp_save = false;
+        }
     }
+
+    
 }
 
 
