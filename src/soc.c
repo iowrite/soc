@@ -587,7 +587,10 @@ static void gropuSOC()
 
 }
 
-
+/**
+ * @brief  convert voltage to soc by lookup table
+ * @return soc
+ */
 static float vol2soc(uint16_t vol, uint16_t tempra)
 {
     return 0;
@@ -699,32 +702,33 @@ void soc_save()
     // cell soc save check
     for(int i = 0; i < CELL_NUMS; i++)
     {
-        if(fabs(g_socInfo[i].soc-lastsoc[i]) > 1)
+        if(fabs(g_socInfo[i].soc-lastsoc[i]) > SOC_SAVE_DIFF_PERCENT)
         {
             save = true;
         }
     }
     // group soc save check
-    if(fabs(*g_grpSOC-last_grpsoc) > 1)
+    if(fabs(*g_grpSOC-last_grpsoc) > SOC_GRP_SAVE_DIFF_PERCENT*10)
     {
-        if(timebase_get_time_s() - last_save > SOC_SAVE_INTERVAFL)
-        {
-            grp_save = true;
-        }
+        grp_save = true;
     }
 
-    if(timebase_get_time_s() - last_save > SOC_SAVE_INTERVAFL)
+    uint32_t now = timebase_get_time_s();
+    // printf("now:%d, last:%d\n", now, last_save);
+    if(now- last_save > SOC_SAVE_INTERVAFL)
     {
-        last_save = timebase_get_time_s();
+        last_save = now;
         if(save){
             for(int i = 0; i < CELL_NUMS; i++)
             {
                 lastsoc[i] = g_socInfo[i].soc;
             }
+            // printf("soc save\n");
             write_saved_soc(lastsoc);
             save = false;
         }
         if(grp_save){
+            last_grpsoc = *g_grpSOC;
             write_saved_soc_group(*g_grpSOC);
             grp_save = false;
         }

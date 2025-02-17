@@ -33,6 +33,8 @@ static void bubbleSort_ascend(uint16_t *inputArr, uint16_t *outputArr, uint16_t 
 
 
 
+uint32_t excel_second = 0;
+
 
 int main() {
 
@@ -160,6 +162,7 @@ int main() {
 
     for(size_t i = 0; i < input_row_len; i++)
     {
+        excel_second++;
         grpVol = inputData[i].grpVol;
         // printf("inputData[%d].grpVol = %f\n", i, grpVol);
         cur = inputData[i].cur;

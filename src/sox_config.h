@@ -4,7 +4,8 @@
 /***********************
  *  SOX Configuration
  **********************/
-
+#define CELL_NUMS                       16
+#define CUR_WINDOW_A                    0.5             //A
 
 
 /***********************
@@ -23,6 +24,9 @@
 
 #define GROUP_STATE_CHANGE_TIME         ((uint32_t)(30*60))         //30mins
 #define SOC_SAVE_INTERVAFL              ((uint32_t)10)              //10s
+
+#define SOC_SAVE_DIFF_PERCENT           1                           // 1%
+#define SOC_GRP_SAVE_DIFF_PERCENT       1                           // 1%
 
 
 /***********************

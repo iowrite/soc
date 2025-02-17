@@ -3,22 +3,6 @@
 #ifndef __SOX_H__
 #define __SOX_H__
 
-#define CELL_NUMS                       16
-
-#define CUR_WINDOW_A                    0.5             //A
-
-
-
-
-
-
-
-
-
-
-
-
-
 int8_t sox_init( 
     float *cur, 
     uint16_t *vol, 
