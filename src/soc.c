@@ -10,25 +10,12 @@
 #include "sox_private.h"
 #include "sox.h"
 #include "port.h"
-
-
-#define CAPACITY_AH                     100             //AH
-#define DIFF_T_SEC                      1               //second
-
-#define DIFF_T_MSEC_ERR                 50              // ms
-#define CAP_ERR_AH                      5.0             // AH          
-#define CUR_SAMPLE_ERR_A                1.0             //A
-#define VOL_SAMPLE_ERR_MV_1             10              //mv
-#define VOL_SAMPLE_ERR_MV_2             5               //mv
-#define VOL_SAMPLE_ERR_MV_3             3               //mv
-#define SOH_ERR_PERCENT                 5
+#include "sox_config.h"
 
 
 
 
-
-
-#define EKF_W(diffAH, cap, cur)                 ((50.0/(DIFF_T_SEC*1000) + CUR_SAMPLE_ERR_A/cur + CAP_ERR_AH/cap+SOH_ERR_PERCENT/100.0) *  diffAH)      
+ #define EKF_W(diffAH, cap, cur)                 ((50.0/(DIFF_T_SEC*1000) + CUR_SAMPLE_ERR_A/cur + CAP_ERR_AH/cap+SOH_ERR_PERCENT/100.0) *  diffAH)     
 #define EKF_Q(diffAH, cap, cur)                 (EKF_W(diffAH, cap, cur)*EKF_W(diffAH, cap, cur))                 
 #define EKF_R_1                                 (VOL_SAMPLE_ERR_MV_1*VOL_SAMPLE_ERR_MV_1)
 #define EKF_R_2                                 (VOL_SAMPLE_ERR_MV_2*VOL_SAMPLE_ERR_MV_2)
@@ -38,20 +25,6 @@
 #define SOC0_ER2                            100
 #define SOC0_ER2_SAVED                      100             // 10% error
 #define SOC0_ER2_LOOKUP_TABLE               900             // 30% error
-
-
-
-#define GROUP_STATE_CHANGE_TIME         ((uint32_t)(30*60))         //30mins
-#define SOC_SAVE_INTERVAFL              ((uint32_t)10)              //10s
-
-
-
-
-
-
-
-
-
 
 
 struct SOC_Info
@@ -556,6 +529,42 @@ static void bubbleSort_ascend(uint16_t *inputArr, uint16_t *outputArr, uint16_t 
     }
 }
 
+static void bubbleSort_ascend_float(float *inputArr, float *outputArr, uint16_t size)
+{
+    memcpy(outputArr, inputArr, size*sizeof(float));
+    for (size_t i = 0; i < size-1; i++)
+    {
+        for (size_t j = 0; j < size-i-1; j++)
+        {
+            if(outputArr[j] > outputArr[j+1])
+            {
+                float tmp = outputArr[j];
+                outputArr[j] = outputArr[j+1];
+                outputArr[j+1] = tmp;
+            }
+        }
+    }
+}
+
+static void bubbleSort_ascend_duble(double *inputArr, double *outputArr, uint16_t size)
+{
+    memcpy(outputArr, inputArr, size*sizeof(double));
+    for (size_t i = 0; i < size-1; i++)
+    {
+        for (size_t j = 0; j < size-i-1; j++)
+        {
+            if(outputArr[j] > outputArr[j+1])
+            {
+                double tmp = outputArr[j];
+                outputArr[j] = outputArr[j+1];
+                outputArr[j+1] = tmp;
+            }
+        }
+    }
+}
+
+
+
 static void gropuSOC()
 {
     static int callCount = 0;
@@ -597,25 +606,38 @@ void soc_init()
     float soc_saved[CELL_NUMS];
     float soc_saved_group;
     float soc_lookuptable[CELL_NUMS];
+    float soc_firstPowerUp[CELL_NUMS];
+    memset(soc_firstPowerUp, 0xff, sizeof(soc_firstPowerUp));
     bool soc_abnormal_flag[CELL_NUMS];
     // read saved soc(last soc before shutdown)
     int8_t ret = read_saved_soc(soc_saved);
     // todo ocv calibration,set init soc and soc_er2
     vol2soc_batch(g_celVol, g_celTmp, soc_lookuptable);
     if(ret == 0){
-        for(int i = 0; i < CELL_NUMS; i++)
+        if(memcmp(soc_saved, soc_firstPowerUp, sizeof(soc_saved)) == 0)
         {
-            if(fabs(soc_saved[i]-soc_lookuptable[i]) > 50)
+            for(int i = 0; i < CELL_NUMS; i++)
             {
                 soc_abnormal_flag[i] = true;
-            }else{
-                soc_abnormal_flag[i] = false;
+            }
+        }else{
+            for(int i = 0; i < CELL_NUMS; i++)
+            {
+                if(soc_saved[i] < 0 || soc_saved[i] > 100){
+                    soc_abnormal_flag[i] = true;
+                }
+                else if(fabs(soc_saved[i]-soc_lookuptable[i]) > 50)
+                {
+                    soc_abnormal_flag[i] = true;
+                }else{
+                    soc_abnormal_flag[i] = false;
+                }
             }
         }
     }else{
         for (size_t i = 0; i < CELL_NUMS; i++)
         {
-            soc_abnormal_flag[i] = false;
+            soc_abnormal_flag[i] = true;
         }
     }
 
@@ -643,7 +665,7 @@ void soc_init()
         sum_soc += g_socInfo[i].soc;
     }    
     avg_soc = sum_soc/CELL_NUMS;
-    bubbleSort_ascend(unsorted_soc, sorted_soc, CELL_NUMS);
+    bubbleSort_ascend_float(unsorted_soc, sorted_soc, CELL_NUMS);
     if(ret == 0){
         if(soc_saved_group < sorted_soc[0] || soc_saved_group > sorted_soc[CELL_NUMS-1])
         {

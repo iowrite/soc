@@ -18,10 +18,10 @@ uint16_t *g_grpSOC;                 // %            *10
 double  *g_celSOH;                  // %            *1
 double  *g_grpSOH;                  // %            *1
 uint32_t *g_cycleCount;             // times        *1000
-float *g_accChgWH;                  // AH           *1
-float *g_accDsgWH;                  // AH           *1
-float *g_sigChgWH;                  // AH           *1
-float *g_sigDsgWH;                  // AH           *1
+float *g_accChgWH;                  // WH           *1
+float *g_accDsgWH;                  // WH           *1
+float *g_sigChgWH;                  // WH           *1
+float *g_sigDsgWH;                  // WH           *1
 
 
 
@@ -75,9 +75,9 @@ int8_t sox_task(bool full, bool empty)
     soe_task();
 
     // Periodic storage to prevent power outages
-    soc_save();
-    soh_save();
-    soe_save();
-    
+    soc_save();                 // cell soc and group soc
+    soh_save();                 // cell soh , group soh and cycle count
+    soe_save();                 // accumulate charge and discharge energy
+     
     return 0;
 }

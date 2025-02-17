@@ -6,9 +6,8 @@
 #include "sox.h"
 #include "sox_private.h"
 #include "port.h"
+#include "sox_config.h"
 
-#define MAX_CYCLE_TIME                  10000
-#define REFERENCE_CYCLE_TIME            5000
 
 static uint16_t s_lastSOC[CELL_NUMS];
 static uint16_t s_lastGrpSOC;
@@ -33,11 +32,23 @@ int8_t  soh_init()
     double soh_saved[CELL_NUMS];
     double soh_first_powerup[CELL_NUMS];
     memset(soh_first_powerup, 0xff, sizeof(soh_first_powerup));
-    double soh_abnormal_flag[CELL_NUMS];
+    bool soh_abnormal_flag[CELL_NUMS];
     ret = read_saved_soh(soh_saved);
     if(ret == 0)
     {
-        if(memcmp(soh_saved, ))
+        if(memcmp(soh_saved, soh_first_powerup, sizeof soh_first_powerup) != 0){
+            for (size_t i = 0; i < CELL_NUMS; i++)
+            {
+                soh_abnormal_flag[i] = false;
+            }
+        }else{
+            for (size_t i = 0; i < CELL_NUMS; i++)
+            {
+                if(soh_saved[i] > 100 || soh_saved[i] < 0){
+                    soh_abnormal_flag[i] = true;
+                }
+            }
+        }
         
     }else{
         for (size_t i = 0; i < CELL_NUMS; i++)
@@ -50,9 +61,9 @@ int8_t  soh_init()
     double soh = 100 - 20 * (*g_cycleCount/1000.0/REFERENCE_CYCLE_TIME);
     for(size_t i = 0; i < CELL_NUMS; i++)
     {
-        soh_saved[i] = soh;
-        soh_abnormal_flag[i] = 0;
-
+        if(soh_abnormal_flag[i] == true){
+            soh_saved[i] = 100 - 20 * (*g_cycleCount/1000.0/REFERENCE_CYCLE_TIME);
+        }
     }
 
 
@@ -109,7 +120,22 @@ int8_t soh_task()
 
 void soh_save()
 {
-
+    static float  last_cycleCount = 0;
+    bool save_flag = false;
+    static uint32_t save_time = 0;
+    if(last_cycleCount - *g_cycleCount > 1000)
+    {
+        save_flag = true;
+        last_cycleCount = *g_cycleCount;
+    }
+    if(timebase_get_time_s() - save_time > 60*60*24*7)
+    {
+        if(save_flag){
+            write_saved_cycle(*g_cycleCount);
+            write_saved_soh(g_celSOH);
+        }
+        save_time = timebase_get_time_s();
+    }
 }
 
 

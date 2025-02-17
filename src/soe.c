@@ -2,9 +2,24 @@
 #include <stdio.h>
 #include "sox_private.h"
 #include "sox.h"
+#include "port.h"
+#include "sox_config.h"
 int8_t soe_init()
 {
-
+    // read saved soe (last saved soe before poweroff)
+    int8_t ret = read_saved_soe(g_accChgWH, g_accDsgWH);
+    if(ret != 0)
+    {
+        *g_accChgWH = 0;
+        *g_accDsgWH = 0;
+    }else{
+        if(*g_accChgWH < 0){
+            *g_accChgWH = 0;
+        }
+        if(*g_accDsgWH < 0){
+            *g_accDsgWH = 0;
+        }
+    }
 
 }
 
@@ -75,5 +90,19 @@ int8_t soe_task()
 
 void soe_save()
 {
+    static float last_accDsgWH = 0;
+    static float last_accChgWH = 0;
+    static bool save_flag = false;
+    static uint32_t last_time = 0;
+    if(*g_accChgWH - last_accChgWH > SOE_SAVE_DIFF_WH || *g_accDsgWH - last_accDsgWH > SOE_SAVE_DIFF_WH)
+    {
+        save_flag = true;
+    }
+    if(timebase_get_time_s() - last_time > SOE_SAVE_INTERVAL_S)
+    {
+        save_flag = false;
+        write_saved_soe(*g_accChgWH, *g_accDsgWH);
+    }
+
 
 }

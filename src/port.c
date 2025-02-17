@@ -43,12 +43,12 @@ int8_t write_saved_soc_group(float grpsoc)
 
 }
 
-int8_t read_saved_soh(float *soh)
+int8_t read_saved_soh(double *soh)
 {
 
     return 0;
 }
-int8_t write_saved_soh(float *soh)
+int8_t write_saved_soh(double *soh)
 {
     return 0;
 
@@ -68,6 +68,20 @@ int8_t write_saved_cycle(uint32_t cycleTime)
 
 
 }
+
+int8_t read_saved_soe(float *totalChgWh, float *totalDsgWh)
+{
+
+    return 0;
+}
+
+int8_t write_saved_soe(float totalChgWh, float totalDsgWh)
+{
+
+    return 0;
+}
+
+
 
 
 

@@ -8,6 +8,17 @@
 #define CUR_WINDOW_A                    0.5             //A
 
 
+
+
+
+
+
+
+
+
+
+
+
 int8_t sox_init( 
     float *cur, 
     uint16_t *vol, 
@@ -22,5 +33,11 @@ int8_t sox_init(
     float *accChgAH,
     float *accDsgAH);
 int8_t sox_task(bool full, bool empty);
+
+
+
+
+
+
 #endif
 
