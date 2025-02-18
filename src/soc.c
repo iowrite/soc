@@ -386,9 +386,9 @@ double getEKF_Q(double soc)
 {
     if(g_group_state == GROUP_STATE_charging)
     {
-        return (0.01 + (soc/100*10)*(soc/100*10));
+        return (0.01 + (soc/100*1)*(soc/100*1));
     }else if(g_group_state == GROUP_STATE_discharging){
-        return (0.01 + ((100-soc)/100*10)*((100-soc)/100*10));
+        return (0.01 + ((100-soc)/100*1)*((100-soc)/100*1));
     }
 }
 
@@ -437,6 +437,7 @@ void mysocEKF(struct SOC_Info *SOCinfo, float cur, uint16_t vol, uint16_t tempra
 
     double diffAH = DIFF_T_SEC/3600.0*cur/capf*100;
     double SOCcal = SOCinfo->soc + diffAH;
+    double Q = getEKF_Q(SOCcal);
     double SOCer2Cal = SOCinfo->socEr2 + getEKF_Q(SOCcal);
     pureAHSUM += diffAH;
     // printf("diffAH : %f, EKF_W : %f pureAH: %f\n", diffAH, EKF_W(diffAH,capf, cur), pureAHSUM);
@@ -546,7 +547,7 @@ void mysocEKF(struct SOC_Info *SOCinfo, float cur, uint16_t vol, uint16_t tempra
     SOCinfo->soc = res;
     SOCinfo->socEr2 = resEr2;
     // printf("soc : %f \n", 100-res);
-    // printf("soc error2: %f \n", SOCinfo->socEr2);
+    printf("%d soc error2: %f Q:%f R:%d, H:%f, K:%lf kcal : %f , vol: %d, estvol: %lf\n",callCount, SOCinfo->socEr2, Q, ekfR, H, K, K*((double)vol-estVol), vol, estVol);
 }
 
 
@@ -830,7 +831,7 @@ void soc_task(bool full, bool empty)
 
         // if(i == 0)
         // {
-        //     printf("soc error2: %f \n", g_socInfo[0].socEr2);
+            // printf("soc error2: %f \n", g_socInfo[0].socEr2);
         // }
     }
     if(full)

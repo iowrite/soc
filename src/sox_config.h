@@ -4,7 +4,7 @@
 /***********************
  *  SOX Configuration
  **********************/
-#define CELL_NUMS                       16
+#define CELL_NUMS                       1
 #define CUR_WINDOW_A                    0.5             //A
 
 
@@ -17,9 +17,9 @@
 #define DIFF_T_MSEC_ERR                 50              // ms
 #define CAP_ERR_AH                      5.0             // AH          
 #define CUR_SAMPLE_ERR_A                1.0             // A
-#define VOL_SAMPLE_ERR_MV_1             50              // mv
-#define VOL_SAMPLE_ERR_MV_2             10              // mv
-#define VOL_SAMPLE_ERR_MV_3             6               // mv
+#define VOL_SAMPLE_ERR_MV_1             10              // mv
+#define VOL_SAMPLE_ERR_MV_2             5              // mv
+#define VOL_SAMPLE_ERR_MV_3             3               // mv
 #define SOH_ERR_PERCENT                 5               // %
 
 #define GROUP_STATE_CHANGE_TIME         ((uint32_t)(30*60))         //30mins
