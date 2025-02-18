@@ -2,7 +2,9 @@
 # 5
 d5c1_chg = [3217, 3287, 3290, 3293, 3296, 3300, 3326, 3347, 3358, 3360, 3361, 3362, 3363, 3367, 3374, 3381, 3386, 3390, 3395, 3399, 3405, 3412, 3424, 3445, 3451, 3460, 3474, 3499, 3576]
 d5c1_dsg = [2962, 3008, 3044, 3070, 3089, 3103, 3145, 3170, 3188, 3200, 3209, 3216, 3222, 3227, 3231, 3236, 3240, 3245, 3252, 3258, 3264, 3268, 3271, 3272, 3273, 3274, 3275, 3276, 3314]
-
+d5c2_dsg = [2963, 2998, 3026, 3048, 3065, 3078, 3119, 3144, 3161, 3173, 3182, 3190, 3196, 3201, 3206, 3211, 3215, 3220, 3224, 3227, 3229, 3229, 3228, 3224, 3224, 3223, 3222, 3224, 3318]
+d5c3_dsg = [2977, 3005, 3027, 3045, 3060, 3072, 3110, 3132, 3147, 3158, 3167, 3174, 3180, 3185, 3189, 3193, 3196, 3198, 3200, 3201, 3200, 3198, 3195, 3189, 3188, 3187, 3186, 3188, 3238]
+d5c4_dsg = [2984, 3008, 3027, 3044, 3057, 3068, 3104, 3124, 3139, 3149, 3158, 3164, 3170, 3174, 3178, 3180, 3183, 3185, 3185, 3184, 3182, 3179, 3173, 3162, 3161, 3159, 3158, 3162, 3222]
 
 # 15
 d15c1_chg = [3059, 3149, 3195, 3231, 3254, 3261, 3278, 3304, 3326, 3340, 3342, 3343, 3344, 3346, 3349, 3356, 3369, 3377, 3380, 3383, 3386, 3391, 3398, 3412, 3417, 3424, 3435, 3458, 3562]
@@ -93,6 +95,20 @@ plt.scatter(x, d45c5_chg)
 plt.legend()
 mplcursors.cursor(hover=True)
 
+
+plt.figure()
+plt.plot(x, d5c1_dsg[::-1], label='d5c1_dsg')
+plt.plot(x, d5c2_dsg[::-1], label='d5c2_dsg')
+plt.plot(x, d5c3_dsg[::-1], label='d5c3_dsg')
+plt.plot(x, d5c4_dsg[::-1], label='d5c4_dsg')
+plt.scatter(x, d5c1_dsg[::-1])
+plt.scatter(x, d5c2_dsg[::-1])
+plt.scatter(x, d5c3_dsg[::-1])
+plt.scatter(x, d5c4_dsg[::-1])
+plt.legend()
+mplcursors.cursor(hover=True)
+
+
 plt.figure()
 plt.plot(x, d15c1_dsg[::-1], label='d15c1_dsg')
 plt.plot(x, d15c2_dsg[::-1], label='d15c2_dsg')
@@ -106,6 +122,22 @@ plt.scatter(x, d15c4_dsg[::-1])
 plt.scatter(x, d15c5_dsg[::-1])
 plt.legend()
 mplcursors.cursor(hover=True)
+
+
+plt.figure()
+plt.plot(x, d5c1_dsg[::-1], label='d5c1_dsg', color='grey')
+plt.plot(x, d5c2_dsg[::-1], label='d5c2_dsg', color='grey')
+plt.plot(x, d5c3_dsg[::-1], label='d5c3_dsg', color='grey')
+plt.plot(x, d5c4_dsg[::-1], label='d5c4_dsg', color='grey')
+plt.plot(x, d15c1_dsg[::-1], label='d15c1_dsg', color='red')
+plt.plot(x, d15c2_dsg[::-1], label='d15c2_dsg', color='red')
+plt.plot(x, d15c3_dsg[::-1], label='d15c3_dsg', color='red')
+plt.plot(x, d15c4_dsg[::-1], label='d15c4_dsg', color='red')
+plt.plot(x, d15c5_dsg[::-1], label='d15c5_dsg', color='red')
+plt.legend()
+
+
+
 
 
 plt.figure()

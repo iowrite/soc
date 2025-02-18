@@ -21,8 +21,8 @@
 #define EKF_R_2                                 (VOL_SAMPLE_ERR_MV_2*VOL_SAMPLE_ERR_MV_2)
 #define EKF_R_3                                 (VOL_SAMPLE_ERR_MV_3*VOL_SAMPLE_ERR_MV_3)
 
-#define SOC0                                100
-#define SOC0_ER2                            100
+#define SOC0                                15
+#define SOC0_ER2                            225
 #define SOC0_ER2_SAVED                      100             // 10% error
 #define SOC0_ER2_LOOKUP_TABLE               900             // 30% error
 
