@@ -5,3 +5,6 @@ codegen/
 a.out
 mysoc
 **/*.o
+
+save_soc_grp.txt
+save_soc.txt

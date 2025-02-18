@@ -1,0 +1,7 @@
+# requirement.txt
+pandas
+matplotlib
+numpy
+openpyxl
+mplcursors
+argparse
