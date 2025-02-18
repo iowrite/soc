@@ -21,7 +21,7 @@
 #define EKF_R_2                                 (VOL_SAMPLE_ERR_MV_2*VOL_SAMPLE_ERR_MV_2)
 #define EKF_R_3                                 (VOL_SAMPLE_ERR_MV_3*VOL_SAMPLE_ERR_MV_3)
 
-#define SOC0                                100
+#define SOC0                                0
 #define SOC0_ER2                            100
 #define SOC0_ER2_SAVED                      100             // 10% error
 #define SOC0_ER2_LOOKUP_TABLE               900             // 30% error
@@ -382,6 +382,20 @@ void mysoc_smooth(struct SOC_Info *SOCinfo, float cur, uint16_t vol, uint16_t te
 }
 
 
+double getEKF_Q(double soc)
+{
+    if(g_group_state == GROUP_STATE_charging)
+    {
+        return (0.01 + (soc/100*10)*(soc/100*10));
+    }else if(g_group_state == GROUP_STATE_discharging){
+        return (0.01 + ((100-soc)/100*10)*((100-soc)/100*10));
+    }
+}
+
+
+
+
+
 uint32_t getEKF_R(double soc)
 {
     if(g_group_state == GROUP_STATE_charging)
@@ -409,7 +423,6 @@ uint32_t getEKF_R(double soc)
 
 
 
-
 void mysocEKF(struct SOC_Info *SOCinfo, float cur, uint16_t vol, uint16_t tempra, float soh)
 {
     static int callCount = 0;
@@ -424,7 +437,7 @@ void mysocEKF(struct SOC_Info *SOCinfo, float cur, uint16_t vol, uint16_t tempra
 
     double diffAH = DIFF_T_SEC/3600.0*cur/capf*100;
     double SOCcal = SOCinfo->soc + diffAH;
-    double SOCer2Cal = SOCinfo->socEr2 + EKF_Q(diffAH,capf, cur);
+    double SOCer2Cal = SOCinfo->socEr2 + getEKF_Q(SOCcal);
     pureAHSUM += diffAH;
     // printf("diffAH : %f, EKF_W : %f pureAH: %f\n", diffAH, EKF_W(diffAH,capf, cur), pureAHSUM);
     double H = 0, Hprev = 0, Hnext = 0;
@@ -559,7 +572,7 @@ void mysoc(struct SOC_Info *SOCinfo, float cur, uint16_t vol, int16_t tempra, fl
                 mysocEKF(SOCinfo, cur, vol, tempra, soh);                   // Ampere-hour Integration + EKF
             }
         }
-        mysoc_smooth(SOCinfo, cur, vol, tempra, soh);
+        //mysoc_smooth(SOCinfo, cur, vol, tempra, soh);
     }
 
 
