@@ -11,9 +11,10 @@ extern uint16_t *g_grpSOC;                  // %            *10
 extern double  *g_celSOH;                   // %            *1
 extern double  *g_grpSOH;                   // %            *1
 extern uint32_t *g_cycleCount;              // times        *1000
-extern float *g_accChgWH;                   // AH           *1
-extern float *g_accDsgWH;                   // AH           *1
-extern float *g_sigChgWH;                   // AH           *1
-extern float *g_sigDsgWH;                   // AH           *1
-
+extern float *g_accChgWH;                   // WH           *1
+extern float *g_accDsgWH;                   // WH           *1
+extern float *g_sigChgWH;                   // WH           *1
+extern float *g_sigDsgWH;                   // WH           *1
+extern uint16_t *g_chg_stop_vol;            // mv           *1
+extern uint16_t *g_dsg_stop_vol;            // mv           *1
 #endif

@@ -22,24 +22,28 @@ float *g_accChgWH;                  // WH           *1
 float *g_accDsgWH;                  // WH           *1
 float *g_sigChgWH;                  // WH           *1
 float *g_sigDsgWH;                  // WH           *1
+uint16_t *g_chg_stop_vol;           // mv           *1
+uint16_t *g_dsg_stop_vol;           // mv           *1
 
 
 
 
 int8_t sox_init( 
-    float *cur,                         // input
-    uint16_t *vol,                      // input
-    int16_t *tmp,                       // input
+    float *cur,                         // input only
+    uint16_t *vol,                      // input only
+    int16_t *tmp,                       // input only
     uint16_t *soc,                      // input and output
     uint16_t *grpSOC ,                  // input and output
     double *soh,                        // input and output
     double *grpSOH,                     // input and output
     uint32_t *cycleCount,               // input and output
-    float *grpVol,                      // input
+    float *grpVol,                      // input only
     float *sigChgWH,                    // input and output
     float *sigDsgWH,                    // input and output
     float *accChgAH,                    // input and output
-    float *accDsgAH                     // input and output
+    float *accDsgAH,                    // input and output
+    uint16_t *chg_stop_vol,             // input only
+    uint16_t *dsg_stop_vol              // input only
     )
 {
     g_cur = cur;

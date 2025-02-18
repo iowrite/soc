@@ -15,7 +15,9 @@ int8_t sox_init(
     float *sigChgWH,
     float *sigDsgWH,
     float *accChgAH,
-    float *accDsgAH);
+    float *accDsgAH,
+    uint16_t *g_chg_stop_vol,
+    uint16_t *g_dsg_stop_vol);
 int8_t sox_task(bool full, bool empty);
 
 

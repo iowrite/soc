@@ -135,6 +135,8 @@ int main() {
     float accChgAH = 0;
     float sigDsgWH = 0;
     float accDsgAH = 0;
+    uint16_t g_chg_stop_vol = 3600;
+    uint16_t g_dsg_stop_vol = 2900;
     for (size_t i = 0; i < 16; i++)
     {
         soh[i] = 100;
@@ -144,7 +146,7 @@ int main() {
 
     memset(soc, 0, sizeof soc);
 
-    sox_init(&cur, vol, tmp, soc, &grpSOC.grpSOC, soh, &grpsoh, &cycleCount, &grpVol, &sigChgWH, &sigDsgWH, &accChgAH, &accDsgAH);
+    sox_init(&cur, vol, tmp, soc, &grpSOC.grpSOC, soh, &grpsoh, &cycleCount, &grpVol, &sigChgWH, &sigDsgWH, &accChgAH, &accDsgAH, &g_chg_stop_vol, &g_dsg_stop_vol);
     memcpy(outputData[0].soc, soc, 32);
     memcpy(outputDataGrp, &grpSOC.grpSOC, 2);
     uint16_t soc_sorted[16];

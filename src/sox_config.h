@@ -4,7 +4,7 @@
 /***********************
  *  SOX Configuration
  **********************/
-#define CELL_NUMS                       1
+#define CELL_NUMS                       16
 #define CUR_WINDOW_A                    0.5             //A
 
 
@@ -27,6 +27,15 @@
 
 #define SOC_SAVE_DIFF_PERCENT           1                           // 1%
 #define SOC_GRP_SAVE_DIFF_PERCENT       1                           // 1%
+
+#define PURE_AH_LOCK_CUR_THRESHOLD      25                          // A
+#define PURE_AH_LOCK_TEMP_THRESHOLD     100                         // 0.1 dregrees
+
+#define STANDBY_HOLD_TIME               600                         // 600s
+#define CELL_VOL_BUFFER_LEN             10
+#define CELL_VOL_BUFFER_SAMPLE_TIME_S   10.0                        // 1item a second
+#define SOC_SMOOTH_START_POINT_CHG      85
+#define SOC_SMOOTH_START_POINT_DSG      15
 
 
 /***********************
