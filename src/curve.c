@@ -4,7 +4,8 @@
 
 const uint16_t s_cap_list_chg[TEMP_POINT_NUM][CUR_POINT_NUM] = {
     /*  0.1C             0.2 C                0.3 C                0.4 C                0.5C*/
-    [0][0] = 0,         [0][1] = 0,         [0][2] = 0,             [0][3] = 0,         [0][4] = 0,                          // 0
+    [0][0] = 0,         [0][1] = 0,         [0][2] = 0,             [0][3] = 0,         [0][4] = 0,                          // -15
+    [0][0] = 0,         [0][1] = 0,         [0][2] = 0,             [0][3] = 0,         [0][4] = 0,                          // -5
     [1][0] = 945,       [1][1] = 0,         [1][2] = 0,             [1][3] = 0,         [1][4] = 0,                          // 5
     [2][0] = 1009,      [2][1] = 969,       [2][2] = 0,             [2][3] = 0,         [2][4] = 0,                          // 15
     [3][0] = 1021,      [3][1] = 0,         [3][2] = 1006,          [3][3] = 1024,      [3][4] = 1024,                       // 25    
@@ -16,8 +17,9 @@ const uint16_t s_cap_list_chg[TEMP_POINT_NUM][CUR_POINT_NUM] = {
 
 const uint16_t s_cap_list_dsg[TEMP_POINT_NUM][CUR_POINT_NUM] = {
     /*  0.1C             0.2 C                0.3 C                0.4 C                    0.5C*/
-    [0][0] = 0,         [0][1] = 0,         [0][2] = 0,         [0][3] = 0,                 [0][4] = 0,                          // 0
-    [1][0] = 914,       [1][1] = 920,       [1][2] = 890,       [1][3] = 882,               [1][4] = 0,                          // 5
+    [0][0] = 0,         [0][1] = 0,         [0][2] = 0,         [0][3] = 0,                 [0][4] = 0,                          // -15
+    [0][0] = 0,         [0][1] = 0,         [0][2] = 0,         [0][3] = 0,                 [0][4] = 0,                          // -5
+    [1][0] = 914,       [1][1] = 920,       [1][2] = 890,       [1][3] = 882,               [1][4] = 864,                        // 5
     [2][0] = 971,       [2][1] = 973,       [2][2] = 972,       [2][3] = 962,               [2][4] = 965,                        // 15
     [3][0] = 1012,      [3][1] = 995,       [3][2] = 1004,      [3][3] = 979,               [3][4] = 983,                        // 25    
     [4][0] = 997,       [4][1] = 998,       [4][2] = 1002,      [4][3] = 996,               [4][4] = 1013,                       // 35
@@ -466,7 +468,8 @@ const int16_t k_45d5c_dsg[SOC_POINT_NUM] = {
 const uint16_t* s_chg_curve[TEMP_POINT_NUM][CUR_POINT_NUM]= 
 {
     /*  0.1C                    0.2 C                        0.3 C                         0.4 C                            0.5C                           */
-    [0][0] = NULL,              [0][1] = NULL,              [0][2] = NULL,              [0][3] = NULL,              [0][4] = NULL,                          // 0
+    [0][0] = NULL,              [0][1] = NULL,              [0][2] = NULL,              [0][3] = NULL,              [0][4] = NULL,                          // -15
+    [0][0] = NULL,              [0][1] = NULL,              [0][2] = NULL,              [0][3] = NULL,              [0][4] = NULL,                          // -5
     [1][0] = v_5d1c_chg,        [1][1] = NULL,              [1][2] = NULL,              [1][3] = NULL,              [1][4] = NULL,                          // 5
     [2][0] = v_15d1c_chg,       [2][1] = v_15d2c_chg,       [2][2] = NULL,              [2][3] = NULL,              [2][4] = NULL,                          // 15
     [3][0] = v_25d1c_chg,       [3][1] = NULL,              [3][2] = v_25d3c_chg,       [3][3] = NULL,              [3][4] = v_25d5c_chg,                   // 25    
@@ -478,7 +481,8 @@ const uint16_t* s_chg_curve[TEMP_POINT_NUM][CUR_POINT_NUM]=
 const int16_t* s_chg_curve_k[TEMP_POINT_NUM][CUR_POINT_NUM] = 
 {
         /*  0.1C                0.2 C                       0.3 C                       0.4 C                        0.5 C                                   */
-    [0][0] = NULL,              [0][1] = NULL,              [0][2] = NULL,              [0][3] = NULL,              [0][4] = NULL,                          // 0
+    [0][0] = NULL,              [0][1] = NULL,              [0][2] = NULL,              [0][3] = NULL,              [0][4] = NULL,                          // -15
+    [0][0] = NULL,              [0][1] = NULL,              [0][2] = NULL,              [0][3] = NULL,              [0][4] = NULL,                          // -5
     [1][0] = k_5d1c_chg,        [1][1] = NULL,              [1][2] = NULL,              [1][3] = NULL,              [1][4] = NULL,                          // 5
     [2][0] = k_15d1c_chg,       [2][1] = k_15d2c_chg,       [2][2] = NULL,              [2][3] = NULL,              [2][4] = NULL,                          // 15
     [3][0] = k_25d1c_chg,       [3][1] = NULL,              [3][2] = k_25d3c_chg,       [3][3] = NULL,              [3][4] = k_25d5c_chg,                   // 25    
@@ -494,7 +498,8 @@ const int16_t* s_chg_curve_k[TEMP_POINT_NUM][CUR_POINT_NUM] =
 const uint16_t* s_dsg_curve[TEMP_POINT_NUM][CUR_POINT_NUM] = 
 {
    /*  0.1C                     0.2 C                       0.3 C                      0.4 C                             0.5C                              */
-    [0][0] = NULL,              [0][1] = NULL,              [0][2] = NULL,              [0][3] = NULL,              [0][4] = NULL,                          // 0
+    [0][0] = NULL,              [0][1] = NULL,              [0][2] = NULL,              [0][3] = NULL,              [0][4] = NULL,                          // -15
+    [0][0] = NULL,              [0][1] = NULL,              [0][2] = NULL,              [0][3] = NULL,              [0][4] = NULL,                          // -5
     [1][0] = v_5d1c_dsg,        [1][1] = NULL,              [1][2] = NULL,              [1][3] = NULL,              [1][4] = NULL,                          // 5
     [2][0] = v_15d1c_dsg,       [2][1] = v_15d2c_dsg,       [2][2] = v_15d3c_dsg,       [2][3] = v_15d4c_dsg,       [2][4] = v_15d5c_dsg,                   // 15
     [3][0] = v_25d1c_dsg,       [3][1] = v_25d2c_dsg,       [3][2] = v_25d3c_dsg,       [3][3] = v_25d4c_dsg,       [3][4] = v_25d5c_dsg,                   // 25    
@@ -506,7 +511,8 @@ const uint16_t* s_dsg_curve[TEMP_POINT_NUM][CUR_POINT_NUM] =
 const int16_t* s_dsg_curve_k[TEMP_POINT_NUM][CUR_POINT_NUM] = 
 {
     /*  0.1C                    0.2 C                           0.3 C                     0.4 C                            0.5C                               */
-    [0][0] = NULL,              [0][1] = NULL,              [0][2] = NULL,              [0][3] = NULL,              [0][4] = NULL,                          // 0
+    [0][0] = NULL,              [0][1] = NULL,              [0][2] = NULL,              [0][3] = NULL,              [0][4] = NULL,                          // -15
+    [0][0] = NULL,              [0][1] = NULL,              [0][2] = NULL,              [0][3] = NULL,              [0][4] = NULL,                          // -5
     [1][0] = k_5d1c_dsg,        [1][1] = NULL,              [1][2] = NULL,              [1][3] = NULL,              [1][4] = NULL,                          // 5
     [2][0] = k_15d1c_dsg,       [2][1] = k_15d2c_dsg,       [2][2] = k_15d3c_dsg,       [2][3] = k_15d4c_dsg,       [2][4] = k_15d5c_dsg,                   // 15
     [3][0] = k_25d1c_dsg,       [3][1] = k_25d2c_dsg,       [3][2] = k_25d3c_dsg,       [3][3] = k_25d4c_dsg,       [3][4] = k_25d5c_dsg,                   // 25    

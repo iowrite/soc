@@ -32,11 +32,12 @@
 #define PURE_AH_LOCK_TEMP_THRESHOLD     100                         // 0.1 dregrees
 
 #define STANDBY_HOLD_TIME               600                         // 600s
-#define CELL_VOL_BUFFER_LEN             10
-#define CELL_VOL_BUFFER_SAMPLE_TIME_S   10.0                        // 1item a second
+#define CELL_VOL_BUFFER_LEN             (10+1)                      // 10s(time span)                    
+#define CELL_VOL_BUFFER_SAMPLE_TIME_S   12                            // 1item per 6 second
 #define SOC_SMOOTH_START_POINT_CHG      85
-#define SOC_SMOOTH_START_POINT_DSG      15
+#define SOC_SMOOTH_START_POINT_DSG      30
 
+#define MAX_EKF_Q_PERCENT               5      // 10%
 
 /***********************
  *  SOH Configuration

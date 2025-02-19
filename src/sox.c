@@ -59,7 +59,8 @@ int8_t sox_init(
     g_sigDsgWH = sigDsgWH;
     g_accChgWH = accChgAH;
     g_accDsgWH = accDsgAH;
-
+    g_chg_stop_vol = chg_stop_vol;
+    g_dsg_stop_vol = dsg_stop_vol;
     soc_init();
     soh_init();
     soe_init();

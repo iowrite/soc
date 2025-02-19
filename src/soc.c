@@ -21,7 +21,7 @@
 #define EKF_R_2                                 (VOL_SAMPLE_ERR_MV_2*VOL_SAMPLE_ERR_MV_2)
 #define EKF_R_3                                 (VOL_SAMPLE_ERR_MV_3*VOL_SAMPLE_ERR_MV_3)
 
-#define SOC0                                0
+#define SOC0                                100
 #define SOC0_ER2                            25
 #define SOC0_ER2_SAVED                      100             // 10% error
 #define SOC0_ER2_LOOKUP_TABLE               900             // 30% error
@@ -32,9 +32,13 @@ struct SOC_Info
     bool pureAH_lock;
     uint8_t cell_vol_buff_idx;
     uint16_t cell_vol_buffer[CELL_VOL_BUFFER_LEN];
+    uint32_t record_time;
+    float oldest_vol; 
+    float newest_vol;
     float soc_smooth;
     float soc;
     float socEr2;
+
 };
 struct SOC_Info g_socInfo[CELL_NUMS];
 
@@ -45,21 +49,13 @@ struct SOC_Info g_socInfo[CELL_NUMS];
 
 static const uint16_t get_cap(float cur, uint16_t tempra)
 {
-    float t = tempra/10.0;
     int tidx = 0;
-    if(t<2.5)
-    {
+    tidx = (tempra+200)/100;
+    if(tidx < 0){
         tidx = 0;
-    }
-    else if(t<10)
+    }else if(tidx >= TEMP_POINT_NUM)
     {
-        tidx = 2;
-    }
-    else if(t<50)
-    {
-        tidx = (int)t/10+1;
-    }else{
-        tidx = 6;
+        tidx = TEMP_POINT_NUM-1;
     }
 
     if(cur > 0)
@@ -108,21 +104,13 @@ static const uint16_t get_cap(float cur, uint16_t tempra)
 static const uint16_t * get_v(const uint16_t *chg_curve[TEMP_POINT_NUM][CUR_POINT_NUM], const uint16_t *dsg_curve[TEMP_POINT_NUM][CUR_POINT_NUM], float cur, uint16_t tempra)
 {
 
-    float t = tempra/10.0;
     int tidx = 0;
-    if(t<2.5)
-    {
+    tidx = (tempra+200)/100;
+    if(tidx < 0){
         tidx = 0;
-    }
-    else if(t<10)
+    }else if(tidx >= TEMP_POINT_NUM)
     {
-        tidx = 1;
-    }
-    else if(t<50)
-    {
-        tidx = (int)t/10+1;
-    }else{
-        tidx = 6;
+        tidx = TEMP_POINT_NUM-1;
     }
 
     if(cur > 0)
@@ -160,22 +148,15 @@ static const uint16_t * get_v(const uint16_t *chg_curve[TEMP_POINT_NUM][CUR_POIN
 
 static const int16_t * get_k(const int16_t *chg_curve[TEMP_POINT_NUM][CUR_POINT_NUM], const int16_t *dsg_curve[TEMP_POINT_NUM][CUR_POINT_NUM], float cur, uint16_t tempra)
 {
-    float t = tempra/10.0;
     int tidx = 0;
-    if(t<2.5)
-    {
+    tidx = (tempra+200)/100;
+    if(tidx < 0){
         tidx = 0;
-    }
-    else if(t<10)
+    }else if(tidx >= TEMP_POINT_NUM)
     {
-        tidx = 2;
+        tidx = TEMP_POINT_NUM-1;
     }
-    else if(t<50)
-    {
-        tidx = (int)t/10+1;
-    }else{
-        tidx = 6;
-    }
+
     if(cur > 0)
     {
         float c = cur/100*10;
@@ -338,11 +319,32 @@ void mysoc_pureAH(struct SOC_Info *SOCinfo, float cur, uint16_t vol, uint16_t te
 
 void mysoc_smooth(struct SOC_Info *SOCinfo, float cur, uint16_t vol, uint16_t tempra, float soh)
 {
-    SOCinfo->cell_vol_buffer[SOCinfo->cell_vol_buff_idx] = vol;
-    SOCinfo->cell_vol_buff_idx++;
-    if(SOCinfo->cell_vol_buff_idx >= CELL_VOL_BUFFER_LEN){
-        SOCinfo->cell_vol_buff_idx = 0;
+    static int callcount = 0;
+    callcount++;
+    if(callcount == 6018){
+        printf("fds\n");
     }
+    if(timebase_get_time_s()-SOCinfo->record_time > CELL_VOL_BUFFER_SAMPLE_TIME_S){
+            SOCinfo->record_time = timebase_get_time_s();
+            SOCinfo->cell_vol_buffer[SOCinfo->cell_vol_buff_idx] = vol;
+            SOCinfo->cell_vol_buff_idx++;
+            if(SOCinfo->cell_vol_buff_idx >= CELL_VOL_BUFFER_LEN){
+                SOCinfo->cell_vol_buff_idx = 0;
+            }
+    }
+    if(SOCinfo->cell_vol_buff_idx == 1){
+        SOCinfo->newest_vol = SOCinfo->cell_vol_buffer[0];
+        SOCinfo->oldest_vol = SOCinfo->cell_vol_buffer[CELL_VOL_BUFFER_LEN-1];
+    }else if(SOCinfo->cell_vol_buff_idx == 0){
+        SOCinfo->newest_vol = SOCinfo->cell_vol_buffer[CELL_VOL_BUFFER_LEN-1];
+        SOCinfo->oldest_vol = SOCinfo->cell_vol_buffer[CELL_VOL_BUFFER_LEN-2];
+    }else{
+        SOCinfo->newest_vol = SOCinfo->cell_vol_buffer[SOCinfo->cell_vol_buff_idx-1];
+        SOCinfo->oldest_vol = SOCinfo->cell_vol_buffer[SOCinfo->cell_vol_buff_idx-2];
+    }
+    
+
+
     if(cur > 0 && SOCinfo->soc > SOC_SMOOTH_START_POINT_CHG || cur < 0 && SOCinfo->soc < SOC_SMOOTH_START_POINT_DSG)
     {
         if(SOCinfo->soc_smooth == 0){
@@ -354,20 +356,32 @@ void mysoc_smooth(struct SOC_Info *SOCinfo, float cur, uint16_t vol, uint16_t te
 
         double diffAH = DIFF_T_SEC/3600.0*cur/capf*100;
 
-        if(cur>0  && (SOCinfo->cell_vol_buffer[CELL_VOL_BUFFER_LEN-1] - SOCinfo->cell_vol_buffer[0])){
-            int smooth_full_estimate_s = *g_chg_stop_vol/(SOCinfo->cell_vol_buffer[CELL_VOL_BUFFER_LEN-1] - SOCinfo->cell_vol_buffer[0])/CELL_VOL_BUFFER_SAMPLE_TIME_S;
-            int AH_s = (100-SOCinfo->soc_smooth)*capf/cur*3600;
+        if(cur>0  && ((int)SOCinfo->newest_vol-(int)SOCinfo->oldest_vol)){
+            int smooth_full_estimate_s = (*g_chg_stop_vol-vol)/(SOCinfo->newest_vol-SOCinfo->oldest_vol)*(CELL_VOL_BUFFER_LEN-1)*CELL_VOL_BUFFER_SAMPLE_TIME_S;
+            int AH_s = (100-SOCinfo->soc_smooth)*(capf/100)/cur*3600;
             if(AH_s > smooth_full_estimate_s){
                 float speedup_k = (float)AH_s/smooth_full_estimate_s-1; 
                 SOCinfo->soc_smooth += speedup_k*diffAH;
+                printf("chg soc speedup\r\n");
+            }else{
+                SOCinfo->soc_smooth = SOCinfo->soc;
+                printf("chg -> AH_s: %d, smooth_full_estimate_s: %d\n", AH_s, smooth_full_estimate_s);
             }   
-        }else if(cur<0 && (SOCinfo->cell_vol_buffer[0] - SOCinfo->cell_vol_buffer[CELL_NUMS-1])){
-            int smooth_empty_estimate_s = *g_dsg_stop_vol/(SOCinfo->cell_vol_buffer[0] - SOCinfo->cell_vol_buffer[CELL_NUMS-1])/CELL_VOL_BUFFER_SAMPLE_TIME_S;
-            int AH_s = SOCinfo->soc_smooth*capf/cur*3600;
+        }else if(cur<0 && ((int)SOCinfo->oldest_vol-(int)SOCinfo->newest_vol)){
+            int smooth_empty_estimate_s = (vol-*g_dsg_stop_vol)/(SOCinfo->oldest_vol-SOCinfo->newest_vol)*(CELL_VOL_BUFFER_LEN-1)*CELL_VOL_BUFFER_SAMPLE_TIME_S;
+            int AH_s = SOCinfo->soc_smooth*(capf/100)/fabs(cur)*3600;
             if(AH_s > smooth_empty_estimate_s){
                 float speedup_k = (float)AH_s/smooth_empty_estimate_s-1; 
-                SOCinfo->soc_smooth -= speedup_k*diffAH;
-            }
+                SOCinfo->soc_smooth += speedup_k*diffAH;
+                if(callcount%16 == 8){
+                    printf("dsg soc speedup %f, dsg -> AH_s: %d, smooth_full_estimate_s: %d, soc_smooth %f\r\n", speedup_k, AH_s, smooth_empty_estimate_s, SOCinfo->soc_smooth);
+                }
+            }else{
+                SOCinfo->soc_smooth = SOCinfo->soc;
+                if(callcount%16 == 8){
+                    printf("callcount:%d, dsg -> AH_s: %d, smooth_full_estimate_s: %d\n",callcount, AH_s, smooth_empty_estimate_s);
+                }
+            }  
         }
     }
 
@@ -381,7 +395,7 @@ void mysoc_smooth(struct SOC_Info *SOCinfo, float cur, uint16_t vol, uint16_t te
 
 }
 
-#define MAX_EKF_Q_PERCENT       5      // 10%
+
 double getEKF_Q(double soc)
 {
     if(g_group_state == GROUP_STATE_charging)
@@ -542,7 +556,7 @@ void mysocEKF(struct SOC_Info *SOCinfo, float cur, uint16_t vol, uint16_t tempra
     SOCinfo->soc = res;
     SOCinfo->socEr2 = resEr2;
     // printf("soc : %f \n", 100-res);
-    printf("%d soc error2: %f Q:%f R:%d, H:%f, K:%lf kcal : %f , vol: %d, estvol: %lf\n",callCount, SOCinfo->socEr2, Q, ekfR, H, K, K*((double)vol-estVol), vol, estVol);
+    //printf("%d soc error2: %f Q:%f R:%d, H:%f, K:%lf kcal : %f , vol: %d, estvol: %lf\n",callCount, SOCinfo->socEr2, Q, ekfR, H, K, K*((double)vol-estVol), vol, estVol);
 }
 
 
@@ -554,7 +568,7 @@ void mysoc(struct SOC_Info *SOCinfo, float cur, uint16_t vol, int16_t tempra, fl
 {
     if(fabs(cur) > CUR_WINDOW_A)
     {
-        if(tempra<0 || (tempra < PURE_AH_LOCK_TEMP_THRESHOLD && cur > PURE_AH_LOCK_CUR_THRESHOLD)){
+        if(tempra<0 || (tempra < PURE_AH_LOCK_TEMP_THRESHOLD && fabs(cur) > PURE_AH_LOCK_CUR_THRESHOLD)){
             SOCinfo->pureAH_lock = true;
         }
         if(SOCinfo->pureAH_lock)
@@ -568,7 +582,7 @@ void mysoc(struct SOC_Info *SOCinfo, float cur, uint16_t vol, int16_t tempra, fl
                 mysocEKF(SOCinfo, cur, vol, tempra, soh);                   // Ampere-hour Integration + EKF
             }
         }
-        //mysoc_smooth(SOCinfo, cur, vol, tempra, soh);
+        mysoc_smooth(SOCinfo, cur, vol, tempra, soh);
     }
 
 
