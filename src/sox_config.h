@@ -17,9 +17,9 @@
 #define DIFF_T_MSEC_ERR                 50              // ms
 #define CAP_ERR_AH                      5.0             // AH          
 #define CUR_SAMPLE_ERR_A                1.0             // A
-#define VOL_SAMPLE_ERR_MV_1             10              // mv
-#define VOL_SAMPLE_ERR_MV_2             5               // mv
-#define VOL_SAMPLE_ERR_MV_3             3               // mv
+#define VOL_SAMPLE_ERR_MV_1             100              // mv
+#define VOL_SAMPLE_ERR_MV_2             5              // mv
+#define VOL_SAMPLE_ERR_MV_3             50               // mv
 #define SOH_ERR_PERCENT                 5               // %
 
 #define GROUP_STATE_CHANGE_TIME         ((uint32_t)(30*60))         //30mins

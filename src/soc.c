@@ -21,8 +21,8 @@
 #define EKF_R_2                                 (VOL_SAMPLE_ERR_MV_2*VOL_SAMPLE_ERR_MV_2)
 #define EKF_R_3                                 (VOL_SAMPLE_ERR_MV_3*VOL_SAMPLE_ERR_MV_3)
 
-#define SOC0                                100
-#define SOC0_ER2                            100
+#define SOC0                                0
+#define SOC0_ER2                            25
 #define SOC0_ER2_SAVED                      100             // 10% error
 #define SOC0_ER2_LOOKUP_TABLE               900             // 30% error
 
@@ -74,9 +74,9 @@ static const uint16_t get_cap(float cur, uint16_t tempra)
         {
             cidx = 4;
         }
-        // if(s_cap_list_chg[tidx][cidx] == 1000){
-        //     assert(0);
-        // }
+        if(s_cap_list_chg[tidx][cidx] == 0){
+            assert(0);
+        }
         return s_cap_list_chg[tidx][cidx];
 
     }else if(cur < 0)
@@ -381,32 +381,36 @@ void mysoc_smooth(struct SOC_Info *SOCinfo, float cur, uint16_t vol, uint16_t te
 
 }
 
-
-uint32_t getEKF_R(double soc)
+#define MAX_EKF_Q_PERCENT       5      // 10%
+double getEKF_Q(double soc)
 {
     if(g_group_state == GROUP_STATE_charging)
     {
-        if(soc < 10)
-        {
-            return EKF_R_3;         // 3mv error
-        }else if(soc < 20){
-            return EKF_R_2;         // 5mv error
-        }else if(soc > 95){
-            return EKF_R_3;         // 3mv error
-        }else{
-            return EKF_R_1;         // 10mv error
-        }
+        return (1 + (soc/100*MAX_EKF_Q_PERCENT)*(soc/100*MAX_EKF_Q_PERCENT));
     }else if(g_group_state == GROUP_STATE_discharging){
-        if(soc < 10){
-            return EKF_R_3;         // 3mv error
-        }else if(soc < 20){
-            return EKF_R_2;         // 5mv error
-        }else{
-            return EKF_R_1;         // 10mv error
-        }
+        return (1 + ((100-soc)/100*MAX_EKF_Q_PERCENT)*((100-soc)/100*MAX_EKF_Q_PERCENT));
     }
 }
 
+
+
+
+
+uint32_t getEKF_R(double H)
+{
+
+    if(H<1)
+    {
+        return VOL_SAMPLE_ERR_MV_1*VOL_SAMPLE_ERR_MV_1;
+    }else if(H>2)
+    {
+        return VOL_SAMPLE_ERR_MV_3*VOL_SAMPLE_ERR_MV_3;
+    }else{
+        int t = fabs(VOL_SAMPLE_ERR_MV_3-VOL_SAMPLE_ERR_MV_1);
+        return (VOL_SAMPLE_ERR_MV_1+(H-1)*t)*(VOL_SAMPLE_ERR_MV_1+(H-1)*t);
+    }
+  
+}
 
 
 
@@ -424,7 +428,8 @@ void mysocEKF(struct SOC_Info *SOCinfo, float cur, uint16_t vol, uint16_t tempra
 
     double diffAH = DIFF_T_SEC/3600.0*cur/capf*100;
     double SOCcal = SOCinfo->soc + diffAH;
-    double SOCer2Cal = SOCinfo->socEr2 + EKF_Q(diffAH,capf, cur);
+    double Q = getEKF_Q(SOCcal);
+    double SOCer2Cal = SOCinfo->socEr2 + Q;
     pureAHSUM += diffAH;
     // printf("diffAH : %f, EKF_W : %f pureAH: %f\n", diffAH, EKF_W(diffAH,capf, cur), pureAHSUM);
     double H = 0, Hprev = 0, Hnext = 0;
@@ -486,7 +491,7 @@ void mysocEKF(struct SOC_Info *SOCinfo, float cur, uint16_t vol, uint16_t tempra
         // printf("callcount %d hprev :%f  H : %f  hnext :%f \n", callCount, Hprev, H, Hnext);
     }
     double K = 0;
-    uint32_t ekfR = getEKF_R(SOCinfo->soc);
+    uint32_t ekfR = getEKF_R(H);
 
     K = SOCer2Cal*H/(H*SOCer2Cal*H+ekfR);
 
@@ -494,6 +499,10 @@ void mysocEKF(struct SOC_Info *SOCinfo, float cur, uint16_t vol, uint16_t tempra
     double res = SOCcal+K*((double)vol-estVol);
     // printf("callcount %d  H: %f K :%f  kcal : %f , vol: %d, estvol: %lf\n", callCount, H, K, K*((double)vol-estVol), vol, estVol);
     double resEr2 = (1-K*H)*SOCer2Cal;
+    if(resEr2 > Q)
+    {
+        resEr2 = Q;
+    }
     double SOCerRes = sqrt(resEr2);
 
 
@@ -533,7 +542,7 @@ void mysocEKF(struct SOC_Info *SOCinfo, float cur, uint16_t vol, uint16_t tempra
     SOCinfo->soc = res;
     SOCinfo->socEr2 = resEr2;
     // printf("soc : %f \n", 100-res);
-    // printf("soc error2: %f \n", SOCinfo->socEr2);
+    printf("%d soc error2: %f Q:%f R:%d, H:%f, K:%lf kcal : %f , vol: %d, estvol: %lf\n",callCount, SOCinfo->socEr2, Q, ekfR, H, K, K*((double)vol-estVol), vol, estVol);
 }
 
 
@@ -559,7 +568,7 @@ void mysoc(struct SOC_Info *SOCinfo, float cur, uint16_t vol, int16_t tempra, fl
                 mysocEKF(SOCinfo, cur, vol, tempra, soh);                   // Ampere-hour Integration + EKF
             }
         }
-        mysoc_smooth(SOCinfo, cur, vol, tempra, soh);
+        //mysoc_smooth(SOCinfo, cur, vol, tempra, soh);
     }
 
 
@@ -817,7 +826,7 @@ void soc_task(bool full, bool empty)
 
         // if(i == 0)
         // {
-        //     printf("soc error2: %f \n", g_socInfo[0].socEr2);
+            // printf("soc error2: %f \n", g_socInfo[0].socEr2);
         // }
     }
     if(full)
