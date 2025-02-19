@@ -22,7 +22,7 @@
 #define EKF_R_3                                 (VOL_SAMPLE_ERR_MV_3*VOL_SAMPLE_ERR_MV_3)
 
 #define SOC0                                0
-#define SOC0_ER2                            100
+#define SOC0_ER2                            25
 #define SOC0_ER2_SAVED                      100             // 10% error
 #define SOC0_ER2_LOOKUP_TABLE               900             // 30% error
 
@@ -74,9 +74,9 @@ static const uint16_t get_cap(float cur, uint16_t tempra)
         {
             cidx = 4;
         }
-        // if(s_cap_list_chg[tidx][cidx] == 1000){
-        //     assert(0);
-        // }
+        if(s_cap_list_chg[tidx][cidx] == 0){
+            assert(0);
+        }
         return s_cap_list_chg[tidx][cidx];
 
     }else if(cur < 0)
