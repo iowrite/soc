@@ -394,13 +394,15 @@ uint32_t getEKF_R(double H)
 
     if(H<1)
     {
+        int t = fabs(VOL_SAMPLE_ERR_MV_1-VOL_SAMPLE_ERR_MV_2);
+        return (VOL_SAMPLE_ERR_MV_1+(1-H)*t)*(VOL_SAMPLE_ERR_MV_1+(1-H)*t);
         return VOL_SAMPLE_ERR_MV_1*VOL_SAMPLE_ERR_MV_1;
     }else if(H>2)
     {
         return VOL_SAMPLE_ERR_MV_3*VOL_SAMPLE_ERR_MV_3;
     }else{
         int t = fabs(VOL_SAMPLE_ERR_MV_3-VOL_SAMPLE_ERR_MV_1);
-        return (VOL_SAMPLE_ERR_MV_1+(H-1)*t)*(VOL_SAMPLE_ERR_MV_1+(H-1)*t);
+        return (VOL_SAMPLE_ERR_MV_3+(H-1)*t)*(VOL_SAMPLE_ERR_MV_3+(H-1)*t);
     }
   
 }
@@ -535,7 +537,10 @@ void mysocEKF(struct SOC_Info *SOCinfo, float cur, uint16_t vol, uint16_t tempra
     SOCinfo->soc = res;
     SOCinfo->socEr2 = resEr2;
     // printf("soc : %f \n", 100-res);
-    //printf("%d soc error2: %f Q:%f R:%d, H:%f, K:%lf kcal : %f , vol: %d, estvol: %lf\n",callCount, SOCinfo->socEr2, Q, ekfR, H, K, K*((double)vol-estVol), vol, estVol);
+    if(callCount%16 == 0){
+        printf("%d soc error2: %f Q:%f R:%d, H:%f, K:%lf kcal : %f , vol: %d, estvol: %lf\n",callCount/16, SOCinfo->socEr2, Q, ekfR, H, K, K*((double)vol-estVol), vol, estVol);
+    }
+    
 }
 
 
