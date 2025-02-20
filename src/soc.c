@@ -21,7 +21,7 @@
 #define EKF_R_2                                 (VOL_SAMPLE_ERR_MV_2*VOL_SAMPLE_ERR_MV_2)
 #define EKF_R_3                                 (VOL_SAMPLE_ERR_MV_3*VOL_SAMPLE_ERR_MV_3)
 
-#define SOC0                                100
+#define SOC0                                0
 #define SOC0_ER2                            25
 #define SOC0_ER2_SAVED                      100             // 10% error
 #define SOC0_ER2_LOOKUP_TABLE               900             // 30% error
@@ -33,8 +33,6 @@ struct SOC_Info
     uint8_t cell_vol_buff_idx;
     uint16_t cell_vol_buffer[CELL_VOL_BUFFER_LEN];
     uint32_t record_time;
-    float oldest_vol; 
-    float newest_vol;
     float soc_smooth;
     float soc;
     float socEr2;
@@ -324,6 +322,7 @@ void mysoc_smooth(struct SOC_Info *SOCinfo, float cur, uint16_t vol, uint16_t te
     if(callcount == 6018){
         printf("fds\n");
     }
+    float newest_vol, oldest_vol;
     if(timebase_get_time_s()-SOCinfo->record_time > CELL_VOL_BUFFER_SAMPLE_TIME_S){
             SOCinfo->record_time = timebase_get_time_s();
             SOCinfo->cell_vol_buffer[SOCinfo->cell_vol_buff_idx] = vol;
@@ -333,61 +332,41 @@ void mysoc_smooth(struct SOC_Info *SOCinfo, float cur, uint16_t vol, uint16_t te
             }
     }
     if(SOCinfo->cell_vol_buff_idx == 1){
-        SOCinfo->newest_vol = SOCinfo->cell_vol_buffer[0];
-        SOCinfo->oldest_vol = SOCinfo->cell_vol_buffer[CELL_VOL_BUFFER_LEN-1];
+        newest_vol = SOCinfo->cell_vol_buffer[0];
+        oldest_vol = SOCinfo->cell_vol_buffer[CELL_VOL_BUFFER_LEN-1];
     }else if(SOCinfo->cell_vol_buff_idx == 0){
-        SOCinfo->newest_vol = SOCinfo->cell_vol_buffer[CELL_VOL_BUFFER_LEN-1];
-        SOCinfo->oldest_vol = SOCinfo->cell_vol_buffer[CELL_VOL_BUFFER_LEN-2];
+        newest_vol = SOCinfo->cell_vol_buffer[CELL_VOL_BUFFER_LEN-1];
+        oldest_vol = SOCinfo->cell_vol_buffer[CELL_VOL_BUFFER_LEN-2];
     }else{
-        SOCinfo->newest_vol = SOCinfo->cell_vol_buffer[SOCinfo->cell_vol_buff_idx-1];
-        SOCinfo->oldest_vol = SOCinfo->cell_vol_buffer[SOCinfo->cell_vol_buff_idx-2];
+        newest_vol = SOCinfo->cell_vol_buffer[SOCinfo->cell_vol_buff_idx-1];
+        oldest_vol = SOCinfo->cell_vol_buffer[SOCinfo->cell_vol_buff_idx-2];
     }
     
 
 
-    if(cur > 0 && SOCinfo->soc > SOC_SMOOTH_START_POINT_CHG || cur < 0 && SOCinfo->soc < SOC_SMOOTH_START_POINT_DSG)
+    if(cur > 0 && vol > SOC_SMOOTH_START_VOL_CHG || cur < 0 && vol < SOC_SMOOTH_START_VOL_DSG)
     {
         if(SOCinfo->soc_smooth == 0){
             SOCinfo->soc_smooth = SOCinfo->soc;
         }
-        const uint16_t cap = get_cap(cur, tempra);
 
-        const double capf = cap/10.0*(soh/100);
-
-        double diffAH = DIFF_T_SEC/3600.0*cur/capf*100;
-
-        if(cur>0  && ((int)SOCinfo->newest_vol-(int)SOCinfo->oldest_vol)){
-            int smooth_full_estimate_s = (*g_chg_stop_vol-vol)/(SOCinfo->newest_vol-SOCinfo->oldest_vol)*(CELL_VOL_BUFFER_LEN-1)*CELL_VOL_BUFFER_SAMPLE_TIME_S;
-            int AH_s = (100-SOCinfo->soc_smooth)*(capf/100)/cur*3600;
-            if(AH_s > smooth_full_estimate_s){
-                float speedup_k = (float)AH_s/smooth_full_estimate_s-1; 
-                SOCinfo->soc_smooth += speedup_k*diffAH;
-                printf("chg soc speedup\r\n");
-            }else{
-                SOCinfo->soc_smooth = SOCinfo->soc;
-                printf("chg -> AH_s: %d, smooth_full_estimate_s: %d\n", AH_s, smooth_full_estimate_s);
-            }   
-        }else if(cur<0 && ((int)SOCinfo->oldest_vol-(int)SOCinfo->newest_vol)){
-            int smooth_empty_estimate_s = (vol-*g_dsg_stop_vol)/(SOCinfo->oldest_vol-SOCinfo->newest_vol)*(CELL_VOL_BUFFER_LEN-1)*CELL_VOL_BUFFER_SAMPLE_TIME_S;
-            int AH_s = SOCinfo->soc_smooth*(capf/100)/fabs(cur)*3600;
-            if(AH_s > smooth_empty_estimate_s){
-                float speedup_k = (float)AH_s/smooth_empty_estimate_s-1; 
-                SOCinfo->soc_smooth += speedup_k*diffAH;
-                if(callcount%16 == 8){
-                    printf("dsg soc speedup %f, dsg -> AH_s: %d, smooth_full_estimate_s: %d, soc_smooth %f\r\n", speedup_k, AH_s, smooth_empty_estimate_s, SOCinfo->soc_smooth);
-                }
-            }else{
-                SOCinfo->soc_smooth = SOCinfo->soc;
-                if(callcount%16 == 8){
-                    printf("callcount:%d, dsg -> AH_s: %d, smooth_full_estimate_s: %d\n",callcount, AH_s, smooth_empty_estimate_s);
-                }
-            }  
+        if(cur>0  && ((int)newest_vol-(int)oldest_vol)){
+            int smooth_full_estimate_s = (*g_chg_stop_vol-vol)/(newest_vol-oldest_vol)*(CELL_VOL_BUFFER_LEN-1)*CELL_VOL_BUFFER_SAMPLE_TIME_S;
+            
+            
+        }else if(cur<0 && ((int)oldest_vol-(int)newest_vol)){
+            int smooth_empty_estimate_s = (vol-*g_dsg_stop_vol)/(oldest_vol-newest_vol)*(CELL_VOL_BUFFER_LEN-1)*CELL_VOL_BUFFER_SAMPLE_TIME_S;
+            double smoothDiff = SOCinfo->soc_smooth/smooth_empty_estimate_s*(3+15*(vol-*g_dsg_stop_vol)/(SOC_SMOOTH_START_VOL_DSG-*g_dsg_stop_vol));
+            SOCinfo->soc_smooth -= smoothDiff;
+            if(callcount%16 == 8 && SOCinfo->soc_smooth<1){
+                printf("dsg soc speedup %f,smooth_full_estimate_s: %d, soc_smooth %f\r\n", smoothDiff, smooth_empty_estimate_s, SOCinfo->soc_smooth);
+            }
         }
     }
 
     if(SOCinfo->soc_smooth < 0)
     {
-        SOCinfo->soc_smooth = 0;
+        SOCinfo->soc_smooth = 0.1;             // not equal to 0(zero mean smooth not enable)
     }else if(SOCinfo->soc_smooth > 100)
     {
         SOCinfo->soc_smooth = 100;
@@ -574,6 +553,8 @@ void mysoc(struct SOC_Info *SOCinfo, float cur, uint16_t vol, int16_t tempra, fl
         if(SOCinfo->pureAH_lock)
         {
             mysoc_pureAH(SOCinfo, cur, vol, tempra, soh);
+            mysoc_smooth(SOCinfo, cur, vol, tempra, soh);
+            printf("pureAH lock\n");
         }else{
             enum GroupState state = check_current_group_state(cur);
             if(state == GROUP_STATE_transfer){
@@ -582,7 +563,6 @@ void mysoc(struct SOC_Info *SOCinfo, float cur, uint16_t vol, int16_t tempra, fl
                 mysocEKF(SOCinfo, cur, vol, tempra, soh);                   // Ampere-hour Integration + EKF
             }
         }
-        mysoc_smooth(SOCinfo, cur, vol, tempra, soh);
     }
 
 
@@ -830,10 +810,19 @@ void soc_task(bool full, bool empty)
         mysoc(&g_socInfo[i], *g_cur, g_celVol[i], g_celTmp[i], g_celSOH[i]);
 
         // output soc
-        if(g_socInfo[i].soc_smooth && fabs(g_socInfo[i].soc_smooth-g_socInfo[i].soc) > 2)
+        if(g_socInfo[i].soc_smooth)
         {
-            g_socInfo[i].soc = g_socInfo[i].soc_smooth*10;
-        }else{
+            if(*g_cur>0 &&  g_socInfo[i].soc_smooth>g_socInfo[i].soc){
+                g_celSOC[i] = g_socInfo[i].soc_smooth*10;
+                printf("use smooth soc\n");
+            }else if(*g_cur<0 &&  g_socInfo[i].soc_smooth<g_socInfo[i].soc){
+                g_celSOC[i] = g_socInfo[i].soc_smooth*10;
+                printf("use smooth soc\n");
+            }else{
+                g_celSOC[i] = round(fabs(g_socInfo[i].soc)*10);
+            }
+        }
+        else{
             g_celSOC[i] = round(fabs(g_socInfo[i].soc)*10);
         }
         
