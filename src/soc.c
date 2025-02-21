@@ -521,15 +521,25 @@ void mysocEKF(struct SOC_Info *SOCinfo, float cur, uint16_t vol, uint16_t tempra
     if(cur > 0){
         if(res < SOCinfo->soc)
         {
-            res = SOCinfo->soc;
+            //res = SOCinfo->soc;
             // resEr2 = SOCinfo->socEr2;
             // printf("soc underflow\n");
+            double smooth_k = 10/SOCinfo->soc;
+            if(smooth_k > 1){
+                smooth_k = 1;
+            }
+            res = SOCinfo->soc + smooth_k*diffAH;
         }
     }else if(cur < 0)
     {
         if(res > SOCinfo->soc)
         {
-            res = SOCinfo->soc;
+            //res = SOCinfo->soc;
+            double smooth_k = 10/(100-SOCinfo->soc);
+            if(smooth_k > 1){
+                smooth_k = 1;
+            }
+            res = SOCinfo->soc + smooth_k*diffAH;
         }
     }
 
