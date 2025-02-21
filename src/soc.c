@@ -319,9 +319,9 @@ void mysoc_smooth(struct SOC_Info *SOCinfo, float cur, uint16_t vol, uint16_t te
 {
     static int callcount = 0;
     callcount++;
-    if(callcount == 6018){
-        printf("fds\n");
-    }
+    // if(callcount == 6018){
+    //     printf("fds\n");
+    // }
     float newest_vol, oldest_vol;
     if(timebase_get_time_s()-SOCinfo->record_time > CELL_VOL_BUFFER_SAMPLE_TIME_S){
             SOCinfo->record_time = timebase_get_time_s();
@@ -488,9 +488,9 @@ void mysocEKF(struct SOC_Info *SOCinfo, float cur, uint16_t vol, uint16_t tempra
     double K = 0;
     uint32_t ekfR = getEKF_R(H);
 
-    if(callCount/16 == 2000){
-        printf("here\n");
-    }
+    // if(callCount/16 == 2000){
+    //     printf("here\n");
+    // }
     if(SOCer2Cal>Q)
     {
         SOCer2Cal = Q;
