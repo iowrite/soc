@@ -488,6 +488,13 @@ void mysocEKF(struct SOC_Info *SOCinfo, float cur, uint16_t vol, uint16_t tempra
     double K = 0;
     uint32_t ekfR = getEKF_R(H);
 
+    if(callCount/16 == 2000){
+        printf("here\n");
+    }
+    if(SOCer2Cal>Q)
+    {
+        SOCer2Cal = Q;
+    }
     K = SOCer2Cal*H/(H*SOCer2Cal*H+ekfR);
 
     

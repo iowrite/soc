@@ -189,6 +189,16 @@ plt.plot(output_x, [row[2] for row in two_dimensional_list_grp], label="min soc"
 plt.plot(output_x, [row[3] for row in two_dimensional_list_grp], label="avg soc")
 plt.ylim(-50, 1050)
 plt.legend()
+
+plt.figure()
+
+plt.grid(True)
+plt.yticks(y_ticks)
+plt.plot(output_x, [row[0] for row in two_dimensional_list_grp], label="grp soc")
+plt.ylim(-50, 1050)
+plt.legend()
+
+
 plt.show()
 
 # # 保存图形到文件
