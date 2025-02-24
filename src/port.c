@@ -53,12 +53,12 @@ int8_t write_saved_soc_group(float grpsoc)
     return 0;
 }
 
-int8_t read_saved_soh(double *soh)
+int8_t read_saved_soh(float *soh)
 {
 
     return 0;
 }
-int8_t write_saved_soh(double *soh)
+int8_t write_saved_soh(float *soh)
 {
     return 0;
 

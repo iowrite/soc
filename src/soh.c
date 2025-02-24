@@ -29,8 +29,8 @@ int8_t  soh_init()
     *g_cycleCount = cycleTime;
 
     // read last soh(saved before last poweroff)
-    double soh_saved[CELL_NUMS];
-    double soh_first_powerup[CELL_NUMS];
+    float soh_saved[CELL_NUMS];
+    float soh_first_powerup[CELL_NUMS];
     memset(soh_first_powerup, 0xff, sizeof(soh_first_powerup));
     bool soh_abnormal_flag[CELL_NUMS];
     ret = read_saved_soh(soh_saved);
@@ -58,7 +58,7 @@ int8_t  soh_init()
         
     }
 
-    double soh = 100 - 20 * (*g_cycleCount/1000.0/REFERENCE_CYCLE_TIME);
+    float soh = 100 - 20 * (*g_cycleCount/1000.0/REFERENCE_CYCLE_TIME);
     for(size_t i = 0; i < CELL_NUMS; i++)
     {
         if(soh_abnormal_flag[i] == true){
@@ -87,7 +87,7 @@ int8_t soh_task()
         
     }
 
-    double sumSOH = 0;
+    float sumSOH = 0;
     for (size_t i = 0; i < CELL_NUMS; i++)
     {
         if (g_celSOC[i] <= s_lastSOC[i]-10 || g_celSOC[i] >= s_lastSOC[i]+10)

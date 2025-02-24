@@ -15,8 +15,8 @@ uint16_t *g_celVol;                 // mv           *1
 int16_t *g_celTmp;                  // dregree      *10
 uint16_t *g_celSOC;                 // %            *10
 uint16_t *g_grpSOC;                 // %            *10
-double  *g_celSOH;                  // %            *1
-double  *g_grpSOH;                  // %            *1
+float  *g_celSOH;                  // %            *1
+float  *g_grpSOH;                  // %            *1
 uint32_t *g_cycleCount;             // times        *1000
 float *g_accChgWH;                  // WH           *1
 float *g_accDsgWH;                  // WH           *1
@@ -34,8 +34,8 @@ int8_t sox_init(
     int16_t *tmp,                       // input only
     uint16_t *soc,                      // input and output
     uint16_t *grpSOC ,                  // input and output
-    double *soh,                        // input and output
-    double *grpSOH,                     // input and output
+    float *soh,                        // input and output
+    float *grpSOH,                     // input and output
     uint32_t *cycleCount,               // input and output
     float *grpVol,                      // input only
     float *sigChgWH,                    // input and output

@@ -9,7 +9,7 @@ int8_t sox_init(
     int16_t *tmp, 
     uint16_t *soc, 
     uint16_t *grpSOC , 
-    double *soh, double *grpSOH, 
+    float *soh, float *grpSOH, 
     uint32_t *cycleCount,
     float *grpVol,
     float *sigChgWH,

@@ -127,8 +127,8 @@ int main() {
     //     tmp[i] = 250;
     // }
     uint16_t soc[16];
-    double soh[16];
-    double grpsoh = 100;
+    float soh[16];
+    float grpsoh = 100;
     uint32_t cycleCount = 0;
     float grpVol = 0;
     float sigChgWH = 0;
