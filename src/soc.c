@@ -379,9 +379,9 @@ double getEKF_Q(double soc)
 {
     if(g_group_state == GROUP_STATE_charging)
     {
-        return (1 + (soc/100*MAX_EKF_Q_PERCENT)*(soc/100*MAX_EKF_Q_PERCENT));
+        return (soc/100 + (soc/100*MAX_EKF_Q_PERCENT)*(soc/100*MAX_EKF_Q_PERCENT));
     }else if(g_group_state == GROUP_STATE_discharging){
-        return (1 + ((100-soc)/100*MAX_EKF_Q_PERCENT)*((100-soc)/100*MAX_EKF_Q_PERCENT));
+        return (soc/100 + ((100-soc)/100*MAX_EKF_Q_PERCENT)*((100-soc)/100*MAX_EKF_Q_PERCENT));
     }
 }
 
