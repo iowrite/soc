@@ -673,12 +673,12 @@ static void gropuSOC()
  * @brief  convert voltage to soc by lookup table
  * @return soc
  */
-static float vol2soc(uint16_t vol, uint16_t tempra)
+static float vol2soc(uint16_t vol, int16_t tempra)
 {
     return 0;
 }
 
-static void vol2soc_batch(uint16_t *vol, uint16_t *tempra, float *soc)
+static void vol2soc_batch(uint16_t *vol, int16_t *tempra, float *soc)
 {
     for(int i = 0; i < CELL_NUMS; i++)
     {
