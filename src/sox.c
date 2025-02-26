@@ -34,8 +34,8 @@ int8_t sox_init(
     int16_t *tmp,                       // input only
     uint16_t *soc,                      // input and output
     uint16_t *grpSOC ,                  // input and output
-    float *soh,                        // input and output
-    float *grpSOH,                     // input and output
+    float *soh,                         // input and output
+    float *grpSOH,                      // output only
     uint32_t *cycleCount,               // input and output
     float *grpVol,                      // input only
     float *sigChgWH,                    // input and output

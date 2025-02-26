@@ -62,7 +62,9 @@ int8_t  soh_init()
     for(size_t i = 0; i < CELL_NUMS; i++)
     {
         if(soh_abnormal_flag[i] == true){
-            soh_saved[i] = 100 - 20 * (*g_cycleCount/1000.0/REFERENCE_CYCLE_TIME);
+            g_celSOH[i] = soh;
+        }else{
+            g_celSOH[i] = soh_saved[i];
         }
     }
 
