@@ -125,6 +125,7 @@ int8_t soh_task()
 
     port_soh_output();
     // printf("cycle: %d  SOH: %f\n", *g_cycleCount, *g_grpSOH);
+    return 0;
 }
 
 
