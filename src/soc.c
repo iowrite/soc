@@ -16,7 +16,7 @@
 
 
 
- #define EKF_W(diffAH, cap, cur)                 ((50.0/(DIFF_T_SEC*1000) + CUR_SAMPLE_ERR_A/cur + CAP_ERR_AH/cap+SOH_ERR_PERCENT/100.0) *  diffAH)     
+#define EKF_W(diffAH, cap, cur)                 ((50.0/(DIFF_T_SEC*1000) + CUR_SAMPLE_ERR_A/cur + CAP_ERR_AH/cap+SOH_ERR_PERCENT/100.0) *  diffAH)     
 #define EKF_Q(diffAH, cap, cur)                 (EKF_W(diffAH, cap, cur)*EKF_W(diffAH, cap, cur))                 
 #define EKF_R_1                                 (VOL_SAMPLE_ERR_MV_1*VOL_SAMPLE_ERR_MV_1)
 #define EKF_R_2                                 (VOL_SAMPLE_ERR_MV_2*VOL_SAMPLE_ERR_MV_2)
@@ -825,8 +825,11 @@ void soc_save()
 
 
 
+
 void soc_task(bool full, bool empty)
 {
+    port_soc_input();
+
     for (size_t i = 0; i < CELL_NUMS; i++)
     {
 
@@ -885,6 +888,7 @@ void soc_task(bool full, bool empty)
     }
     gropuSOC();
 
+    port_soc_output();
 
 }
 

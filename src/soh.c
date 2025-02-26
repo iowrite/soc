@@ -77,8 +77,14 @@ int8_t  soh_init()
 }
 
 
+
+
+
 int8_t soh_task()
 {
+
+    port_soh_input();
+
     // bug: lost some cycle when charge change to discharge or discharge to charge
     if(*g_grpSOC <= s_lastGrpSOC-10){
         *g_cycleCount += 5*((s_lastGrpSOC-*g_grpSOC)/10);
@@ -116,6 +122,8 @@ int8_t soh_task()
     
     *g_grpSOH = sumSOH/16;
 
+
+    port_soh_output();
     // printf("cycle: %d  SOH: %f\n", *g_cycleCount, *g_grpSOH);
 }
 

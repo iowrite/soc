@@ -27,9 +27,18 @@ int8_t soe_init()
 
 }
 
+
+
+
+
+
+
 static float s_lastCur = 0;
 int8_t soe_task()
 {
+
+    port_soe_input();
+
     if(g_accChgWH && g_accDsgWH && g_sigChgWH && g_sigDsgWH){
         if(*g_cur > 0){
             *g_accChgWH += *g_cur * *g_grpVol /3600;
@@ -89,7 +98,7 @@ int8_t soe_task()
         }
     }
 
-    
+    port_soe_output();
     // printf("sigChg:%f,  sigDsg:%f, accChgWH:%f, accDsgWH:%f\n",*g_sigChgWH, *g_sigDsgWH, *g_accChgWH, *g_accDsgWH);
 
 
