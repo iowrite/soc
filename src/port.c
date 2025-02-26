@@ -94,6 +94,23 @@ int8_t write_saved_soe(float totalChgWh, float totalDsgWh)
 
 
 
+void port_sox_input(void)
+{
+
+
+
+
+}
+
+void port_sox_output(void)
+{
+
+
+
+
+}
+
+
 void port_soc_input(void)
 {
 

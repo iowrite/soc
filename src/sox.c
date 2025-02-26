@@ -6,6 +6,7 @@
 #include "soe.h"
 #include "sop.h"
 #include "sox.h"
+#include "port.h"
 
 
 
@@ -74,10 +75,12 @@ int8_t sox_init(
 
 int8_t sox_task(bool full, bool empty)
 {
+    port_sox_input();
     // calculate
     soc_task(full, empty);
     soh_task();
     soe_task();
+    port_sox_output();
 
     // Periodic storage to prevent power outages
     soc_save();                 // cell soc and group soc
