@@ -5,6 +5,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <assert.h>
+#include <stdlib.h>
 #include "soc.h"
 #include "curve.h"
 #include "sox_private.h"
@@ -394,14 +395,14 @@ uint32_t getEKF_R(float H)
 
     if(H<1)
     {
-        int t = fabs(VOL_SAMPLE_ERR_MV_1-VOL_SAMPLE_ERR_MV_2);
+        int t = abs(VOL_SAMPLE_ERR_MV_1-VOL_SAMPLE_ERR_MV_2);
         return (VOL_SAMPLE_ERR_MV_1+(1-H)*t)*(VOL_SAMPLE_ERR_MV_1+(1-H)*t);
         return VOL_SAMPLE_ERR_MV_1*VOL_SAMPLE_ERR_MV_1;
     }else if(H>2)
     {
         return VOL_SAMPLE_ERR_MV_3*VOL_SAMPLE_ERR_MV_3;
     }else{
-        int t = fabs(VOL_SAMPLE_ERR_MV_3-VOL_SAMPLE_ERR_MV_1);
+        int t = abs(VOL_SAMPLE_ERR_MV_3-VOL_SAMPLE_ERR_MV_1);
         return (VOL_SAMPLE_ERR_MV_3+(H-1)*t)*(VOL_SAMPLE_ERR_MV_3+(H-1)*t);
     }
   
