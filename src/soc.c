@@ -94,7 +94,7 @@ static const uint16_t get_cap(float cur, uint16_t tempra)
 
 
 
-
+    return 0;
 }
 
 
@@ -142,6 +142,7 @@ static const uint16_t * get_v(const uint16_t *chg_curve[TEMP_POINT_NUM][CUR_POIN
         assert(dsg_curve[tidx][cidx] != NULL);
         return dsg_curve[tidx][cidx];
     }
+    return NULL;
 }
 
 
@@ -186,6 +187,7 @@ static const int16_t * get_k(const int16_t *chg_curve[TEMP_POINT_NUM][CUR_POINT_
         assert(dsg_curve[tidx][cidx] != NULL);
         return dsg_curve[tidx][cidx];
     }
+    return NULL;
 }
 
 
