@@ -40,8 +40,8 @@ int8_t sox_init(
     float *grpVol,                      // input only
     float *sigChgWH,                    // input and output
     float *sigDsgWH,                    // input and output
-    float *accChgAH,                    // input and output
-    float *accDsgAH,                    // input and output
+    float *accChgWH,                    // input and output
+    float *accDsgWH,                    // input and output
     uint16_t *chg_stop_vol,             // input only
     uint16_t *dsg_stop_vol              // input only
     )
@@ -57,8 +57,8 @@ int8_t sox_init(
     g_grpVol = grpVol;
     g_sigChgWH = sigChgWH;
     g_sigDsgWH = sigDsgWH;
-    g_accChgWH = accChgAH;
-    g_accDsgWH = accDsgAH;
+    g_accChgWH = accChgWH;
+    g_accDsgWH = accDsgWH;
     g_chg_stop_vol = chg_stop_vol;
     g_dsg_stop_vol = dsg_stop_vol;
     soc_init();
