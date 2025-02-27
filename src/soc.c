@@ -182,6 +182,7 @@ static const int16_t * get_k(const int16_t *chg_curve[TEMP_POINT_NUM][CUR_POINT_
         if(cidx > 4)
         {
             cidx = 4;
+        }
 #if FULL_STD_CLIB
         assert(dsg_curve[tidx][cidx] != NULL);
 #endif
