@@ -1,9 +1,15 @@
 #include <stdint.h>
 #include <time.h>
 #include <stdio.h>
+#include <math.h>
 #include "port.h"
 #include "sox_config.h"
+#include "soc.h"
+#include "sox_private.h"
 
+
+#define SOC0                                0
+#define SOC0_ER2                            25
 extern uint32_t excel_second;
 uint32_t timebase_get_time_s(void)
 {
@@ -162,6 +168,39 @@ void port_soh_output(void)
 
 
     
+}
+
+
+
+void port_soc_init(void)
+{
+    for (size_t i = 0; i < CELL_NUMS; i++)
+    {
+        g_socInfo[i].soc = SOC0;
+        g_socInfo[i].socEr2 = SOC0_ER2;
+        g_celSOC[i] = round(SOC0*10);
+
+    }
+    *g_grpSOC = round(SOC0*10);
+}
+void port_soh_init(void)
+{
+    for(size_t i = 0; i < CELL_NUMS; i++)
+    {
+        g_celSOH[i] = 100;
+    }
+
+}
+void port_soe_init(void)
+{
+
+
+}
+void port_sop_init(void)
+{
+
+
+
 }
 
 

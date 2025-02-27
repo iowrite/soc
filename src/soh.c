@@ -73,6 +73,8 @@ int8_t  soh_init()
 
     memcpy(s_lastSOC, g_celSOC, sizeof(s_lastSOC));
     s_lastGrpSOC = *g_grpSOC;
+
+    port_soh_init();
     return 0;
 }
 

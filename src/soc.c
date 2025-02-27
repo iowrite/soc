@@ -22,8 +22,7 @@
 #define EKF_R_2                                 (VOL_SAMPLE_ERR_MV_2*VOL_SAMPLE_ERR_MV_2)
 #define EKF_R_3                                 (VOL_SAMPLE_ERR_MV_3*VOL_SAMPLE_ERR_MV_3)
 
-#define SOC0                                0
-#define SOC0_ER2                            25
+
 #define SOC0_ER2_SAVED                      100             // 10% error
 #define SOC0_ER2_LOOKUP_TABLE               900             // 30% error
 
@@ -766,16 +765,8 @@ void soc_init()
     }
 
 
+    port_soc_init();
 
-    for (size_t i = 0; i < CELL_NUMS; i++)
-    {
-        g_socInfo[i].soc = SOC0;
-        g_socInfo[i].socEr2 = SOC0_ER2;
-        g_celSOC[i] = round(SOC0*10);
-
-    }
-    *g_grpSOC = round(SOC0*10);
-    
     
 }
 

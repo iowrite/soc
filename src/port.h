@@ -109,7 +109,10 @@ void port_soe_output(void);
 void port_sop_input(void);
 void port_sop_output(void);
 
-
+void port_soc_init(void);
+void port_soh_init(void);
+void port_soe_init(void);
+void port_sop_init(void);
 
 
 #endif
