@@ -386,6 +386,7 @@ float getEKF_Q(float soc)
     }else if(g_group_state == GROUP_STATE_discharging){
         return (soc/100 + ((100-soc)/100*MAX_EKF_Q_PERCENT)*((100-soc)/100*MAX_EKF_Q_PERCENT));
     }
+    return nan("");
 }
 
 
