@@ -669,7 +669,18 @@ static void gropuSOC()
  */
 static float vol2soc(uint16_t vol, int16_t tempra)
 {
-    return 0;
+    float soc = 0;
+    
+    for(int i = 0; i < OCV_POINT_NUM; i++)
+    {
+        if(vol < temp_ocv[4][i])
+        {
+            soc += 5;
+        }
+        
+    }
+
+    return soc-5;
 }
 
 static void vol2soc_batch(uint16_t *vol, int16_t *tempra, float *soc)
