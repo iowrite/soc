@@ -558,9 +558,9 @@ void mysocEKF(struct SOC_Info *SOCinfo, float cur, uint16_t vol, uint16_t tempra
     SOCinfo->soc = res;
     SOCinfo->socEr2 = resEr2;
     // printf("soc : %f \n", 100-res);
-    if(callCount%16 == 0){
-        printf("%d soc error2: %f Q:%f R:%d, H:%f, K:%lf kcal : %f , vol: %d, estvol: %lf\n",callCount/16, SOCinfo->socEr2, Q, ekfR, H, K, K*((float)vol-estVol), vol, estVol);
-    }
+    //if(callCount%16 == 0){
+    //    printf("%d soc error2: %f Q:%f R:%d, H:%f, K:%lf kcal : %f , vol: %d, estvol: %lf\n",callCount/16, SOCinfo->socEr2, Q, ekfR, H, K, K*((float)vol-estVol), vol, estVol);
+    //}
     
 }
 
@@ -573,7 +573,7 @@ void mysoc(struct SOC_Info *SOCinfo, float cur, uint16_t vol, int16_t tempra, fl
 {
     if(fabs(cur) > CUR_WINDOW_A)
     {
-        if(tempra<0 || (tempra < PURE_AH_LOCK_TEMP_THRESHOLD && fabs(cur) > PURE_AH_LOCK_CUR_THRESHOLD)){
+        if((tempra<0 && tempra > -200) || (tempra < PURE_AH_LOCK_TEMP_THRESHOLD && fabs(cur) > PURE_AH_LOCK_CUR_THRESHOLD)){
             SOCinfo->pureAH_lock = true;
         }
         if(SOCinfo->pureAH_lock)
