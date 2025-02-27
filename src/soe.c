@@ -23,7 +23,7 @@ int8_t soe_init()
             }
         }
     }
-
+    return 0;
 
 }
 
