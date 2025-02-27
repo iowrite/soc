@@ -2,6 +2,8 @@
 #ifndef AEKF_PORT_H
 #define AEKF_PORT_H
 
+#define FULL_STD_CLIB       0
+
 /**
  * @brief get a timestamp in seconds
  */
