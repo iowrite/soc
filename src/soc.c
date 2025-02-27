@@ -59,7 +59,9 @@ static const uint16_t get_cap(float cur, uint16_t tempra)
             cidx = 4;
         }
         if(s_cap_list_chg[tidx][cidx] == 0){
+#if FULL_STD_CLIB
             assert(0);
+#endif
         }
         return s_cap_list_chg[tidx][cidx];
 
@@ -76,7 +78,9 @@ static const uint16_t get_cap(float cur, uint16_t tempra)
             cidx = 4;
         }
         if(s_cap_list_dsg[tidx][cidx] == 0){
+#if FULL_STD_CLIB
             assert(0);
+#endif
         }
         return s_cap_list_dsg[tidx][cidx];
     }
@@ -113,7 +117,9 @@ static const uint16_t * get_v(const uint16_t *chg_curve[TEMP_POINT_NUM][CUR_POIN
         {
             cidx = 4;
         }
+#if FULL_STD_CLIB
         assert(chg_curve[tidx][cidx] != NULL);
+#endif
         return chg_curve[tidx][cidx];
 
     }else if(cur < 0)
@@ -128,7 +134,9 @@ static const uint16_t * get_v(const uint16_t *chg_curve[TEMP_POINT_NUM][CUR_POIN
         {
             cidx = 4;
         }
+#if FULL_STD_CLIB
         assert(dsg_curve[tidx][cidx] != NULL);
+#endif
         return dsg_curve[tidx][cidx];
     }
     return NULL;
@@ -158,7 +166,9 @@ static const int16_t * get_k(const int16_t *chg_curve[TEMP_POINT_NUM][CUR_POINT_
         {
             cidx = 4;
         }
+#if FULL_STD_CLIB
         assert(chg_curve[tidx][cidx] != NULL);
+#endif
         return chg_curve[tidx][cidx];
 
     }else if(cur < 0)
@@ -172,8 +182,9 @@ static const int16_t * get_k(const int16_t *chg_curve[TEMP_POINT_NUM][CUR_POINT_
         if(cidx > 4)
         {
             cidx = 4;
-        }
+#if FULL_STD_CLIB
         assert(dsg_curve[tidx][cidx] != NULL);
+#endif
         return dsg_curve[tidx][cidx];
     }
     return NULL;
@@ -350,9 +361,9 @@ void mysoc_smooth(struct SOC_Info *SOCinfo, float cur, uint16_t vol, uint16_t te
             int smooth_empty_estimate_s = (vol-*g_dsg_stop_vol)/(oldest_vol-newest_vol)*(CELL_VOL_BUFFER_LEN-1)*CELL_VOL_BUFFER_SAMPLE_TIME_S;
             float smoothDiff = SOCinfo->soc_smooth/smooth_empty_estimate_s*(3+15*(vol-*g_dsg_stop_vol)/(SOC_SMOOTH_START_VOL_DSG-*g_dsg_stop_vol));
             SOCinfo->soc_smooth -= smoothDiff;
-            if(callcount%16 == 8 && SOCinfo->soc_smooth<1){
-                printf("dsg soc speedup %f,smooth_full_estimate_s: %d, soc_smooth %f\r\n", smoothDiff, smooth_empty_estimate_s, SOCinfo->soc_smooth);
-            }
+//            if(callcount%16 == 8 && SOCinfo->soc_smooth<1){
+//                printf("dsg soc speedup %f,smooth_full_estimate_s: %d, soc_smooth %f\r\n", smoothDiff, smooth_empty_estimate_s, SOCinfo->soc_smooth);
+//            }
         }
     }
 
@@ -569,7 +580,7 @@ void mysoc(struct SOC_Info *SOCinfo, float cur, uint16_t vol, int16_t tempra, fl
         {
             mysoc_pureAH(SOCinfo, cur, vol, tempra, soh);
             mysoc_smooth(SOCinfo, cur, vol, tempra, soh);
-            printf("pureAH lock\n");
+//            printf("pureAH lock\n");
         }else{
             enum GroupState state = check_current_group_state(cur);
             if(state == GROUP_STATE_transfer){
@@ -847,10 +858,10 @@ void soc_task(bool full, bool empty)
         {
             if(*g_cur>0 &&  g_socInfo[i].soc_smooth>g_socInfo[i].soc){
                 g_celSOC[i] = g_socInfo[i].soc_smooth*10;
-                printf("use smooth soc\n");
+//               printf("use smooth soc\n");
             }else if(*g_cur<0 &&  g_socInfo[i].soc_smooth<g_socInfo[i].soc){
                 g_celSOC[i] = g_socInfo[i].soc_smooth*10;
-                printf("use smooth soc\n");
+//               printf("use smooth soc\n");
             }else{
                 g_celSOC[i] = round(fabs(g_socInfo[i].soc)*10);
             }
