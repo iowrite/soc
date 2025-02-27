@@ -10,6 +10,20 @@
 
 #define SOC0                                0
 #define SOC0_ER2                            25
+
+#if FULL_STD_CLIB
+
+
+#else
+
+void __aeabi_assert (const char *expr, const char *file, int line) {
+    while(1);
+}
+
+
+#endif
+
+
 extern uint32_t excel_second;
 uint32_t timebase_get_time_s(void)
 {
