@@ -7,6 +7,6 @@ int8_t soe_init();
 
 int8_t soe_task();
 
-void soe_save();
+void soe_save(bool force);
 
 #endif

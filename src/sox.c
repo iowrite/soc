@@ -1,6 +1,7 @@
 #include <stdint.h>
 #include <stdbool.h>
 #include "sox_private.h"
+#include "sox_config.h"
 #include "soc.h"
 #include "soh.h"
 #include "soe.h"
@@ -83,9 +84,47 @@ int8_t sox_task(bool full, bool empty)
     port_sox_output();
 
     // Periodic storage to prevent power outages
-    soc_save();                 // cell soc and group soc
-    soh_save();                 // cell soh , group soh and cycle count
-    soe_save();                 // accumulate charge and discharge energy
+    soc_save(false);                 // cell soc and group soc
+    soh_save(false);                 // cell soh , group soh and cycle count
+    soe_save(false);                 // accumulate charge and discharge energy
      
     return 0;
+}
+
+
+int8_t sox_manual_set_soc(float soc)
+{
+    for(int i = 0; i < CELL_NUMS; i++){
+        g_socInfo[i].soc = soc;
+    }
+    *g_grpSOC = (uint16_t)soc;
+
+    port_soc_output();
+    soc_save(true);
+    return 0;
+}
+
+int8_t sox_manual_set_soh(float soh, uint32_t cycleCount)
+{
+    for(int i = 0; i < CELL_NUMS; i++)
+    {
+        g_celSOH[i] = soh;
+    }
+    *g_grpSOH = soh;
+    *g_cycleCount = cycleCount;
+
+    port_soh_output();
+    soh_save(true);
+    return 0;
+}
+
+
+
+int8_t sox_manual_set_acc_chg_dsg(float accChgWH, float accDsgWH)
+{
+    *g_accChgWH = accChgWH;
+    *g_accDsgWH = accDsgWH;
+
+    port_soe_output();
+    soe_save(true);
 }

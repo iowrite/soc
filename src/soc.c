@@ -28,17 +28,7 @@
 #define SOC0_ER2_LOOKUP_TABLE               900             // 30% error
 
 
-struct SOC_Info
-{
-    bool pureAH_lock;
-    uint8_t cell_vol_buff_idx;
-    uint16_t cell_vol_buffer[CELL_VOL_BUFFER_LEN];
-    uint32_t record_time;
-    float soc_smooth;
-    float soc;
-    float socEr2;
 
-};
 struct SOC_Info g_socInfo[CELL_NUMS];
 
 
@@ -778,47 +768,59 @@ void soc_init()
     
 }
 
-void soc_save()
+void soc_save(bool force)
 {
-    static uint32_t last_save = 0;
-    static bool save = false;
-    static bool grp_save = false;
-    static float lastsoc[CELL_NUMS];
-    static float last_grpsoc;
-    // cell soc save check
-    for(int i = 0; i < CELL_NUMS; i++)
-    {
-        if(fabs(g_socInfo[i].soc-lastsoc[i]) > SOC_SAVE_DIFF_PERCENT)
+    if(!force){
+        static uint32_t last_save = 0;
+        static bool save = false;
+        static bool grp_save = false;
+        static float lastsoc[CELL_NUMS];
+        static float last_grpsoc;
+        // cell soc save check
+        for(int i = 0; i < CELL_NUMS; i++)
         {
-            save = true;
+            if(fabs(g_socInfo[i].soc-lastsoc[i]) > SOC_SAVE_DIFF_PERCENT)
+            {
+                save = true;
+            }
         }
-    }
-    // group soc save check
-    if(fabs(*g_grpSOC-last_grpsoc) > SOC_GRP_SAVE_DIFF_PERCENT*10)
-    {
-        grp_save = true;
+        // group soc save check
+        if(fabs(*g_grpSOC-last_grpsoc) > SOC_GRP_SAVE_DIFF_PERCENT*10)
+        {
+            grp_save = true;
+        }
+
+        uint32_t now = timebase_get_time_s();
+        // printf("now:%d, last:%d\n", now, last_save);
+        if(now- last_save > SOC_SAVE_INTERVAFL)
+        {
+            last_save = now;
+            if(save){
+                for(int i = 0; i < CELL_NUMS; i++)
+                {
+                    lastsoc[i] = g_socInfo[i].soc;
+                }
+                // printf("soc save\n");
+                write_saved_soc(lastsoc);
+                save = false;
+            }
+            if(grp_save){
+                last_grpsoc = *g_grpSOC;
+                write_saved_soc_group(*g_grpSOC);
+                grp_save = false;
+            }
+        }   
+    }else{
+        float soc_write[CELL_NUMS];
+        for(int i = 0; i < CELL_NUMS; i++)
+        {
+            soc_write[i] = g_socInfo[i].soc;
+        }
+
+        write_saved_soc(soc_write);
+        write_saved_soc_group(*g_grpSOC);
     }
 
-    uint32_t now = timebase_get_time_s();
-    // printf("now:%d, last:%d\n", now, last_save);
-    if(now- last_save > SOC_SAVE_INTERVAFL)
-    {
-        last_save = now;
-        if(save){
-            for(int i = 0; i < CELL_NUMS; i++)
-            {
-                lastsoc[i] = g_socInfo[i].soc;
-            }
-            // printf("soc save\n");
-            write_saved_soc(lastsoc);
-            save = false;
-        }
-        if(grp_save){
-            last_grpsoc = *g_grpSOC;
-            write_saved_soc_group(*g_grpSOC);
-            grp_save = false;
-        }
-    }
 
     
 }

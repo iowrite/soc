@@ -20,9 +20,9 @@ int8_t sox_init(
     uint16_t *g_dsg_stop_vol);
 int8_t sox_task(bool full, bool empty);
 
-
-
-
+int8_t sox_manual_set_soc(float soc);
+int8_t sox_manual_set_soh(float soh, uint32_t cycleCount);
+int8_t sox_manual_set_acc_chg_dsg(float accChgWH, float accDsgWH);
 
 
 #endif

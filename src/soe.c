@@ -104,21 +104,26 @@ int8_t soe_task()
 
 }
 
-void soe_save()
+void soe_save(bool force)
 {
     if(g_accChgWH && g_accDsgWH){
-        static float last_accDsgWH = 0;
-        static float last_accChgWH = 0;
-        static bool save_flag = false;
-        static uint32_t last_time = 0;
-        if(*g_accChgWH - last_accChgWH > SOE_SAVE_DIFF_WH || *g_accDsgWH - last_accDsgWH > SOE_SAVE_DIFF_WH)
-        {
-            save_flag = true;
-        }
-        if(timebase_get_time_s() - last_time > SOE_SAVE_INTERVAL_S)
-        {
-            save_flag = false;
+        if(!force){
+            static float last_accDsgWH = 0;
+            static float last_accChgWH = 0;
+            static bool save_flag = false;
+            static uint32_t last_time = 0;
+            if(*g_accChgWH - last_accChgWH > SOE_SAVE_DIFF_WH || *g_accDsgWH - last_accDsgWH > SOE_SAVE_DIFF_WH)
+            {
+                save_flag = true;
+            }
+            if(timebase_get_time_s() - last_time > SOE_SAVE_INTERVAL_S)
+            {
+                save_flag = false;
+                write_saved_soe(*g_accChgWH, *g_accDsgWH);
+            } 
+        }else{
             write_saved_soe(*g_accChgWH, *g_accDsgWH);
-        } 
+        }
+
     }
 }

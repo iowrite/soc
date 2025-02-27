@@ -5,6 +5,6 @@
 
 int8_t soh_init();
 int8_t soh_task();
-void soh_save();
+void soh_save(bool force);
 
 #endif

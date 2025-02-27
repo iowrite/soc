@@ -129,24 +129,30 @@ int8_t soh_task()
 }
 
 
-void soh_save()
+void soh_save(bool force)
 {
-    static float  last_cycleCount = 0;
-    bool save_flag = false;
-    static uint32_t save_time = 0;
-    if(last_cycleCount - *g_cycleCount > 1000)
-    {
-        save_flag = true;
-        last_cycleCount = *g_cycleCount;
-    }
-    if(timebase_get_time_s() - save_time > 60*60*24*7)
-    {
-        if(save_flag){
+    if(!force){
+        static float  last_cycleCount = 0;
+        bool save_flag = false;
+        static uint32_t save_time = 0;
+        if(last_cycleCount - *g_cycleCount > 1000)
+        {
+            save_flag = true;
+            last_cycleCount = *g_cycleCount;
+        }
+        if(timebase_get_time_s() - save_time > 60*60*24*7)
+        {
+            if(save_flag){
+                write_saved_cycle(*g_cycleCount);
+                write_saved_soh(g_celSOH);
+            }
+            save_time = timebase_get_time_s();
+        }
+    }else{
             write_saved_cycle(*g_cycleCount);
             write_saved_soh(g_celSOH);
-        }
-        save_time = timebase_get_time_s();
     }
+
 }
 
 
