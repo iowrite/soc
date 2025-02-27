@@ -100,7 +100,7 @@ int8_t soe_task()
 
     port_soe_output();
     // printf("sigChg:%f,  sigDsg:%f, accChgWH:%f, accDsgWH:%f\n",*g_sigChgWH, *g_sigDsgWH, *g_accChgWH, *g_accDsgWH);
-
+    return 0;
 
 }
 
