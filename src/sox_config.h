@@ -31,7 +31,7 @@
 #define PURE_AH_LOCK_CUR_THRESHOLD      25                          // A
 #define PURE_AH_LOCK_TEMP_THRESHOLD     100                         // 0.1 dregrees
 
-#define STANDBY_HOLD_TIME               600                         // 600s
+#define STANDBY_HOLD_TIME               ((uint32_t)600)                         // 600s
 #define CELL_VOL_BUFFER_LEN             (10+1)                      // 10s(time span)                    
 #define CELL_VOL_BUFFER_SAMPLE_TIME_S   6                            // 1item per 6 second
 #define SOC_SMOOTH_START_POINT_CHG      85

@@ -223,10 +223,16 @@ enum GroupState check_current_group_state(float cur)
     switch (g_group_state)
     {
     case GROUP_STATE_standby:
-        if(cur > CUR_WINDOW_A && last_group_state == GROUP_STATE_standby)               // initial state is standby
+        if  ( cur > CUR_WINDOW_A && last_group_state == GROUP_STATE_standby // initial state is standby
+                ||
+              cur > CUR_WINDOW_A && last_group_state == GROUP_STATE_charging
+            )               
         {
             g_group_state = GROUP_STATE_charging;
-        }else if(cur < -CUR_WINDOW_A && last_group_state == GROUP_STATE_standby)
+        }else if(cur < -CUR_WINDOW_A && last_group_state == GROUP_STATE_standby
+                    ||
+                 cur < -CUR_WINDOW_A && last_group_state == GROUP_STATE_discharging
+                )
         {
             g_group_state = GROUP_STATE_discharging;                                    // initial state is standby
         }
@@ -239,7 +245,7 @@ enum GroupState check_current_group_state(float cur)
                 transfer_start_time = timebase_get_time_s();
             }
         }else{
-            standby_hold_time = timebase_get_time_s();
+            standby_hold_time = timebase_get_time_s()-STANDBY_HOLD_TIME-(uint32_t)1;
         }
         break;
     case GROUP_STATE_transfer:
@@ -379,14 +385,15 @@ void mysoc_smooth(struct SOC_Info *SOCinfo, float cur, uint16_t vol, uint16_t te
 }
 
 
-float getEKF_Q(float soc)
+float getEKF_Q(float soc, float cur)
 {
-    if(g_group_state == GROUP_STATE_charging)
+    if(cur > 0)
     {
         return (soc/100 + (soc/100*MAX_EKF_Q_PERCENT)*(soc/100*MAX_EKF_Q_PERCENT));
-    }else if(g_group_state == GROUP_STATE_discharging){
+    }else{
         return (soc/100 + ((100-soc)/100*MAX_EKF_Q_PERCENT)*((100-soc)/100*MAX_EKF_Q_PERCENT));
     }
+
     return nan("");
 }
 
@@ -419,6 +426,11 @@ void mysocEKF(struct SOC_Info *SOCinfo, float cur, uint16_t vol, uint16_t tempra
     static int callCount = 0;
     callCount++;
     static float pureAHSUM = 0;
+    // if(callCount == 165680)
+    // {
+    //     printf("fds\n");
+
+    // }
 
     const uint16_t *curve = get_curve_v(cur, tempra);
     const int16_t *curveK = get_curve_k(cur, tempra);
@@ -428,7 +440,7 @@ void mysocEKF(struct SOC_Info *SOCinfo, float cur, uint16_t vol, uint16_t tempra
 
     float diffAH = DIFF_T_SEC/3600.0*cur/capf*100;
     float SOCcal = SOCinfo->soc + diffAH;
-    float Q = getEKF_Q(SOCcal);
+    float Q = getEKF_Q(SOCcal, cur);
     float SOCer2Cal = SOCinfo->socEr2 + Q;
     pureAHSUM += diffAH;
     // printf("diffAH : %f, EKF_W : %f pureAH: %f\n", diffAH, EKF_W(diffAH,capf, cur), pureAHSUM);
@@ -467,7 +479,7 @@ void mysocEKF(struct SOC_Info *SOCinfo, float cur, uint16_t vol, uint16_t tempra
             estVolNext = curve[23+(int)SOCcal-95+1];
             estVol = estVolPrev + sock*(estVolNext-estVolPrev);
         }
-        // printf("callcount %d soccal : %f  estVolPrev :%f  estVol : %f  estVolNext :%f \n", callCount, SOCcal, estVolPrev, estVol, estVolNext);
+        //printf("callcount %d soccal : %f  estVolPrev :%f  estVol : %f  estVolNext :%f \n", callCount, SOCcal, estVolPrev, estVol, estVolNext);
 
         if(SOCcal < 5)
         {
@@ -854,6 +866,10 @@ void soc_task(bool full, bool empty)
 {
     port_soc_input();
 
+    enum GroupState state = check_current_group_state(*g_cur);
+    static uint32_t callCount = 0;
+    callCount++;
+    
     for (size_t i = 0; i < CELL_NUMS; i++)
     {
 
@@ -882,6 +898,7 @@ void soc_task(bool full, bool empty)
             // printf("soc error2: %f \n", g_socInfo[0].socEr2);
         // }
     }
+    //printf("cur: %f, state: %d\n", *g_cur, g_group_state);
     if(full)
     {
         for (size_t i = 0; i < CELL_NUMS; i++)
@@ -898,7 +915,7 @@ void soc_task(bool full, bool empty)
             g_celSOC[i] = 0;
         }
     }
-    enum GroupState state = check_current_group_state(*g_cur);
+    
     if(state == GROUP_STATE_standby)
     {
         for (size_t i = 0; i < CELL_NUMS; i++)
@@ -912,6 +929,7 @@ void soc_task(bool full, bool empty)
     }
     gropuSOC();
 
+    //printf("call: %d, grpsoc: %d\n", callCount, *g_grpSOC);
     port_soc_output();
 
 }

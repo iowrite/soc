@@ -161,7 +161,7 @@ output_x = list(range(0, len(two_dimensional_list)))
 
 # 创建图形和轴对象
 # stdData_multiplied_rounded = [round(x * 10) for x in stdData]
-y_ticks = np.arange(-50, 1051, 50)
+y_ticks = np.arange(-5, 105, 5)
 # 绘制散点图
 for i in range(0, 16):
     plt.subplot(4, 4, i+1)
@@ -176,7 +176,7 @@ for i in range(0, 16):
     # 显示图例
     plt.legend()
 
-plt.ylim(-50, 1050)
+plt.ylim(-5, 105)
 
 
 plt.figure()
@@ -187,7 +187,7 @@ plt.plot(output_x, [row[0] for row in two_dimensional_list_grp], label="grp soc"
 plt.plot(output_x, [row[1] for row in two_dimensional_list_grp], label="max soc")
 plt.plot(output_x, [row[2] for row in two_dimensional_list_grp], label="min soc")
 plt.plot(output_x, [row[3] for row in two_dimensional_list_grp], label="avg soc")
-plt.ylim(-50, 1050)
+plt.ylim(-5, 105)
 plt.legend()
 
 plt.figure()
@@ -195,7 +195,7 @@ plt.figure()
 plt.grid(True)
 plt.yticks(y_ticks)
 plt.plot(output_x, [row[0] for row in two_dimensional_list_grp], label="grp soc")
-plt.ylim(-50, 1050)
+plt.ylim(-5, 105)
 plt.legend()
 
 
