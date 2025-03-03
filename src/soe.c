@@ -4,6 +4,7 @@
 #include "sox.h"
 #include "port.h"
 #include "sox_config.h"
+#include "soe.h"
 int8_t soe_init()
 {
     // read saved soe (last saved soe before poweroff)
@@ -23,6 +24,14 @@ int8_t soe_init()
             }
         }
     }
+	
+	
+	
+	port_soe_init();
+	
+	port_soe_output();
+	
+	soe_save(true);
     return 0;
 
 }

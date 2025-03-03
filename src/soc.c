@@ -59,9 +59,9 @@ static const uint16_t get_cap(float cur, uint16_t tempra)
             cidx = 4;
         }
         if(s_cap_list_chg[tidx][cidx] == 0){
-#if FULL_STD_CLIB
+//#if FULL_STD_CLIB
             assert(0);
-#endif
+//#endif
         }
         return s_cap_list_chg[tidx][cidx];
 
@@ -78,9 +78,9 @@ static const uint16_t get_cap(float cur, uint16_t tempra)
             cidx = 4;
         }
         if(s_cap_list_dsg[tidx][cidx] == 0){
-#if FULL_STD_CLIB
+//#if FULL_STD_CLIB
             assert(0);
-#endif
+//#endif
         }
         return s_cap_list_dsg[tidx][cidx];
     }
@@ -117,9 +117,9 @@ static const uint16_t * get_v(const uint16_t *chg_curve[TEMP_POINT_NUM][CUR_POIN
         {
             cidx = 4;
         }
-#if FULL_STD_CLIB
+//#if FULL_STD_CLIB
         assert(chg_curve[tidx][cidx] != NULL);
-#endif
+//#endif
         return chg_curve[tidx][cidx];
 
     }else if(cur < 0)
@@ -134,9 +134,9 @@ static const uint16_t * get_v(const uint16_t *chg_curve[TEMP_POINT_NUM][CUR_POIN
         {
             cidx = 4;
         }
-#if FULL_STD_CLIB
+//#if FULL_STD_CLIB
         assert(dsg_curve[tidx][cidx] != NULL);
-#endif
+//#endif
         return dsg_curve[tidx][cidx];
     }
     return NULL;
@@ -166,9 +166,9 @@ static const int16_t * get_k(const int16_t *chg_curve[TEMP_POINT_NUM][CUR_POINT_
         {
             cidx = 4;
         }
-#if FULL_STD_CLIB
+//#if FULL_STD_CLIB
         assert(chg_curve[tidx][cidx] != NULL);
-#endif
+//#endif
         return chg_curve[tidx][cidx];
 
     }else if(cur < 0)
@@ -183,9 +183,9 @@ static const int16_t * get_k(const int16_t *chg_curve[TEMP_POINT_NUM][CUR_POINT_
         {
             cidx = 4;
         }
-#if FULL_STD_CLIB
+//#if FULL_STD_CLIB
         assert(dsg_curve[tidx][cidx] != NULL);
-#endif
+//#endif
         return dsg_curve[tidx][cidx];
     }
     return NULL;
@@ -664,11 +664,11 @@ static void gropuSOC()
     // if(callCount == 3560){
     //     printf("change\n");
     // }
-    uint16_t hSOC = maxSOC*(maxSOC/1000.0)+minSOC*(1-maxSOC/1000.0);
-    uint16_t lSOC= minSOC*(1-minSOC/1000.0)+maxSOC*(minSOC/1000.0);
+    uint16_t hSOC = maxSOC*(maxSOC/100.0)+minSOC*(1-maxSOC/100.0);
+    uint16_t lSOC= minSOC*(1-minSOC/100.0)+maxSOC*(minSOC/100.0);
     uint16_t h = hSOC>lSOC?hSOC:lSOC;
     uint16_t l = lSOC<hSOC?lSOC:hSOC;
-    *g_grpSOC = (*g_grpSOC)/1000.0*h+(1000-*g_grpSOC)/1000.0*l;
+    *g_grpSOC = round((*g_grpSOC)/100.0*h+(100-*g_grpSOC)/100.0*l);
 
     // printf("call: %d, hSOC:%d, lSOC:%d, grpSOC:%d\n",callCount, hSOC, lSOC, *g_grpSOC);
 
@@ -684,7 +684,7 @@ static float vol2soc(uint16_t vol, int16_t tempra)
     
     for(int i = 0; i < OCV_POINT_NUM; i++)
     {
-        if(vol < temp_ocv[4][i])
+        if(vol > temp_ocv[4][i])
         {
             soc += 5;
         }
@@ -710,6 +710,7 @@ void soc_init()
     float soc_firstPowerUp[CELL_NUMS];
     memset(soc_firstPowerUp, 0xff, sizeof(soc_firstPowerUp));
     bool soc_abnormal_flag[CELL_NUMS];
+	memset(soc_abnormal_flag, false, sizeof(soc_abnormal_flag));
     // read saved soc(last soc before shutdown)
     int8_t ret = read_saved_soc(soc_saved);
     // todo ocv calibration,set init soc and soc_er2
@@ -727,7 +728,7 @@ void soc_init()
                 if(soc_saved[i] < 0 || soc_saved[i] > 100){
                     soc_abnormal_flag[i] = true;
                 }
-                else if(fabs(soc_saved[i]-soc_lookuptable[i]) > 50)
+                else if(fabs(soc_saved[i]-soc_lookuptable[i]) > 30)
                 {
                     soc_abnormal_flag[i] = true;
                 }else{
@@ -742,6 +743,7 @@ void soc_init()
         }
     }
 
+	
     for (size_t i = 0; i < CELL_NUMS; i++)
     {
         if(soc_abnormal_flag[i]){
@@ -770,14 +772,17 @@ void soc_init()
     if(ret == 0){
         if(soc_saved_group < sorted_soc[0] || soc_saved_group > sorted_soc[CELL_NUMS-1])
         {
-            *g_grpSOC = round(avg_soc*10);
+            *g_grpSOC = round(avg_soc);
         }
     }else{
-        *g_grpSOC = round(avg_soc*10);
+        *g_grpSOC = round(avg_soc);
     }
 
 
     port_soc_init();
+	
+	port_soc_output();
+	soc_save(true);
 
     
 }
@@ -799,7 +804,7 @@ void soc_save(bool force)
             }
         }
         // group soc save check
-        if(fabs(*g_grpSOC-last_grpsoc) > SOC_GRP_SAVE_DIFF_PERCENT*10)
+        if(fabs(*g_grpSOC-last_grpsoc) > SOC_GRP_SAVE_DIFF_PERCENT)
         {
             grp_save = true;
         }
@@ -858,17 +863,17 @@ void soc_task(bool full, bool empty)
         if(g_socInfo[i].soc_smooth)
         {
             if(*g_cur>0 &&  g_socInfo[i].soc_smooth>g_socInfo[i].soc){
-                g_celSOC[i] = g_socInfo[i].soc_smooth*10;
+                g_celSOC[i] = g_socInfo[i].soc_smooth;
 //               printf("use smooth soc\n");
             }else if(*g_cur<0 &&  g_socInfo[i].soc_smooth<g_socInfo[i].soc){
-                g_celSOC[i] = g_socInfo[i].soc_smooth*10;
+                g_celSOC[i] = g_socInfo[i].soc_smooth;
 //               printf("use smooth soc\n");
             }else{
-                g_celSOC[i] = round(fabs(g_socInfo[i].soc)*10);
+                g_celSOC[i] = round(fabs(g_socInfo[i].soc));
             }
         }
         else{
-            g_celSOC[i] = round(fabs(g_socInfo[i].soc)*10);
+            g_celSOC[i] = round(fabs(g_socInfo[i].soc));
         }
         
 
@@ -882,7 +887,7 @@ void soc_task(bool full, bool empty)
         for (size_t i = 0; i < CELL_NUMS; i++)
         {
             g_socInfo[i].soc = 100;
-            g_celSOC[i] = 1000;
+            g_celSOC[i] = 100;
         }
     }
     if(empty)

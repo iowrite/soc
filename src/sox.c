@@ -127,4 +127,5 @@ int8_t sox_manual_set_acc_chg_dsg(float accChgWH, float accDsgWH)
 
     port_soe_output();
     soe_save(true);
+    return 0;
 }

@@ -7,6 +7,7 @@
 #include "sox_private.h"
 #include "port.h"
 #include "sox_config.h"
+#include "soh.h"
 
 
 static uint16_t s_lastSOC[CELL_NUMS];
@@ -33,13 +34,14 @@ int8_t  soh_init()
     float soh_first_powerup[CELL_NUMS];
     memset(soh_first_powerup, 0xff, sizeof(soh_first_powerup));
     bool soh_abnormal_flag[CELL_NUMS];
+	memset(soh_abnormal_flag, false, sizeof(soh_abnormal_flag));
     ret = read_saved_soh(soh_saved);
     if(ret == 0)
     {
-        if(memcmp(soh_saved, soh_first_powerup, sizeof soh_first_powerup) != 0){
+        if(memcmp(soh_saved, soh_first_powerup, sizeof soh_first_powerup) == 0){
             for (size_t i = 0; i < CELL_NUMS; i++)
             {
-                soh_abnormal_flag[i] = false;
+                soh_abnormal_flag[i] = true;
             }
         }else{
             for (size_t i = 0; i < CELL_NUMS; i++)
@@ -75,6 +77,10 @@ int8_t  soh_init()
     s_lastGrpSOC = *g_grpSOC;
 
     port_soh_init();
+	
+	
+	port_soh_output();
+	soh_save(true);
     return 0;
 }
 
@@ -88,10 +94,10 @@ int8_t soh_task()
     port_soh_input();
 
     // bug: lost some cycle when charge change to discharge or discharge to charge
-    if(*g_grpSOC <= s_lastGrpSOC-10){
+    if(*g_grpSOC <= s_lastGrpSOC-1){
         *g_cycleCount += 5*((s_lastGrpSOC-*g_grpSOC)/10);
         s_lastGrpSOC  = *g_grpSOC;
-    }else if(*g_grpSOC >= s_lastGrpSOC+10){
+    }else if(*g_grpSOC >= s_lastGrpSOC+1){
         *g_cycleCount += 5*((*g_grpSOC-s_lastGrpSOC)/10);
         s_lastGrpSOC  = *g_grpSOC;
         
