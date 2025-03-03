@@ -59,9 +59,7 @@ static const uint16_t get_cap(float cur, uint16_t tempra)
             cidx = 4;
         }
         if(s_cap_list_chg[tidx][cidx] == 0){
-//#if FULL_STD_CLIB
             assert(0);
-//#endif
         }
         return s_cap_list_chg[tidx][cidx];
 
@@ -78,9 +76,7 @@ static const uint16_t get_cap(float cur, uint16_t tempra)
             cidx = 4;
         }
         if(s_cap_list_dsg[tidx][cidx] == 0){
-//#if FULL_STD_CLIB
             assert(0);
-//#endif
         }
         return s_cap_list_dsg[tidx][cidx];
     }
@@ -117,9 +113,7 @@ static const uint16_t * get_v(const uint16_t *chg_curve[TEMP_POINT_NUM][CUR_POIN
         {
             cidx = 4;
         }
-//#if FULL_STD_CLIB
         assert(chg_curve[tidx][cidx] != NULL);
-//#endif
         return chg_curve[tidx][cidx];
 
     }else if(cur < 0)
@@ -134,9 +128,7 @@ static const uint16_t * get_v(const uint16_t *chg_curve[TEMP_POINT_NUM][CUR_POIN
         {
             cidx = 4;
         }
-//#if FULL_STD_CLIB
         assert(dsg_curve[tidx][cidx] != NULL);
-//#endif
         return dsg_curve[tidx][cidx];
     }
     return NULL;
@@ -166,9 +158,7 @@ static const int16_t * get_k(const int16_t *chg_curve[TEMP_POINT_NUM][CUR_POINT_
         {
             cidx = 4;
         }
-//#if FULL_STD_CLIB
         assert(chg_curve[tidx][cidx] != NULL);
-//#endif
         return chg_curve[tidx][cidx];
 
     }else if(cur < 0)
@@ -183,9 +173,7 @@ static const int16_t * get_k(const int16_t *chg_curve[TEMP_POINT_NUM][CUR_POINT_
         {
             cidx = 4;
         }
-//#if FULL_STD_CLIB
         assert(dsg_curve[tidx][cidx] != NULL);
-//#endif
         return dsg_curve[tidx][cidx];
     }
     return NULL;
