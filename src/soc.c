@@ -661,7 +661,6 @@ static void gropuSOC()
 {
     static int callCount = 0;
     callCount++;
-    static 
     uint16_t sortedSOC[CELL_NUMS];
     bubbleSort_ascend(g_celSOC, sortedSOC, CELL_NUMS);
     uint16_t maxSOC = sortedSOC[CELL_NUMS-1];
@@ -671,9 +670,27 @@ static void gropuSOC()
     // }
     uint16_t hSOC = maxSOC*(maxSOC/100.0)+minSOC*(1-maxSOC/100.0);
     uint16_t lSOC= minSOC*(1-minSOC/100.0)+maxSOC*(minSOC/100.0);
-    uint16_t h = hSOC>lSOC?hSOC:lSOC;
-    uint16_t l = lSOC<hSOC?lSOC:hSOC;
-    *g_grpSOC = round((*g_grpSOC)/100.0*h+(100-*g_grpSOC)/100.0*l);
+    // uint16_t h = hSOC>lSOC?hSOC:lSOC;
+    // uint16_t l = lSOC<hSOC?lSOC:hSOC;
+    uint16_t grpsoc = round((*g_grpSOC)/100.0*hSOC+(100-*g_grpSOC)/100.0*lSOC);
+    static uint32_t smooth_count = 0;
+
+    if(abs(grpsoc - *g_grpSOC)>=2)
+    {        
+        if(timebase_get_time_s()-smooth_count > (uint32_t)2)
+        {
+            smooth_count = timebase_get_time_s();
+            if(grpsoc > *g_grpSOC)
+            {
+                (*g_grpSOC)++;
+            }else{
+                (*g_grpSOC)--;
+            }
+        }
+    }else{
+        *g_grpSOC = grpsoc;
+    }
+
 
     // printf("call: %d, hSOC:%d, lSOC:%d, grpSOC:%d\n",callCount, hSOC, lSOC, *g_grpSOC);
 
