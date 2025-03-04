@@ -8,7 +8,7 @@
 #include "sox_private.h"
 
 
-#define SOC0                                0
+#define SOC0                                95
 #define SOC0_ER2                            25
 
 #if FULL_STD_CLIB
@@ -192,10 +192,10 @@ void port_soc_init(void)
     {
         g_socInfo[i].soc = SOC0;
         g_socInfo[i].socEr2 = SOC0_ER2;
-        g_celSOC[i] = round(SOC0*10);
+        g_celSOC[i] = round(SOC0);
 
     }
-    *g_grpSOC = round(SOC0*10);
+    *g_grpSOC = round(SOC0);
 }
 void port_soh_init(void)
 {

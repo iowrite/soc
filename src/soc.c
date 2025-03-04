@@ -873,11 +873,11 @@ void soc_task(bool full, bool empty)
                 g_celSOC[i] = g_socInfo[i].soc_smooth;
 //               printf("use smooth soc\n");
             }else{
-                g_celSOC[i] = round(fabs(g_socInfo[i].soc));
+                g_celSOC[i] = round(g_socInfo[i].soc);
             }
         }
         else{
-            g_celSOC[i] = round(fabs(g_socInfo[i].soc));
+            g_celSOC[i] = round(g_socInfo[i].soc);
         }
         
 
