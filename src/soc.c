@@ -206,52 +206,60 @@ static enum GroupState g_group_state;
 enum GroupState check_current_group_state(float cur)
 {
     static enum GroupState last_group_state = GROUP_STATE_standby;
-    static uint32_t transfer_start_time = 0;
     static uint32_t standby_hold_time = 0;
+    static uint32_t trans_dsg_acc_time = 0;
+    static uint32_t trans_chg_acc_time = 0;
+    // if(trans_chg_acc_time == 132){
+    //     printf("herer\n");
+    // }
     switch (g_group_state)
     {
     case GROUP_STATE_standby:
-        if  ( cur > CUR_WINDOW_A && last_group_state == GROUP_STATE_standby // initial state is standby
-                ||
-              cur > CUR_WINDOW_A && last_group_state == GROUP_STATE_charging
-            )               
+        trans_dsg_acc_time++;
+        trans_chg_acc_time++;
+
+        if  ( cur > CUR_WINDOW_A && (last_group_state == GROUP_STATE_standby || last_group_state == GROUP_STATE_charging))          
         {
             g_group_state = GROUP_STATE_charging;
-        }else if(cur < -CUR_WINDOW_A && last_group_state == GROUP_STATE_standby
-                    ||
-                 cur < -CUR_WINDOW_A && last_group_state == GROUP_STATE_discharging
-                )
+        }else if(cur < -CUR_WINDOW_A && (last_group_state == GROUP_STATE_standby || last_group_state == GROUP_STATE_discharging)) 
         {
-            g_group_state = GROUP_STATE_discharging;                                    // initial state is standby
+            g_group_state = GROUP_STATE_discharging;                      
         }
         if(timebase_get_time_s()-standby_hold_time < STANDBY_HOLD_TIME){
             if(cur>CUR_WINDOW_A && last_group_state == GROUP_STATE_discharging){
                 g_group_state = GROUP_STATE_transfer;
-                transfer_start_time = timebase_get_time_s();
+                trans_dsg_acc_time = 0;
+                trans_chg_acc_time = 0;
             }else if(cur<-CUR_WINDOW_A && last_group_state == GROUP_STATE_charging){
                 g_group_state = GROUP_STATE_transfer;
-                transfer_start_time = timebase_get_time_s();
+                trans_dsg_acc_time = 0;
+                trans_chg_acc_time = 0;
             }
-        }else{
-            standby_hold_time = timebase_get_time_s()-STANDBY_HOLD_TIME-(uint32_t)1;
         }
         break;
     case GROUP_STATE_transfer:
         if(fabs(cur) < CUR_WINDOW_A){                               // reset state logic
             g_group_state = GROUP_STATE_standby;
-            last_group_state = GROUP_STATE_standby;
-        } 
-        else if(last_group_state == GROUP_STATE_charging)
-        {
-            if(cur > CUR_WINDOW_A && timebase_get_time_s()-transfer_start_time > GROUP_STATE_CHANGE_TIME){
+            standby_hold_time = timebase_get_time_s();
+        }else if(cur > CUR_WINDOW_A){
+            last_group_state = GROUP_STATE_charging;
+            trans_dsg_acc_time = 0;
+            trans_chg_acc_time++;
+            if(trans_chg_acc_time > GROUP_STATE_CHANGE_TIME){
                 g_group_state = GROUP_STATE_charging;
                 last_group_state = GROUP_STATE_transfer;
+                trans_dsg_acc_time = 0;
+                trans_chg_acc_time = 0;
             }
-        }else if(last_group_state == GROUP_STATE_discharging)
-        {
-            if(cur < -CUR_WINDOW_A && timebase_get_time_s()-transfer_start_time > GROUP_STATE_CHANGE_TIME){
-                g_group_state = GROUP_STATE_charging;
+        }else if(cur < -CUR_WINDOW_A){
+            last_group_state = GROUP_STATE_discharging;
+            trans_chg_acc_time = 0;
+            trans_dsg_acc_time++;
+            if(trans_dsg_acc_time > GROUP_STATE_CHANGE_TIME){
+                g_group_state = GROUP_STATE_discharging;
                 last_group_state = GROUP_STATE_transfer;
+                trans_dsg_acc_time = 0;
+                trans_chg_acc_time = 0;
             }
         }
         break;
@@ -263,7 +271,6 @@ enum GroupState check_current_group_state(float cur)
         }else if(cur<-CUR_WINDOW_A){
             g_group_state = GROUP_STATE_transfer;
             last_group_state = GROUP_STATE_charging;
-            transfer_start_time = timebase_get_time_s();
         }
         break;
     case GROUP_STATE_discharging:
@@ -273,8 +280,7 @@ enum GroupState check_current_group_state(float cur)
             last_group_state = GROUP_STATE_discharging;
         }else if(cur>CUR_WINDOW_A){
             g_group_state = GROUP_STATE_transfer;
-            last_group_state = GROUP_STATE_charging;
-            transfer_start_time = timebase_get_time_s();
+            last_group_state = GROUP_STATE_discharging;
         }
         break;
     default:
@@ -583,8 +589,7 @@ void mysoc(struct SOC_Info *SOCinfo, float cur, uint16_t vol, int16_t tempra, fl
             mysoc_smooth(SOCinfo, cur, vol, tempra, soh);
 //            printf("pureAH lock\n");
         }else{
-            enum GroupState state = check_current_group_state(cur);
-            if(state == GROUP_STATE_transfer){
+            if(g_group_state == GROUP_STATE_transfer){
                 mysoc_pureAH(SOCinfo, cur, vol, tempra, soh);               // Ampere-hour Integration only
             }else{
                 mysocEKF(SOCinfo, cur, vol, tempra, soh);                   // Ampere-hour Integration + EKF
@@ -854,9 +859,14 @@ void soc_task(bool full, bool empty)
 {
     port_soc_input();
 
+
     enum GroupState state = check_current_group_state(*g_cur);
     static uint32_t callCount = 0;
     callCount++;
+    // if(callCount == 132)
+    // {
+    //     printf("fdsa\n");
+    // }
     
     for (size_t i = 0; i < CELL_NUMS; i++)
     {
@@ -886,7 +896,7 @@ void soc_task(bool full, bool empty)
             // printf("soc error2: %f \n", g_socInfo[0].socEr2);
         // }
     }
-    //printf("cur: %f, state: %d\n", *g_cur, g_group_state);
+    //printf("call: %d, cur: %f, state: %d\n",callCount, *g_cur, g_group_state);
     if(full)
     {
         for (size_t i = 0; i < CELL_NUMS; i++)
