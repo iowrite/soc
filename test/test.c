@@ -59,6 +59,7 @@ int main() {
         float cur;
         float avgTmp;
         float vol[16];
+        float tmp[9];
     };
 
     struct input *inputData = malloc(sizeof (struct input) * input_row_len);
@@ -66,6 +67,7 @@ int main() {
 
     uint8_t *b = (uint8_t *)inputData;
     int count = sizeof (struct input) * input_row_len;
+    printf("count = %d\n", count);
     int r = 0;
     while(count>0)
     {
@@ -171,8 +173,16 @@ int main() {
         for (size_t j = 0; j < 16; j++)
         {
             vol[j] = inputData[i].vol[j];
-            tmp[j] = inputData[i].avgTmp*10;
+            //tmp[j] = inputData[i].avgTmp*10;
         }
+
+        tmp[0]  = inputData[i].tmp[0]*10;
+        for(int j = 0; j < 7; j++)
+        {
+            tmp[j*2+1] = inputData[i].tmp[j+1]*10;
+            tmp[j*2+2] = inputData[i].tmp[j+2]*10;
+        }
+        tmp[15] = inputData[i].tmp[8]*10;
 
         sox_task(0, 0);
 
