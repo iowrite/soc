@@ -8,7 +8,7 @@
 #include "sox_private.h"
 
 
-#define SOC0                                0
+#define SOC0                                95
 #define SOC0_ER2                            25
 
 #if FULL_STD_CLIB

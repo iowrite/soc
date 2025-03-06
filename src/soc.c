@@ -395,7 +395,7 @@ float getEKF_Q(float soc, float cur)
 
 
 
-static uint32_t getEKF_R(uint16_t vol, const uint16_t *curve, const int16_t *curveK)
+static uint32_t getEKF_R(float H_soc, uint16_t vol, const uint16_t *curve, const int16_t *curveK, uint16_t switch_curve_time)
 {
 
     float vol_R;
@@ -420,7 +420,10 @@ static uint32_t getEKF_R(uint16_t vol, const uint16_t *curve, const int16_t *cur
         H = (curveK[index-1] + (curveK[index]-curveK[index-1])*(vol-curve[index-1])/(curve[index]-curve[index-1]))/10.0;
     }
 
-
+    if(H > H_soc)
+    {
+        H = H_soc;
+    }
 
     float H_R;
     if(H<2)
@@ -434,8 +437,12 @@ static uint32_t getEKF_R(uint16_t vol, const uint16_t *curve, const int16_t *cur
         int t = abs(VOL_SAMPLE_ERR_MV_3-VOL_SAMPLE_ERR_MV_1);
         H_R = (VOL_SAMPLE_ERR_MV_3+(H-2)*t)*(VOL_SAMPLE_ERR_MV_3+(H-2)*t);
     }
-
-    return H_R;
+    if(switch_curve_time){
+        return H_R+40000*switch_curve_time/600+10000; 
+    }else{
+        return H_R;
+    }
+    
   
 }
 
@@ -443,6 +450,7 @@ static uint32_t getEKF_R(uint16_t vol, const uint16_t *curve, const int16_t *cur
 
 void mysocEKF(struct SOC_Info *SOCinfo, float cur, uint16_t vol, uint16_t tempra, float soh)
 {
+    
     static int callCount = 0;
     callCount++;
     static float pureAHSUM = 0;
@@ -452,9 +460,33 @@ void mysocEKF(struct SOC_Info *SOCinfo, float cur, uint16_t vol, uint16_t tempra
 
     // }
 
+    // if(callCount%16 == 2)
+    // {
+    //     printf("fds\n");
+    // }
     const uint16_t *curve = get_curve_v(cur, tempra);
     const int16_t *curveK = get_curve_k(cur, tempra);
     const uint16_t cap = get_cap(cur, tempra);
+
+    if(SOCinfo->last_curve != curve)
+    {
+        SOCinfo->last_curve = curve;
+        SOCinfo->swith_curve_time = 600;
+    }
+    if(SOCinfo->swith_curve_time != 0)
+    {
+        SOCinfo->swith_curve_time--;
+    }
+
+
+    // if(callCount %16 == 12 && SOCinfo->swith_curve_time)
+    // {
+    //     printf("callCount: %d, switch count : %d \n", callCount/16, SOCinfo->swith_curve_time);
+    // }
+    // if(callCount %16 == 1 && SOCinfo->swith_curve_time)
+    // {
+    //     printf("callCount: %d\n", callCount/16);
+    // }
 
     const float capf = cap/10.0*(soh/100);
 
@@ -523,11 +555,11 @@ void mysocEKF(struct SOC_Info *SOCinfo, float cur, uint16_t vol, uint16_t tempra
         // printf("callcount %d hprev :%f  H : %f  hnext :%f \n", callCount, Hprev, H, Hnext);
     }
     float K = 0;
-    if(callCount%16 == 1 && SOCcal >= 92)
-    {
-        printf("fdfsa\n");
-    }
-    uint32_t ekfR = getEKF_R(vol, curve, curveK);
+    // if(callCount%16 == 13 && SOCcal >= 92)
+    // {
+    //     printf("fdfsa\n");
+    // }
+    uint32_t ekfR = getEKF_R(H, vol, curve, curveK, SOCinfo->swith_curve_time);
 
 
     if(SOCer2Cal>Q)
@@ -535,9 +567,9 @@ void mysocEKF(struct SOC_Info *SOCinfo, float cur, uint16_t vol, uint16_t tempra
         SOCer2Cal = Q;
     }
     K = SOCer2Cal*H/(H*SOCer2Cal*H+ekfR);
-    if(callCount%16 == 1){
-        printf("soc: %f, R: %d, k: %f\n", SOCinfo->soc, ekfR, K);
-    }
+    // if(callCount%16 == 13){
+    //     printf("soc: %f, R: %d, k: %f\n", SOCinfo->soc, ekfR, K);
+    // }
     
     float res = SOCcal+K*((float)vol-estVol);
     // printf("callcount %d  H: %f K :%f  kcal : %f , vol: %d, estvol: %lf\n", callCount, H, K, K*((float)vol-estVol), vol, estVol);
@@ -985,6 +1017,8 @@ void soc_task(bool full, bool empty)
             g_socInfo[i].soc_smooth = 0;
             memset(g_socInfo[i].cell_vol_buffer, 0, sizeof(g_socInfo[i].cell_vol_buffer));
             g_socInfo[i].cell_vol_buff_idx = 0;
+            g_socInfo[i].swith_curve_time = 0;
+            g_socInfo[i].last_curve = NULL;
         }
         
     }
