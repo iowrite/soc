@@ -395,21 +395,47 @@ float getEKF_Q(float soc, float cur)
 
 
 
-uint32_t getEKF_R(float H)
+static uint32_t getEKF_R(uint16_t vol, const uint16_t *curve, const int16_t *curveK)
 {
 
-    if(H<1)
+    float vol_R;
+    int index = 0;
+    for(int i = 0; i < SOC_POINT_NUM; i++)
+    {
+        if(vol > curve[i])
+        {
+            index++;
+        }else{
+            break;
+        }
+    }
+    float H;
+    if(index == 0)
+    {
+        H = curveK[0];
+    }else if(index == SOC_POINT_NUM)
+    {
+        H = curveK[SOC_POINT_NUM-1];
+    }else{
+        H = (curveK[index-1] + (curveK[index]-curveK[index-1])*(vol-curve[index-1])/(curve[index]-curve[index-1]))/10.0;
+    }
+
+
+
+    float H_R;
+    if(H<2)
     {
         int t = abs(VOL_SAMPLE_ERR_MV_1-VOL_SAMPLE_ERR_MV_2);
-        return (VOL_SAMPLE_ERR_MV_1+(1-H)*t)*(VOL_SAMPLE_ERR_MV_1+(1-H)*t);
-        return VOL_SAMPLE_ERR_MV_1*VOL_SAMPLE_ERR_MV_1;
-    }else if(H>2)
+        H_R = (VOL_SAMPLE_ERR_MV_1+(1-H)*t)*(VOL_SAMPLE_ERR_MV_1+(1-H)*t);
+    }else if(H>4)
     {
-        return VOL_SAMPLE_ERR_MV_3*VOL_SAMPLE_ERR_MV_3;
+        H_R = VOL_SAMPLE_ERR_MV_3*VOL_SAMPLE_ERR_MV_3;
     }else{
         int t = abs(VOL_SAMPLE_ERR_MV_3-VOL_SAMPLE_ERR_MV_1);
-        return (VOL_SAMPLE_ERR_MV_3+(H-1)*t)*(VOL_SAMPLE_ERR_MV_3+(H-1)*t);
+        H_R = (VOL_SAMPLE_ERR_MV_3+(H-1)*t)*(VOL_SAMPLE_ERR_MV_3+(H-1)*t);
     }
+
+    return H_R;
   
 }
 
@@ -497,17 +523,17 @@ void mysocEKF(struct SOC_Info *SOCinfo, float cur, uint16_t vol, uint16_t tempra
         // printf("callcount %d hprev :%f  H : %f  hnext :%f \n", callCount, Hprev, H, Hnext);
     }
     float K = 0;
-    uint32_t ekfR = getEKF_R(H);
+    uint32_t ekfR = getEKF_R(vol, curve, curveK);
 
-    // if(callCount/16 == 2000){
-    //     printf("here\n");
-    // }
+
     if(SOCer2Cal>Q)
     {
         SOCer2Cal = Q;
     }
     K = SOCer2Cal*H/(H*SOCer2Cal*H+ekfR);
-
+    if(callCount%16 == 1){
+        printf("soc: %f, R: %d, k: %f\n", SOCinfo->soc, ekfR, K);
+    }
     
     float res = SOCcal+K*((float)vol-estVol);
     // printf("callcount %d  H: %f K :%f  kcal : %f , vol: %d, estvol: %lf\n", callCount, H, K, K*((float)vol-estVol), vol, estVol);
@@ -673,8 +699,14 @@ static void gropuSOC()
     // uint16_t h = hSOC>lSOC?hSOC:lSOC;
     // uint16_t l = lSOC<hSOC?lSOC:hSOC;
     uint16_t grpsoc = round((*g_grpSOC)/100.0*hSOC+(100-*g_grpSOC)/100.0*lSOC);
+    if(grpsoc > 99)
+    {
+        grpsoc = 99;
+    }else if(grpsoc < 1){
+        grpsoc = 1;
+    }
     static uint32_t smooth_count = 0;
-
+    uint16_t smooth_soc = *g_grpSOC;
     if(abs(grpsoc - *g_grpSOC)>=2)
     {        
         if(timebase_get_time_s()-smooth_count > (uint32_t)2)
@@ -682,10 +714,18 @@ static void gropuSOC()
             smooth_count = timebase_get_time_s();
             if(grpsoc > *g_grpSOC)
             {
-                (*g_grpSOC)++;
+                smooth_soc++;
             }else{
-                (*g_grpSOC)--;
+                smooth_soc--;
             }
+            if(smooth_soc > 99)
+            {
+                smooth_soc = 99;
+            }else if(smooth_soc < 1){
+                smooth_soc = 1;
+            }
+            *g_grpSOC = smooth_soc;
+
         }
     }else{
         *g_grpSOC = grpsoc;
@@ -921,6 +961,7 @@ void soc_task(bool full, bool empty)
             g_socInfo[i].soc = 100;
             g_celSOC[i] = 100;
         }
+        *g_grpSOC = 100;
     }
     if(empty)
     {
@@ -929,6 +970,7 @@ void soc_task(bool full, bool empty)
             g_socInfo[i].soc = 0;
             g_celSOC[i] = 0;
         }
+        *g_grpSOC = 0;
     }
     
     if(state == GROUP_STATE_standby)
