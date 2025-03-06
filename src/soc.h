@@ -13,6 +13,8 @@ struct SOC_Info
     float soc_smooth;
     float soc;
     float socEr2;
+    const uint16_t *last_curve;
+    uint16_t swith_curve_time;
 
 };
 
