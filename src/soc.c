@@ -426,13 +426,13 @@ static uint32_t getEKF_R(uint16_t vol, const uint16_t *curve, const int16_t *cur
     if(H<2)
     {
         int t = abs(VOL_SAMPLE_ERR_MV_1-VOL_SAMPLE_ERR_MV_2);
-        H_R = (VOL_SAMPLE_ERR_MV_1+(1-H)*t)*(VOL_SAMPLE_ERR_MV_1+(1-H)*t);
+        H_R = (VOL_SAMPLE_ERR_MV_1+(2-H)*t)*(VOL_SAMPLE_ERR_MV_1+(2-H)*t);
     }else if(H>4)
     {
         H_R = VOL_SAMPLE_ERR_MV_3*VOL_SAMPLE_ERR_MV_3;
     }else{
         int t = abs(VOL_SAMPLE_ERR_MV_3-VOL_SAMPLE_ERR_MV_1);
-        H_R = (VOL_SAMPLE_ERR_MV_3+(H-1)*t)*(VOL_SAMPLE_ERR_MV_3+(H-1)*t);
+        H_R = (VOL_SAMPLE_ERR_MV_3+(H-2)*t)*(VOL_SAMPLE_ERR_MV_3+(H-2)*t);
     }
 
     return H_R;
@@ -523,6 +523,10 @@ void mysocEKF(struct SOC_Info *SOCinfo, float cur, uint16_t vol, uint16_t tempra
         // printf("callcount %d hprev :%f  H : %f  hnext :%f \n", callCount, Hprev, H, Hnext);
     }
     float K = 0;
+    if(callCount%16 == 1 && SOCcal >= 92)
+    {
+        printf("fdfsa\n");
+    }
     uint32_t ekfR = getEKF_R(vol, curve, curveK);
 
 
