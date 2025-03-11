@@ -1,7 +1,7 @@
 #include <stdint.h>
 
-#ifndef __CURVE_H
-#define __CURVE_H
+#ifndef _SOX_CURVE_H
+#define _SOX_CURVE_H
 
 #define TEMP_POINT_NUM              8      // -15  -5  5  15 25   35  45  55   
 #define CUR_POINT_NUM               5       // 0.1 0.2 0.3 0.4 0.5

@@ -1,6 +1,6 @@
 #include <stdint.h>
-#ifndef _SOE_H_
-#define _SOE_H_
+#ifndef _SOX_SOE_H
+#define _SOX_SOE_H
 
 
 int8_t soe_init();
