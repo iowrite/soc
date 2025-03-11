@@ -95,10 +95,10 @@ int8_t soh_task()
 
     // bug: lost some cycle when charge change to discharge or discharge to charge
     if(*g_grpSOC <= s_lastGrpSOC-1){
-        *g_cycleCount += 5*((s_lastGrpSOC-*g_grpSOC)/10);
+        *g_cycleCount += 5*(s_lastGrpSOC-*g_grpSOC);
         s_lastGrpSOC  = *g_grpSOC;
     }else if(*g_grpSOC >= s_lastGrpSOC+1){
-        *g_cycleCount += 5*((*g_grpSOC-s_lastGrpSOC)/10);
+        *g_cycleCount += 5*(*g_grpSOC-s_lastGrpSOC);
         s_lastGrpSOC  = *g_grpSOC;
         
     }

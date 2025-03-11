@@ -1,5 +1,6 @@
 #include <stdint.h>
 #include <stdbool.h>
+#include <math.h>
 #include "sox_private.h"
 #include "sox_config.h"
 #include "soc.h"
@@ -87,6 +88,19 @@ int8_t sox_task(bool full, bool empty)
     soc_save(false);                 // cell soc and group soc
     soh_save(false);                 // cell soh , group soh and cycle count
     soe_save(false);                 // accumulate charge and discharge energy
+	
+	static uint32_t standby_save = 0;
+	if(fabs(*g_cur)< CUR_WINDOW_A)
+	{
+		standby_save++;
+		if(standby_save == 1){
+			soc_save(true);                 
+			soh_save(true);            
+			soe_save(true); 
+		}
+	}else{
+		standby_save = 0;
+	}
      
     return 0;
 }

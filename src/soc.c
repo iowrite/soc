@@ -741,31 +741,34 @@ static void gropuSOC()
     }else if(grpsoc < 1){
         grpsoc = 1;
     }
-    static uint32_t smooth_count = 0;
-    uint16_t smooth_soc = *g_grpSOC;
-    if(abs(grpsoc - *g_grpSOC)>=2)
-    {        
-        if(timebase_get_time_s()-smooth_count > (uint32_t)2)
-        {
-            smooth_count = timebase_get_time_s();
-            if(grpsoc > *g_grpSOC)
-            {
-                smooth_soc++;
-            }else{
-                smooth_soc--;
-            }
-            if(smooth_soc > 99)
-            {
-                smooth_soc = 99;
-            }else if(smooth_soc < 1){
-                smooth_soc = 1;
-            }
-            *g_grpSOC = smooth_soc;
 
-        }
-    }else{
-        *g_grpSOC = grpsoc;
-    }
+	static uint32_t smooth_count = 0;
+	uint16_t smooth_soc = *g_grpSOC;
+	if(abs(grpsoc - *g_grpSOC)>=2)
+	{        
+		if(timebase_get_time_s()-smooth_count > (uint32_t)2)
+		{
+			smooth_count = timebase_get_time_s();
+			if(grpsoc > *g_grpSOC)
+			{
+				smooth_soc++;
+			}else{
+				smooth_soc--;
+			}
+			if(smooth_soc > 99)
+			{
+				smooth_soc = 99;
+			}else if(smooth_soc < 1){
+				smooth_soc = 1;
+			}
+			*g_grpSOC = smooth_soc;
+
+		}
+	}else{
+		*g_grpSOC = grpsoc;
+	}
+
+
 
 
     // printf("call: %d, hSOC:%d, lSOC:%d, grpSOC:%d\n",callCount, hSOC, lSOC, *g_grpSOC);
@@ -990,24 +993,7 @@ void soc_task(bool full, bool empty)
         // }
     }
     //printf("call: %d, cur: %f, state: %d\n",callCount, *g_cur, g_group_state);
-    if(full)
-    {
-        for (size_t i = 0; i < CELL_NUMS; i++)
-        {
-            g_socInfo[i].soc = 100;
-            g_celSOC[i] = 100;
-        }
-        *g_grpSOC = 100;
-    }
-    if(empty)
-    {
-        for (size_t i = 0; i < CELL_NUMS; i++)
-        {
-            g_socInfo[i].soc = 0;
-            g_celSOC[i] = 0;
-        }
-        *g_grpSOC = 0;
-    }
+
     
     if(state == GROUP_STATE_standby)
     {
@@ -1022,8 +1008,30 @@ void soc_task(bool full, bool empty)
         }
         
     }
+	
+	// XXX grp soc maybe need a mux lock when in rtos
     gropuSOC();
-
+	
+	if(full)
+    {
+//        for (size_t i = 0; i < CELL_NUMS; i++)
+//        {
+//            g_socInfo[i].soc = 100;
+//            g_celSOC[i] = 100;
+//        }
+        *g_grpSOC = 100;
+    }
+    if(empty)
+    {
+//        for (size_t i = 0; i < CELL_NUMS; i++)
+//        {
+//            g_socInfo[i].soc = 0;
+//            g_celSOC[i] = 0;
+//        }
+        *g_grpSOC = 0;
+    }
+	// XXX grp soc maybe need a mux unlock when in rtos
+	
     //printf("call: %d, grpsoc: %d\n", callCount, *g_grpSOC);
     port_soc_output();
 

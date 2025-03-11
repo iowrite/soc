@@ -1,5 +1,6 @@
 #include <stdint.h>
 #include <stdio.h>
+#include <math.h>
 #include "sox_private.h"
 #include "sox.h"
 #include "port.h"
@@ -52,11 +53,13 @@ int8_t soe_task()
         if(*g_cur > 0){
             *g_accChgWH += *g_cur * *g_grpVol /3600;
         }else{
-            *g_accDsgWH += *g_cur * *g_grpVol /3600;
+            *g_accDsgWH += fabs(*g_cur * *g_grpVol /3600);
         }
         static int state = 0, lastState = 0;
         switch(state){
             case 0:                                         // standby
+				*g_sigChgWH = 0;
+                *g_sigDsgWH = 0;
                 lastState = state;
                 if(*g_cur > CUR_WINDOW_A)
                 {
@@ -70,34 +73,36 @@ int8_t soe_task()
                 break;
             case 1:                                         // charge
                 lastState = state;
-                if(*g_cur> 0)
+                if(*g_cur> CUR_WINDOW_A)
                 {
                     *g_sigChgWH += *g_cur * *g_grpVol /3600;
-                }
-                if(*g_cur < -CUR_WINDOW_A)
+                }else if(*g_cur < -CUR_WINDOW_A)
                 {
                     state = 2;
-                }
+                }else{
+					state = 0;
+				}
                 break;
             case 2:                                         // charge to discharge
-                *g_accChgWH = 0;
-                *g_accDsgWH = 0;
+                *g_sigChgWH = 0;
+                *g_sigDsgWH = 0;
                 lastState = state;
                 state = 3;
                 break;
             case 3:                                         // discharge        
                 lastState = state;
-                if(*g_cur < 0){
-                    *g_sigDsgWH += *g_cur * *g_grpVol /3600;
-                }
-                if(*g_cur > CUR_WINDOW_A)
+                if(*g_cur < -CUR_WINDOW_A){
+                    *g_sigDsgWH += fabs(*g_cur * *g_grpVol /3600);
+                }else if(*g_cur > CUR_WINDOW_A)
                 {
                     state = 4;
-                }
+                }else{
+					state = 0;
+				}
                 break;
             case 4:                                         // discharge to charge
-                *g_accChgWH = 0;
-                *g_accDsgWH = 0;
+                *g_sigChgWH = 0;
+                *g_sigDsgWH = 0;
                 lastState = state;
                 state = 1;
                 break;
