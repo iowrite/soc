@@ -12,6 +12,7 @@
 #include "sox.h"
 #include "port.h"
 #include "sox_config.h"
+#include "common.h"
 
 
 
@@ -723,18 +724,172 @@ static void gropuSOC()
 {
     static int callCount = 0;
     callCount++;
-    uint16_t sortedSOC[CELL_NUMS];
-    bubbleSort_ascend(g_celSOC, sortedSOC, CELL_NUMS);
-    uint16_t maxSOC = sortedSOC[CELL_NUMS-1];
-    uint16_t minSOC = sortedSOC[0];
+    float unsortedSOC[CELL_NUMS];
+    for(int i = 0; i < CELL_NUMS; i++)
+    {
+        unsortedSOC[i] = g_socInfo[i].soc;
+    }
+    float sortedSOC[CELL_NUMS];
+    bubbleSort_ascend_float(unsortedSOC, sortedSOC, CELL_NUMS);
+    float maxSOC = sortedSOC[CELL_NUMS-1];
+    float minSOC = sortedSOC[0];
+    float avgSOC = 0;
+    for(int i=0; i<CELL_NUMS; i++)
+    {
+        avgSOC += sortedSOC[i];
+    }
+    avgSOC = avgSOC/CELL_NUMS;
+
     // if(callCount == 3560){
     //     printf("change\n");
     // }
-    uint16_t hSOC = maxSOC*(maxSOC/100.0)+minSOC*(1-maxSOC/100.0);
-    uint16_t lSOC= minSOC*(1-minSOC/100.0)+maxSOC*(minSOC/100.0);
+
+
+    // uint16_t hSOC = maxSOC*(maxSOC/100.0)+minSOC*(1-maxSOC/100.0);
+    // uint16_t lSOC= minSOC*(1-minSOC/100.0)+maxSOC*(minSOC/100.0);
+
+    
     // uint16_t h = hSOC>lSOC?hSOC:lSOC;
     // uint16_t l = lSOC<hSOC?lSOC:hSOC;
-    uint16_t grpsoc = round((*g_grpSOC)/100.0*hSOC+(100-*g_grpSOC)/100.0*lSOC);
+    uint16_t grpsoc;
+    // uint16_t grpsoc = round((*g_grpSOC)/100.0*hSOC+(100-*g_grpSOC)/100.0*lSOC);
+
+#define GRP_Q_MAX               25
+#define GRP_Q_Min               1
+#define GRP_Q                   0.01f
+
+#define  E_HIGH_MIN       1
+#define  E_HIGH_MAX       5
+#define  E_LOW_MIN        1
+#define  E_LOW_MAX        5
+
+
+#define  R_HIGH_MIN       (E_HIGH_MIN*E_HIGH_MIN)
+#define  R_HIGH_MAX       (E_HIGH_MAX*E_HIGH_MAX)
+#define  R_LOW_MIN        (E_LOW_MIN*E_LOW_MIN)
+#define  R_LOW_MAX        (E_LOW_MAX*E_LOW_MAX)
+#define  R_AVG_MIN        (E_AEG_MIN*E_AEG_MIN)
+#define  R_AVG_MAX        (E_AEG_MIN*E_AEG_MIN)
+
+
+    static float avg_soc_buff[10];
+    static uint8_t buff_idx = 0;
+
+
+    static uint32_t last_record_time = 0;
+    if(timebase_get_time_s() - last_record_time > (uint32_t)60)
+    {
+        last_record_time = timebase_get_time_s();
+        avg_soc_buff[buff_idx] = avgSOC;
+        buff_idx++;
+        if(buff_idx >= 10)
+        {
+            buff_idx = 0;
+        }
+    }
+
+    float last_avg_soc;
+    if(buff_idx == 9)
+    {
+        last_avg_soc = avg_soc_buff[0];
+    }else
+    {
+        last_avg_soc = avg_soc_buff[buff_idx+1];
+    }
+
+    float max_soc_change_R_offset = fabs(maxSOC - last_avg_soc);
+    float min_soc_change_R_offset = fabs(minSOC - last_avg_soc);
+    float max_soc_change_R_offset2 = max_soc_change_R_offset*max_soc_change_R_offset;
+    float min_soc_change_R_offset2 = min_soc_change_R_offset*min_soc_change_R_offset;
+    if(max_soc_change_R_offset2 > 25)
+    {
+        max_soc_change_R_offset2 = 25; 
+    }
+    if(min_soc_change_R_offset2 > 25)
+    {
+        min_soc_change_R_offset = 25; 
+    }
+
+    float maxSOC_R = R_HIGH_MIN + (1-*g_grpSOC/100.0f) * (R_HIGH_MAX- R_HIGH_MIN) + max_soc_change_R_offset2;
+    float minSOC_R = R_LOW_MIN + *g_grpSOC/100.0f * (R_LOW_MAX- R_LOW_MIN) + min_soc_change_R_offset2;
+
+    if(*g_grpSOC > 50 && maxSOC_R > minSOC_R)
+    {
+        maxSOC_R = minSOC_R -1;
+    }else if(*g_grpSOC < 50 && minSOC_R > maxSOC_R)
+    {
+        minSOC_R = maxSOC_R -1;
+    }
+
+
+    printf("last_avg_soc %f, maxSOC_R: %f, minSOC_R: %f, maxsoc %f, minsoc %f", last_avg_soc, maxSOC_R, minSOC_R, maxSOC, minSOC);
+    static float cal_grp_soc;
+    static bool grp_soc_init = false;
+    if(!grp_soc_init){
+        grp_soc_init = true;
+        cal_grp_soc = *g_grpSOC;
+    }
+    
+
+    static float grp_soc_p = 1;
+
+    float cal_grp_soc_p=grp_soc_p + GRP_Q;
+
+    printf("kf soc: %f, p: %f \n", cal_grp_soc, grp_soc_p);
+
+    float H[2][1] = {1, 1};
+    float H_t[1][2] = {1, 1};
+    float Z[2][1] = {minSOC, maxSOC};
+    float R[2][2] = {    minSOC_R,       1       ,
+                            1       ,       maxSOC_R,
+                        };
+    float S[2][2] = {0};
+    float H_P[2][1] = {cal_grp_soc_p, cal_grp_soc_p};
+    matrix_multiply((float *)H_P, (float *)H_t, (float *)S, 2, 1, 2);
+    for(int i=0; i<2; i++)
+    {
+        for(int j=0; j<2; j++)
+        {
+            S[i][j] = S[i][j] + R[i][j];
+        }
+
+    }
+
+    float S_i[2][2] = {0};
+    inverse_matrix_2x2(S, S_i);
+
+    float P_H_t[1][2] = {cal_grp_soc_p, cal_grp_soc_p};
+
+    float K[1][2] = {0};
+    matrix_multiply((float *)P_H_t, (float *)S_i, (float *)K, 1, 2, 2);
+
+
+    float Z_H[2][1] = {0};
+    float H_x[2][1] = {cal_grp_soc, cal_grp_soc};
+    for(int i=0; i<2; i++)
+    {
+        Z_H[i][0] = Z[i][0] - H_x[i][0];
+    }
+
+    float x_k = 0;
+    matrix_multiply((float *)K, (float *)Z_H, &x_k, 1, 2, 1);
+
+    cal_grp_soc = cal_grp_soc + x_k;
+
+    float K_H = 0;
+    matrix_multiply((float *)K, (float *)H, &K_H, 1, 2, 1);
+    grp_soc_p = (1-K_H)*cal_grp_soc_p;
+
+
+    grpsoc = round(cal_grp_soc);
+
+
+
+
+
+
+
+
     if(grpsoc > 99)
     {
         grpsoc = 99;

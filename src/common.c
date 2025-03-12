@@ -16,7 +16,7 @@
  * @param n     column of matrix A, row of matrix B
  * @param p     column of matrix B
  */
-void matrix_multiply(int *A, int *B, int *C, int m, int n, int p) 
+void matrix_multiply(float *A, float *B, float *C, int m, int n, int p) 
 {
     for (int i = 0; i < m; i++) {
         for (int j = 0; j < p; j++) {
