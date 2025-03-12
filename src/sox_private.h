@@ -1,6 +1,6 @@
 #include <stdint.h>
-#ifndef _SOX_PRIVATE_H_
-#define _SOX_PRIVATE_H_
+#ifndef _SOX_PRIVATE_H
+#define _SOX_PRIVATE_H
 
 extern float *g_cur;                        // A            *1
 extern float *g_grpVol;                     // vol          *1 

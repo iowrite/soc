@@ -1,7 +1,7 @@
 #include <stdint.h>
 #include <stdbool.h>
-#ifndef __SOX_H__
-#define __SOX_H__
+#ifndef _SOX_SOX_H
+#define _SOX_SOX_H
 
 int8_t sox_init( 
     float *cur, 

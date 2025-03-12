@@ -1,8 +1,8 @@
 #include <stdint.h>
 #include <stdbool.h>
 #include "sox_config.h"
-#ifndef _SOC_H
-#define _SOC_H
+#ifndef _SOX_SOC_H
+#define _SOX_SOC_H
 
 struct SOC_Info
 {

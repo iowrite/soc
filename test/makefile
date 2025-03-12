@@ -15,7 +15,8 @@ mysoc: 	build_dir/test.o \
 		build_dir/soe.o \
 		build_dir/sop.o \
 		build_dir/sox.o \
-		build_dir/port.o
+		build_dir/port.o \
+		build_dir/common.o
 	gcc  	build_dir/test.o \
 			build_dir/soc.o \
 			build_dir/curve.o \
@@ -24,7 +25,9 @@ mysoc: 	build_dir/test.o \
 			build_dir/sop.o \
 			build_dir/sox.o \
 			build_dir/port.o \
+			build_dir/common.o \
 			-o mysoc -lm -g
+
 
 
 
@@ -51,6 +54,9 @@ build_dir/sop.o: ../src/sop.c ../src/sop.h	../src/sox.h ../src/sox_config.h
 
 build_dir/sox.o: ../src/sox.c ../src/sox.h	../src/soc.h ../src/soh.h ../src/soe.h ../src/sop.h ../src/sox_config.h 
 	gcc -c  ../src/sox.c -o build_dir/sox.o -lm -g
+
+build_dir/common.o: ../src/sox.c ../src/sox.h	../src/soc.h ../src/soh.h ../src/soe.h ../src/sop.h ../src/sox_config.h ../src/common.h
+	gcc -c  ../src/common.c -o build_dir/common.o -lm -g
 
 
 

@@ -1,5 +1,5 @@
-#ifndef SOX_CONFIG_H
-#define SOX_CONFIG_H
+#ifndef _SOX_CONFIG_H
+#define _SOX_CONFIG_H
 
 /***********************
  *  SOX Configuration

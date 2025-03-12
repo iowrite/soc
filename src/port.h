@@ -1,6 +1,6 @@
 #include <stdint.h>
-#ifndef AEKF_PORT_H
-#define AEKF_PORT_H
+#ifndef _SOX_PORT_H
+#define _SOX_PORT_H
 
 #define FULL_STD_CLIB       1
 
