@@ -5,7 +5,7 @@
  *  SOX Configuration
  **********************/
 #define CELL_NUMS                       16
-#define CUR_WINDOW_A                    1.5             //A
+#define CUR_WINDOW_A                    3.0f             //A
 
 
 /***********************

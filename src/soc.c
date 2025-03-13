@@ -813,12 +813,26 @@ static void gropuSOC()
     float maxSOC_R = R_HIGH_MIN + (1-*g_grpSOC/100.0f) * (R_HIGH_MAX- R_HIGH_MIN) + max_soc_change_R_offset2;
     float minSOC_R = R_LOW_MIN + *g_grpSOC/100.0f * (R_LOW_MAX- R_LOW_MIN) + min_soc_change_R_offset2;
 
-    if(*g_grpSOC > 50 && maxSOC_R > minSOC_R)
+
+    if(*g_grpSOC > 50)
     {
-        maxSOC_R = minSOC_R -1;
-    }else if(*g_grpSOC < 50 && minSOC_R > maxSOC_R)
+        if(minSOC_R > 25)
+        {
+            minSOC_R = 25;
+        }
+        if(maxSOC_R > minSOC_R){
+            maxSOC_R = minSOC_R -1;
+        }
+    }else if(*g_grpSOC < 50)
     {
-        minSOC_R = maxSOC_R -1;
+        if(maxSOC_R > 25)
+        {
+            maxSOC_R = 25;
+        }
+        if(minSOC_R > maxSOC_R)
+        {
+            minSOC_R = maxSOC_R -1;
+        }
     }
 
 
