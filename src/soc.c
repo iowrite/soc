@@ -836,7 +836,7 @@ static void gropuSOC()
     }
 
 
-    printf("last_avg_soc %f, maxSOC_R: %f, minSOC_R: %f, maxsoc %f, minsoc %f", last_avg_soc, maxSOC_R, minSOC_R, maxSOC, minSOC);
+    //printf("last_avg_soc %f, maxSOC_R: %f, minSOC_R: %f, maxsoc %f, minsoc %f", last_avg_soc, maxSOC_R, minSOC_R, maxSOC, minSOC);
     static float cal_grp_soc;
     static bool grp_soc_init = false;
     if(!grp_soc_init){
@@ -849,7 +849,7 @@ static void gropuSOC()
 
     float cal_grp_soc_p=grp_soc_p + GRP_Q;
 
-    printf("kf soc: %f, p: %f \n", cal_grp_soc, grp_soc_p);
+    //printf("kf soc: %f, p: %f \n", cal_grp_soc, grp_soc_p);
 
     float H[2][1] = {1, 1};
     float H_t[1][2] = {1, 1};
