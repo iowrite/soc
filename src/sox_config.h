@@ -36,8 +36,8 @@
 #define CELL_VOL_BUFFER_SAMPLE_TIME_S   6                            // 1item per 6 second
 #define SOC_SMOOTH_START_POINT_CHG      85
 #define SOC_SMOOTH_START_POINT_DSG      30
-#define SOC_SMOOTH_START_VOL_DSG        3100.0
-#define SOC_SMOOTH_START_VOL_CHG        3400.0
+#define SOC_SMOOTH_START_VOL_DSG        3050
+#define SOC_SMOOTH_START_VOL_CHG        3400
 
 #define MAX_EKF_Q_PERCENT               5      // 10%
 

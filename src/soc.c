@@ -36,7 +36,7 @@ struct SOC_Info g_socInfo[CELL_NUMS];
 
 
 
-static const uint16_t get_cap(float cur, uint16_t tempra)
+static const uint16_t get_cap(float cur, int16_t tempra)
 {
     int tidx = 0;
     tidx = (tempra+200)/100;
@@ -90,7 +90,7 @@ static const uint16_t get_cap(float cur, uint16_t tempra)
 
 
 
-static const uint16_t * get_v(const uint16_t *chg_curve[TEMP_POINT_NUM][CUR_POINT_NUM], const uint16_t *dsg_curve[TEMP_POINT_NUM][CUR_POINT_NUM], float cur, uint16_t tempra)
+static const uint16_t * get_v(const uint16_t *chg_curve[TEMP_POINT_NUM][CUR_POINT_NUM], const uint16_t *dsg_curve[TEMP_POINT_NUM][CUR_POINT_NUM], float cur, int16_t tempra)
 {
 
     int tidx = 0;
@@ -136,7 +136,7 @@ static const uint16_t * get_v(const uint16_t *chg_curve[TEMP_POINT_NUM][CUR_POIN
 }
 
 
-static const int16_t * get_k(const int16_t *chg_curve[TEMP_POINT_NUM][CUR_POINT_NUM], const int16_t *dsg_curve[TEMP_POINT_NUM][CUR_POINT_NUM], float cur, uint16_t tempra)
+static const int16_t * get_k(const int16_t *chg_curve[TEMP_POINT_NUM][CUR_POINT_NUM], const int16_t *dsg_curve[TEMP_POINT_NUM][CUR_POINT_NUM], float cur, int16_t tempra)
 {
     int tidx = 0;
     tidx = (tempra+200)/100;
@@ -182,12 +182,12 @@ static const int16_t * get_k(const int16_t *chg_curve[TEMP_POINT_NUM][CUR_POINT_
 
 
 
-static const uint16_t * get_curve_v(float cur, uint16_t tempra)
+static const uint16_t * get_curve_v(float cur, int16_t tempra)
 {
     return get_v(s_chg_curve, s_dsg_curve, cur, tempra);
 }
 
-static const int16_t * get_curve_k(float cur, uint16_t tempra)
+static const int16_t * get_curve_k(float cur, int16_t tempra)
 {
     return get_k(s_chg_curve_k, s_dsg_curve_k, cur, tempra);
 }
@@ -291,7 +291,7 @@ enum GroupState check_current_group_state(float cur)
 }
 
 
-void mysoc_pureAH(struct SOC_Info *SOCinfo, float cur, uint16_t vol, uint16_t tempra, float soh)
+void mysoc_pureAH(struct SOC_Info *SOCinfo, float cur, uint16_t vol, int16_t tempra, float soh)
 {
     const uint16_t cap = get_cap(cur, tempra);
 
@@ -320,7 +320,7 @@ void mysoc_pureAH(struct SOC_Info *SOCinfo, float cur, uint16_t vol, uint16_t te
 
 
 
-void mysoc_smooth(struct SOC_Info *SOCinfo, float cur, uint16_t vol, uint16_t tempra, float soh)
+void mysoc_smooth(struct SOC_Info *SOCinfo, float cur, uint16_t vol, int16_t tempra, float soh)
 {
     static int callcount = 0;
     callcount++;
@@ -349,7 +349,7 @@ void mysoc_smooth(struct SOC_Info *SOCinfo, float cur, uint16_t vol, uint16_t te
     
 
 
-    if(cur > 0 && vol > SOC_SMOOTH_START_VOL_CHG || cur < 0 && vol < SOC_SMOOTH_START_VOL_DSG)
+    if(cur > 0 && vol > SOC_SMOOTH_START_VOL_CHG &&  SOCinfo->soc > 80|| cur < 0 && vol < SOC_SMOOTH_START_VOL_DSG && SOCinfo->soc < 20)
     {
         if(SOCinfo->soc_smooth == 0){
             SOCinfo->soc_smooth = SOCinfo->soc;
@@ -361,11 +361,11 @@ void mysoc_smooth(struct SOC_Info *SOCinfo, float cur, uint16_t vol, uint16_t te
             
         }else if(cur<0 && ((int)oldest_vol-(int)newest_vol)){
             int smooth_empty_estimate_s = (vol-*g_dsg_stop_vol)/(oldest_vol-newest_vol)*(CELL_VOL_BUFFER_LEN-1)*CELL_VOL_BUFFER_SAMPLE_TIME_S;
-            float smoothDiff = SOCinfo->soc_smooth/smooth_empty_estimate_s*(3+15*(vol-*g_dsg_stop_vol)/(SOC_SMOOTH_START_VOL_DSG-*g_dsg_stop_vol));
+            float smoothDiff = SOCinfo->soc_smooth/smooth_empty_estimate_s*(1+20*(vol-*g_dsg_stop_vol)/(SOC_SMOOTH_START_VOL_DSG-*g_dsg_stop_vol));
             SOCinfo->soc_smooth -= smoothDiff;
-//            if(callcount%16 == 8 && SOCinfo->soc_smooth<1){
-//                printf("dsg soc speedup %f,smooth_full_estimate_s: %d, soc_smooth %f\r\n", smoothDiff, smooth_empty_estimate_s, SOCinfo->soc_smooth);
-//            }
+           if(callcount%16 == 8){
+               printf("dsg soc speedup %f,smooth_full_estimate_s: %d, soc_smooth %f\r\n", smoothDiff, smooth_empty_estimate_s, SOCinfo->soc_smooth);
+           }
         }
     }
 
@@ -449,7 +449,7 @@ static uint32_t getEKF_R(float H_soc, uint16_t vol, const uint16_t *curve, const
 
 
 
-void mysocEKF(struct SOC_Info *SOCinfo, float cur, uint16_t vol, uint16_t tempra, float soh)
+void mysocEKF(struct SOC_Info *SOCinfo, float cur, uint16_t vol, int16_t tempra, float soh)
 {
     
     static int callCount = 0;

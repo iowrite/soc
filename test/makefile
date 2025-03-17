@@ -34,7 +34,7 @@ mysoc: 	build_dir/test.o \
 build_dir/test.o: test.c ../src/sox.h ../src/sox_config.h
 	gcc -I ../src -c  test.c -o build_dir/test.o -lm -g
 
-build_dir/port.o: ../src/port.c ../src/port.h ../src/sox_config.h
+build_dir/port.o: ../src/port.c ../src/port.h ../src/sox.h  ../src/sox_config.h
 	gcc -c  ../src/port.c -o build_dir/port.o -lm -g
 
 build_dir/soc.o: ../src/soc.c ../src/soc.h ../src/sox.h ../src/sox_config.h
@@ -52,7 +52,7 @@ build_dir/soe.o: ../src/soe.c ../src/soe.h	../src/sox.h ../src/sox_config.h
 build_dir/sop.o: ../src/sop.c ../src/sop.h	../src/sox.h ../src/sox_config.h 
 	gcc -c  ../src/sop.c -o build_dir/sop.o -lm -g
 
-build_dir/sox.o: ../src/sox.c ../src/sox.h	../src/soc.h ../src/soh.h ../src/soe.h ../src/sop.h ../src/sox_config.h 
+build_dir/sox.o: ../src/sox.c ../src/sox.h	../src/soc.h ../src/soh.h ../src/soe.h ../src/sop.h  ../src/sox_config.h 
 	gcc -c  ../src/sox.c -o build_dir/sox.o -lm -g
 
 build_dir/common.o: ../src/sox.c ../src/sox.h	../src/soc.h ../src/soh.h ../src/soe.h ../src/sop.h ../src/sox_config.h ../src/common.h
