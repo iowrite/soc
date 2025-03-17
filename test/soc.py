@@ -38,11 +38,22 @@ print(len(data_list))
 combined_list = [[row[9]] + [row[11]] + [row[38]] + row[76:92] + row[108:117]for row in data_list]
 
 # 打印结果以验证
-print(combined_list)
+#print(combined_list)
+
+cur = [row[11] for row in data_list]
+print(len(cur))
+totalAH = sum(cur)
 
 
+socAH = []
+init_soc = 100
+socAH.append(init_soc/100*abs(totalAH))
+cumulative_sum = socAH[0]
+for current in cur:
+    cumulative_sum += current
+    socAH.append(cumulative_sum)
 
-
+print("socAH:", socAH)
 # try:
 #     # 使用pandas读取Excel文件中的特定列
 #     df = pd.read_excel('data/not_fix_temp/std_chg_0.5c.xlsx', usecols=['cap'])
@@ -195,11 +206,17 @@ plt.figure()
 plt.grid(True)
 plt.yticks(y_ticks)
 plt.plot(output_x, [row[0] for row in two_dimensional_list_grp], label="grp soc")
+print(len(output_x))
+print(len([AH/socAH[-1]*100 for AH in socAH]))
+plt.plot(output_x, [AH/abs(totalAH)*100 for AH in socAH], label="pureAH soc", color='grey')
 plt.ylim(-5, 105)
 plt.legend()
 
+print(totalAH/3600)
 
 plt.show()
+
+
 
 # # 保存图形到文件
 # plt.savefig('/home/matlab/Documents/soc/scatter_plot.png')
