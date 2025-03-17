@@ -352,7 +352,7 @@ void mysoc_smooth(struct SOC_Info *SOCinfo, float cur, uint16_t vol, int16_t tem
     if(cur > 0 && vol > SOC_SMOOTH_START_VOL_CHG &&  SOCinfo->soc > 80|| cur < 0 && vol < SOC_SMOOTH_START_VOL_DSG && SOCinfo->soc < 20)
     {
         if(SOCinfo->soc_smooth == 0){
-            SOCinfo->soc_smooth = SOCinfo->soc;
+            SOCinfo->soc_smooth = SOCinfo->soc;                  
         }
 
         if(cur>0  && ((int)newest_vol-(int)oldest_vol)){
@@ -363,9 +363,9 @@ void mysoc_smooth(struct SOC_Info *SOCinfo, float cur, uint16_t vol, int16_t tem
             int smooth_empty_estimate_s = (vol-*g_dsg_stop_vol)/(oldest_vol-newest_vol)*(CELL_VOL_BUFFER_LEN-1)*CELL_VOL_BUFFER_SAMPLE_TIME_S;
             float smoothDiff = SOCinfo->soc_smooth/smooth_empty_estimate_s*(1+20*(vol-*g_dsg_stop_vol)/(SOC_SMOOTH_START_VOL_DSG-*g_dsg_stop_vol));
             SOCinfo->soc_smooth -= smoothDiff;
-           if(callcount%16 == 8){
-               printf("dsg soc speedup %f,smooth_full_estimate_s: %d, soc_smooth %f\r\n", smoothDiff, smooth_empty_estimate_s, SOCinfo->soc_smooth);
-           }
+        //    if(callcount%16 == 8){
+        //        printf("dsg soc speedup %f,smooth_full_estimate_s: %d, soc_smooth %f\r\n", smoothDiff, smooth_empty_estimate_s, SOCinfo->soc_smooth);
+        //    }
         }
     }
 
@@ -725,9 +725,27 @@ static void gropuSOC()
     static int callCount = 0;
     callCount++;
     float unsortedSOC[CELL_NUMS];
+    bool pureAH_lock = false;
     for(int i = 0; i < CELL_NUMS; i++)
     {
-        unsortedSOC[i] = g_socInfo[i].soc;
+        if(g_socInfo[i].soc_smooth)
+        {
+            if(*g_cur>0 &&  g_socInfo[i].soc_smooth>g_socInfo[i].soc){
+                unsortedSOC[i] = g_socInfo[i].soc_smooth;
+
+            }else if(*g_cur<0 &&  g_socInfo[i].soc_smooth<g_socInfo[i].soc){
+                unsortedSOC[i] = g_socInfo[i].soc_smooth;
+            }else{
+                unsortedSOC[i] = g_socInfo[i].soc;
+            }
+        }else{
+            unsortedSOC[i] = g_socInfo[i].soc;
+        }
+        if(g_socInfo[i].pureAH_lock)
+        {
+            pureAH_lock = true;
+        }
+        
     }
     float sortedSOC[CELL_NUMS];
     bubbleSort_ascend_float(unsortedSOC, sortedSOC, CELL_NUMS);
@@ -758,9 +776,9 @@ static void gropuSOC()
 #define GRP_Q_Min               1
 #define GRP_Q                   0.01f
 
-#define  E_HIGH_MIN       1
+#define  E_HIGH_MIN       0.1f
 #define  E_HIGH_MAX       5
-#define  E_LOW_MIN        1
+#define  E_LOW_MIN        0.1f
 #define  E_LOW_MAX        5
 
 
@@ -772,44 +790,38 @@ static void gropuSOC()
 #define  R_AVG_MAX        (E_AEG_MIN*E_AEG_MIN)
 
 
-    static float avg_soc_buff[10];
-    static uint8_t buff_idx = 0;
 
 
-    static uint32_t last_record_time = 0;
-    if(timebase_get_time_s() - last_record_time > (uint32_t)60)
-    {
-        last_record_time = timebase_get_time_s();
-        avg_soc_buff[buff_idx] = avgSOC;
-        buff_idx++;
-        if(buff_idx >= 10)
-        {
-            buff_idx = 0;
-        }
-    }
 
-    float last_avg_soc;
-    if(buff_idx == 9)
-    {
-        last_avg_soc = avg_soc_buff[0];
-    }else
-    {
-        last_avg_soc = avg_soc_buff[buff_idx+1];
-    }
+
+
 
     if(fabs(*g_cur)>CUR_WINDOW_A){
 
-        float max_soc_change_R_offset = fabs(maxSOC - last_avg_soc);
-        float min_soc_change_R_offset = fabs(minSOC - last_avg_soc);
+        float max_soc_change_R_offset = fabs(maxSOC - avgSOC);
+        float min_soc_change_R_offset = fabs(minSOC - avgSOC);
         float max_soc_change_R_offset2 = max_soc_change_R_offset*max_soc_change_R_offset;
         float min_soc_change_R_offset2 = min_soc_change_R_offset*min_soc_change_R_offset;
-        if(max_soc_change_R_offset2 > 25)
+        if(max_soc_change_R_offset > 97)
         {
-            max_soc_change_R_offset2 = 25; 
+            max_soc_change_R_offset2 = 9; 
         }
-        if(min_soc_change_R_offset2 > 25)
+        if(minSOC < 5)
         {
-            min_soc_change_R_offset = 25; 
+            min_soc_change_R_offset2 = 0;
+        }
+        if(max_soc_change_R_offset2 > 9)
+        {
+            max_soc_change_R_offset2 = 9; 
+        }
+        if(min_soc_change_R_offset2 > 9)
+        {
+            min_soc_change_R_offset = 9; 
+        }
+        if(pureAH_lock)
+        {
+            max_soc_change_R_offset2 = 0;
+            min_soc_change_R_offset2 = 0;
         }
 
         float maxSOC_R = R_HIGH_MIN + (1-*g_grpSOC/100.0f) * (R_HIGH_MAX- R_HIGH_MIN) + max_soc_change_R_offset2;
@@ -838,7 +850,7 @@ static void gropuSOC()
         }
 
 
-        //printf("last_avg_soc %f, maxSOC_R: %f, minSOC_R: %f, maxsoc %f, minsoc %f", last_avg_soc, maxSOC_R, minSOC_R, maxSOC, minSOC);
+        //printf("last_avg_soc %f, maxSOC_R: %f, minSOC_R: %f, maxsoc %f, minsoc %f ", avgSOC, maxSOC_R, minSOC_R, maxSOC, minSOC);
         static float cal_grp_soc;
         static bool grp_soc_init = false;
         if(!grp_soc_init){
