@@ -20,11 +20,11 @@ int8_t read_saved_soc(float *soc);
 
 /**
  * @brief read saved soc (last soc before shutdown)
- * @param soc pointer to float array of soc
+ * @param soc pointer to uint16_t group soc
  * @return  0: valid
  *         -1: invalid
  */
-int8_t read_saved_soc_group(float *grpsoc);
+int8_t read_saved_soc_group(uint16_t *grpsoc);
 
 
 /** 
@@ -38,11 +38,11 @@ int8_t write_saved_soc(float *soc);
 
 /** 
  * @brief write lastest soc (per 1% changed)
- * @param soc pointer to float array of soc
+ * @param soc uint16_t group soc
  * @return  0: valid
  *         -1: invalid
  */
-int8_t write_saved_soc_group(float grpsoc);
+int8_t write_saved_soc_group(uint16_t grpsoc);
 
 
 /** 
@@ -99,6 +99,8 @@ int8_t write_saved_soe(float totalChgWh, float totalDsgWh);
 void port_sox_input(void);
 void port_sox_output(void);
 
+
+
 void port_soc_input(void);
 void port_soc_output(void);
 
@@ -111,10 +113,12 @@ void port_soe_output(void);
 void port_sop_input(void);
 void port_sop_output(void);
 
+
 void port_soc_init(void);
 void port_soh_init(void);
 void port_soe_init(void);
 void port_sop_init(void);
+
 
 
 #endif
