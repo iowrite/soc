@@ -360,7 +360,13 @@ void mysoc_smooth(struct SOC_Info *SOCinfo, float cur, uint16_t vol, int16_t tem
             
             
         }else if(cur<0 && ((int)oldest_vol-(int)newest_vol)){
-            int smooth_empty_estimate_s = (vol-*g_dsg_stop_vol)/(oldest_vol-newest_vol)*(CELL_VOL_BUFFER_LEN-1)*CELL_VOL_BUFFER_SAMPLE_TIME_S;
+			float buff_diff = 0;
+			if(oldest_vol-newest_vol < 1)			// current change, cell voltage restore briefly
+			{
+				buff_diff = 1;
+			}
+				
+            int smooth_empty_estimate_s = (vol-*g_dsg_stop_vol)/buff_diff*(CELL_VOL_BUFFER_LEN-1)*CELL_VOL_BUFFER_SAMPLE_TIME_S;
             float smoothDiff = SOCinfo->soc_smooth/smooth_empty_estimate_s*(1+20*(vol-*g_dsg_stop_vol)/(SOC_SMOOTH_START_VOL_DSG-*g_dsg_stop_vol));
             SOCinfo->soc_smooth -= smoothDiff;
         //    if(callcount%16 == 8){
@@ -643,7 +649,7 @@ void mysoc(struct SOC_Info *SOCinfo, float cur, uint16_t vol, int16_t tempra, fl
 {
     if(fabs(cur) > CUR_WINDOW_A)
     {
-        if((tempra<0 && tempra > -200) || (tempra < PURE_AH_LOCK_TEMP_THRESHOLD && fabs(cur) > PURE_AH_LOCK_CUR_THRESHOLD)){
+        if((tempra<0 && tempra > -200) || (tempra < PURE_AH_LOCK_TEMP_THRESHOLD && cur < -PURE_AH_LOCK_CUR_THRESHOLD)){
             SOCinfo->pureAH_lock = true;
         }
         if(SOCinfo->pureAH_lock)
@@ -985,7 +991,7 @@ static void vol2soc_batch(uint16_t *vol, int16_t *tempra, float *soc)
 void soc_init()
 {
     float soc_saved[CELL_NUMS];
-    float soc_saved_group;
+    uint16_t soc_saved_group;
     float soc_lookuptable[CELL_NUMS];
     float soc_firstPowerUp[CELL_NUMS];
     memset(soc_firstPowerUp, 0xff, sizeof(soc_firstPowerUp));
@@ -1050,7 +1056,7 @@ void soc_init()
     avg_soc = sum_soc/CELL_NUMS;
     bubbleSort_ascend_float(unsorted_soc, sorted_soc, CELL_NUMS);
     if(ret == 0){
-        if(soc_saved_group < sorted_soc[0] || soc_saved_group > sorted_soc[CELL_NUMS-1])
+        if(soc_saved_group < (sorted_soc[0] - 1) || soc_saved_group > (sorted_soc[CELL_NUMS-1]+1))
         {
             *g_grpSOC = round(avg_soc);
         }
