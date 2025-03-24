@@ -56,12 +56,12 @@ int8_t write_saved_soc(float *soc)
 
 
 
-int8_t read_saved_soc_group(float *grpsoc)
+int8_t read_saved_soc_group(uint16_t *grpsoc)
 {
 
     return 0;
 }
-int8_t write_saved_soc_group(float grpsoc)
+int8_t write_saved_soc_group(uint16_t grpsoc)
 {
     FILE* save_soc_grp = fopen("save_soc_grp.txt", "a+");
     fprintf(save_soc_grp, "%d -> ", excel_second);
