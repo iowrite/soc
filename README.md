@@ -177,6 +177,8 @@ Q 值用来调整 组端 SOC 变化的的变化速度, 即平滑度.
 
 #### 4.1.1 soc.c
 
+![](doc/soc_module.png)
+
 ```
 /**
  * @brief 初始化, 读取上次下电前存储的 SOC, group SOC
@@ -196,6 +198,7 @@ void soc_task(bool full, bool empty);
 void soc_save(bool force);
 ```
 #### 4.1.2 soh.c
+![](doc/soh_module.png)
 ```
 /**
  * @brief 初始化, 读取上次下电前存储的 SOH, group SOH, 循环次数
@@ -214,6 +217,7 @@ void soh_save(bool force);
 ```
 
 #### 4.1.3 soe.c
+![](doc/soe_module.png)
 ```
 /**
  * @brief 初始化, 读取上次下电前存储的累计充放电量
