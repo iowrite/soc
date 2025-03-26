@@ -312,6 +312,7 @@ int8_t sox_manual_set_acc_chg_dsg(float accChgWH, float accDsgWH);
 ### 4.2 移植层
 
 #### 4.2.1 port.c
+![](doc/port_module.png)
 ```
 /**
  * @brief get a timestamp in seconds
