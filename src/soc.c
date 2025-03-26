@@ -988,6 +988,10 @@ static void vol2soc_batch(uint16_t *vol, int16_t *tempra, float *soc)
     }
 }
 
+
+/**
+ * @brief  init soc module, read saved soc and group soc( last power offf saved)
+ */
 void soc_init()
 {
     float soc_saved[CELL_NUMS];
@@ -1073,6 +1077,9 @@ void soc_init()
     
 }
 
+/**
+ * @param force give true to force save
+ */
 void soc_save(bool force)
 {
     if(!force){
@@ -1135,7 +1142,11 @@ void soc_save(bool force)
 
 
 
-
+/**
+ * @brief  soc task , need call priodically
+ * @param full give true when full charge, false when not
+ * @param empty give true when empty charge, false when not
+ */
 void soc_task(bool full, bool empty)
 {
     port_soc_input();
