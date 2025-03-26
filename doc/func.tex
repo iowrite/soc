@@ -12,3 +12,31 @@ K=\frac{P_{k}^{-} *C}{P_{k}^{-} *C^2+R}
 \hat{SOC_{k}}  = \hat{SOC_{k}^{-}} + K * (vol - \hat{vol})
 
 P_{k} = (1-K*C)*P_{K}^{-}
+
+
+
+
+\hat{SOCGRP_{k}^{-}} = \hat{SOCGRP_{k-1}}
+
+Z = \begin{bmatrix}
+    SOC_{low}
+  \\SOC_{high}
+ \end{bmatrix}
+
+ H = \begin{bmatrix}
+    1
+  \\1
+ \end{bmatrix}
+
+
+ R = \begin{bmatrix}
+    R_{low}  & 1\\
+     1 & R_{high}
+    \end{bmatrix}
+
+
+K = \frac{P_{k}^{-} \cdot H^{T}}{H \cdot P_{k}^{-} \cdot H^{T} + R}  
+
+\hat{SOCGRP_{k}}  = \hat{SOCGRP_{k}^{-}} + K * (z - H \cdot \hat{SOCGRP_{k}^{-}})
+
+P_{k} = (1-K*H)*P_{K}^{-}
