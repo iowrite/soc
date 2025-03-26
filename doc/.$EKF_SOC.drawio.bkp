@@ -1,6 +1,6 @@
 <mxfile host="Electron" agent="Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) draw.io/26.0.4 Chrome/128.0.6613.186 Electron/32.2.8 Safari/537.36" version="26.0.4">
   <diagram name="Page-1" id="31JKt_lZGiEf4TpAlraY">
-    <mxGraphModel dx="1194" dy="968" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="850" pageHeight="1100" math="0" shadow="0">
+    <mxGraphModel dx="1433" dy="1161" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="850" pageHeight="1100" math="0" shadow="0">
       <root>
         <mxCell id="0" />
         <mxCell id="1" parent="0" />
@@ -525,6 +525,70 @@
         </mxCell>
         <mxCell id="JDpjnnhHoQwIafvol6ZJ-55" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0.511;entryY=0.023;entryDx=0;entryDy=0;entryPerimeter=0;" edge="1" parent="1" source="JDpjnnhHoQwIafvol6ZJ-52" target="JDpjnnhHoQwIafvol6ZJ-53">
           <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="JDpjnnhHoQwIafvol6ZJ-56" value="" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontStyle=1" vertex="1" parent="1">
+          <mxGeometry x="133" y="3735" width="607" height="505" as="geometry" />
+        </mxCell>
+        <mxCell id="JDpjnnhHoQwIafvol6ZJ-75" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" edge="1" parent="1" source="JDpjnnhHoQwIafvol6ZJ-57" target="JDpjnnhHoQwIafvol6ZJ-73">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="JDpjnnhHoQwIafvol6ZJ-57" value="单次充放电量计算&lt;div&gt;累计充放电量计算&lt;/div&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontStyle=1" vertex="1" parent="1">
+          <mxGeometry x="195" y="3830" width="210" height="100" as="geometry" />
+        </mxCell>
+        <mxCell id="JDpjnnhHoQwIafvol6ZJ-63" value="SOE INIT" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontStyle=1" vertex="1" parent="1">
+          <mxGeometry x="180" y="3590" width="480" height="110" as="geometry" />
+        </mxCell>
+        <mxCell id="JDpjnnhHoQwIafvol6ZJ-64" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0.467;entryY=0;entryDx=0;entryDy=0;entryPerimeter=0;fontStyle=1" edge="1" parent="1" source="JDpjnnhHoQwIafvol6ZJ-63" target="JDpjnnhHoQwIafvol6ZJ-56">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="JDpjnnhHoQwIafvol6ZJ-65" value="SOE save" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontStyle=1" vertex="1" parent="1">
+          <mxGeometry x="500" y="3840" width="180" height="370" as="geometry" />
+        </mxCell>
+        <mxCell id="JDpjnnhHoQwIafvol6ZJ-76" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" edge="1" parent="1" source="JDpjnnhHoQwIafvol6ZJ-73" target="JDpjnnhHoQwIafvol6ZJ-74">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="JDpjnnhHoQwIafvol6ZJ-77" value="是" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" vertex="1" connectable="0" parent="JDpjnnhHoQwIafvol6ZJ-76">
+          <mxGeometry x="-0.2" y="-2" relative="1" as="geometry">
+            <mxPoint as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="JDpjnnhHoQwIafvol6ZJ-73" value="此次充放电结束" style="rhombus;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="235" y="3980" width="130" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="JDpjnnhHoQwIafvol6ZJ-74" value="清空单次充放电量" style="rounded=1;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="240" y="4120" width="120" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="JDpjnnhHoQwIafvol6ZJ-78" value="" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontStyle=1" vertex="1" parent="1">
+          <mxGeometry x="122" y="4445" width="607" height="505" as="geometry" />
+        </mxCell>
+        <mxCell id="JDpjnnhHoQwIafvol6ZJ-79" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" edge="1" parent="1" source="JDpjnnhHoQwIafvol6ZJ-80" target="JDpjnnhHoQwIafvol6ZJ-86">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="JDpjnnhHoQwIafvol6ZJ-80" value="单次充放电量计算&lt;div&gt;累计充放电量计算&lt;/div&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontStyle=1" vertex="1" parent="1">
+          <mxGeometry x="184" y="4540" width="210" height="100" as="geometry" />
+        </mxCell>
+        <mxCell id="JDpjnnhHoQwIafvol6ZJ-81" value="SOE INIT" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontStyle=1" vertex="1" parent="1">
+          <mxGeometry x="169" y="4300" width="480" height="110" as="geometry" />
+        </mxCell>
+        <mxCell id="JDpjnnhHoQwIafvol6ZJ-82" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0.467;entryY=0;entryDx=0;entryDy=0;entryPerimeter=0;fontStyle=1" edge="1" parent="1" source="JDpjnnhHoQwIafvol6ZJ-81" target="JDpjnnhHoQwIafvol6ZJ-78">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="JDpjnnhHoQwIafvol6ZJ-83" value="SOE save" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontStyle=1" vertex="1" parent="1">
+          <mxGeometry x="489" y="4550" width="180" height="370" as="geometry" />
+        </mxCell>
+        <mxCell id="JDpjnnhHoQwIafvol6ZJ-84" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" edge="1" parent="1" source="JDpjnnhHoQwIafvol6ZJ-86" target="JDpjnnhHoQwIafvol6ZJ-87">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="JDpjnnhHoQwIafvol6ZJ-85" value="是" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" vertex="1" connectable="0" parent="JDpjnnhHoQwIafvol6ZJ-84">
+          <mxGeometry x="-0.2" y="-2" relative="1" as="geometry">
+            <mxPoint as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="JDpjnnhHoQwIafvol6ZJ-86" value="此次充放电结束" style="rhombus;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="224" y="4690" width="130" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="JDpjnnhHoQwIafvol6ZJ-87" value="清空单次充放电量" style="rounded=1;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="229" y="4830" width="120" height="60" as="geometry" />
         </mxCell>
       </root>
     </mxGraphModel>

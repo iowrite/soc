@@ -558,6 +558,57 @@
         <mxCell id="JDpjnnhHoQwIafvol6ZJ-74" value="清空单次充放电量" style="rounded=1;whiteSpace=wrap;html=1;" vertex="1" parent="1">
           <mxGeometry x="240" y="4120" width="120" height="60" as="geometry" />
         </mxCell>
+        <mxCell id="JDpjnnhHoQwIafvol6ZJ-78" value="" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontStyle=1" vertex="1" parent="1">
+          <mxGeometry x="176" y="5080" width="470" height="410" as="geometry" />
+        </mxCell>
+        <mxCell id="JDpjnnhHoQwIafvol6ZJ-81" value="" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontStyle=1" vertex="1" parent="1">
+          <mxGeometry x="160" y="4490" width="470" height="490" as="geometry" />
+        </mxCell>
+        <mxCell id="JDpjnnhHoQwIafvol6ZJ-82" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0.467;entryY=0;entryDx=0;entryDy=0;entryPerimeter=0;fontStyle=1" edge="1" parent="1" source="JDpjnnhHoQwIafvol6ZJ-81" target="JDpjnnhHoQwIafvol6ZJ-78">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="JDpjnnhHoQwIafvol6ZJ-88" value="&lt;span style=&quot;font-weight: 700;&quot;&gt;SOX INIT&lt;/span&gt;" style="text;html=1;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;" vertex="1" parent="1">
+          <mxGeometry x="191" y="4590" width="60" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="JDpjnnhHoQwIafvol6ZJ-89" value="SOC INIT" style="rounded=1;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="336" y="4610" width="120" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="JDpjnnhHoQwIafvol6ZJ-94" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" edge="1" parent="1" source="JDpjnnhHoQwIafvol6ZJ-90" target="JDpjnnhHoQwIafvol6ZJ-91">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="JDpjnnhHoQwIafvol6ZJ-90" value="SOH INIT" style="rounded=1;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="341" y="4700" width="120" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="JDpjnnhHoQwIafvol6ZJ-96" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" edge="1" parent="1" source="JDpjnnhHoQwIafvol6ZJ-91" target="JDpjnnhHoQwIafvol6ZJ-92">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="JDpjnnhHoQwIafvol6ZJ-91" value="SOE INIT" style="rounded=1;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="340" y="4790" width="120" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="JDpjnnhHoQwIafvol6ZJ-92" value="SOP INIT" style="rounded=1;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="341" y="4890" width="120" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="JDpjnnhHoQwIafvol6ZJ-93" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0.458;entryY=0.167;entryDx=0;entryDy=0;entryPerimeter=0;" edge="1" parent="1" source="JDpjnnhHoQwIafvol6ZJ-89" target="JDpjnnhHoQwIafvol6ZJ-90">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="JDpjnnhHoQwIafvol6ZJ-97" value="SOC TASK" style="rounded=1;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="336" y="5100" width="120" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="JDpjnnhHoQwIafvol6ZJ-98" value="SOH TASK" style="rounded=1;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="340" y="5200" width="120" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="JDpjnnhHoQwIafvol6ZJ-99" value="SOE TASK" style="rounded=1;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="341" y="5290" width="120" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="JDpjnnhHoQwIafvol6ZJ-100" value="SOP TASK" style="rounded=1;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="341" y="5390" width="120" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="JDpjnnhHoQwIafvol6ZJ-101" value="&lt;span style=&quot;font-weight: 700;&quot;&gt;SOX TASK&lt;/span&gt;" style="text;html=1;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;" vertex="1" parent="1">
+          <mxGeometry x="201" y="5100" width="90" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="JDpjnnhHoQwIafvol6ZJ-102" value="SOX INIT&lt;div&gt;&lt;br&gt;&lt;/div&gt;" style="rounded=1;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="335" y="4510" width="120" height="60" as="geometry" />
+        </mxCell>
       </root>
     </mxGraphModel>
   </diagram>

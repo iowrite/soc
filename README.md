@@ -243,7 +243,7 @@ void sop_task(bool full, bool empty);
 void sop_save(bool force);
 ```
 #### 4.1.5 sox.c
-
+![](doc/sox_module.png)
 ```
 /**
  * @brief 初始化, 指定输入输出的数据地址
