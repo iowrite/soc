@@ -1,0 +1,14 @@
+SOC_{k} = SOC_{k-1} + \frac{cur*\Delta t}{cap} + w
+
+\hat{vol} = f(SOC_{k}, cur, temperature) + v
+
+\hat{SOC_{k}^{-}} = \hat{SOC_{k-1}}  + \frac{cur*\Delta t}{cap}
+P_{k}^{-} = P_{k-1}  + Q
+
+C = \frac{\partial f}{\partial SOC} |_{SOC=\hat{SOC_{k}^{-}}}
+
+K=\frac{P_{k}^{-} *C}{P_{k}^{-} *C^2+R} 
+
+\hat{SOC_{k}}  = \hat{SOC_{k}^{-}} + K * (vol - \hat{vol})
+
+P_{k} = (1-K*C)*P_{K}^{-}
