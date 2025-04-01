@@ -148,6 +148,13 @@ int main() {
 
     memset(soc, 0, sizeof soc);
 
+    for (size_t j = 0; j < 16; j++)
+    {
+        vol[j] = inputData[0].vol[j];
+        //tmp[j] = inputData[i].avgTmp*10;
+        tmp[j] = inputData[0].tmp[j]*10;
+    }
+
     sox_init(&cur, vol, tmp, soc, &grpSOC.grpSOC, soh, &grpsoh, &cycleCount, &grpVol, &sigChgWH, &sigDsgWH, &accChgAH, &accDsgAH, &g_chg_stop_vol, &g_dsg_stop_vol);
     memcpy(outputData[0].soc, soc, 32);
     memcpy(outputDataGrp, &grpSOC.grpSOC, 2);
