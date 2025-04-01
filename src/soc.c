@@ -976,8 +976,15 @@ static float vol2soc(uint16_t vol, int16_t tempra)
         }
         
     }
+    if(soc > 100)
+    {
+        soc = 100;
+    }else if(soc < 0)
+    {
+        soc = 0;
+    }
 
-    return soc-5;
+    return soc;
 }
 
 static void vol2soc_batch(uint16_t *vol, int16_t *tempra, float *soc)
