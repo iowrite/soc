@@ -8,7 +8,7 @@
 #include "sox_private.h"
 
 
-#define SOC0                                100
+#define SOC0                                0
 #define SOC0_ER2                            25
 
 #if FULL_STD_CLIB
@@ -37,6 +37,23 @@ uint32_t timebase_get_time_s(void)
 
 int8_t read_saved_soc(float *soc)
 {
+    soc[0] = SOC0;
+    soc[1] = SOC0;
+    soc[2] = SOC0;
+    soc[3] = SOC0;
+    soc[4] = SOC0;
+    soc[5] = SOC0;
+    soc[6] = SOC0;
+    soc[7] = SOC0;
+    soc[8] = SOC0;
+    soc[9] = SOC0;
+    soc[10] = SOC0;
+    soc[11] = SOC0;
+    soc[12] = SOC0;
+    soc[13] = SOC0;
+    soc[14] = SOC0;
+    soc[15] = SOC0;
+
 
     return 0;
 }
@@ -188,13 +205,13 @@ void port_soh_output(void)
 
 void port_soc_init(void)
 {
-    for (size_t i = 0; i < CELL_NUMS; i++)
-    {
-        g_socInfo[i].soc = SOC0;
-        g_socInfo[i].socEr2 = SOC0_ER2;
-        g_celSOC[i] = round(SOC0);
+    // for (size_t i = 0; i < CELL_NUMS; i++)
+    // {
+    //     g_socInfo[i].soc = SOC0;
+    //     g_socInfo[i].socEr2 = SOC0_ER2;
+    //     g_celSOC[i] = round(SOC0);
 
-    }
+    // }
     *g_grpSOC = round(SOC0);
 }
 void port_soh_init(void)
