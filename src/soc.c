@@ -579,7 +579,9 @@ void mysocEKF(struct SOC_Info *SOCinfo, float cur, uint16_t vol, int16_t tempra,
     // }
     
     float res = SOCcal+K*((float)vol-estVol);
-    // printf("callcount %d  H: %f K :%f  kcal : %f , vol: %d, estvol: %lf\n", callCount, H, K, K*((float)vol-estVol), vol, estVol);
+    // if(callCount%16 == 9 ){
+    //     printf("callcount %d  H: %f K :%f  kcal : %f , vol: %d, estvol: %lf soc:%f \n", callCount, H, K, K*((float)vol-estVol), vol, estVol, SOCinfo->soc);
+    // }
     float resEr2 = (1-K*H)*SOCer2Cal;
     if(resEr2 > Q)
     {
@@ -634,9 +636,10 @@ void mysocEKF(struct SOC_Info *SOCinfo, float cur, uint16_t vol, int16_t tempra,
     SOCinfo->soc = res;
     SOCinfo->socEr2 = resEr2;
     // printf("soc : %f \n", 100-res);
-    //if(callCount%16 == 0){
-    //    printf("%d soc error2: %f Q:%f R:%d, H:%f, K:%lf kcal : %f , vol: %d, estvol: %lf\n",callCount/16, SOCinfo->socEr2, Q, ekfR, H, K, K*((float)vol-estVol), vol, estVol);
-    //}
+    // printf("%d \n", callCount);
+    // if(callCount%16 == 9){
+    //    printf("%d soc error2: %f Q:%f R:%d, H:%f, K:%lf kcal : %f , vol: %d, estvol: %lf soc: %f\n",callCount/16, SOCinfo->socEr2, Q, ekfR, H, K, K*((float)vol-estVol), vol, estVol, SOCinfo->soc);
+    // }
     
 }
 
@@ -808,13 +811,13 @@ static void gropuSOC()
         float min_soc_change_R_offset = fabs(minSOC - avgSOC);
         float max_soc_change_R_offset2 = max_soc_change_R_offset*max_soc_change_R_offset;
         float min_soc_change_R_offset2 = min_soc_change_R_offset*min_soc_change_R_offset;
-        if(max_soc_change_R_offset > 97)
+        if(maxSOC > 97)
         {
-            max_soc_change_R_offset2 = 9; 
+            max_soc_change_R_offset2 = 9*(100-maxSOC)/3; 
         }
         if(minSOC < 5)
         {
-            min_soc_change_R_offset2 = 0;
+            min_soc_change_R_offset2 = 9*minSOC/5;
         }
         if(max_soc_change_R_offset2 > 9)
         {
@@ -856,7 +859,7 @@ static void gropuSOC()
         }
 
 
-        //printf("last_avg_soc %f, maxSOC_R: %f, minSOC_R: %f, maxsoc %f, minsoc %f ", avgSOC, maxSOC_R, minSOC_R, maxSOC, minSOC);
+        // printf("last_avg_soc %f, maxSOC_R: %f, minSOC_R: %f, maxsoc %f, minsoc %f ", avgSOC, maxSOC_R, minSOC_R, maxSOC, minSOC);
         static float cal_grp_soc;
         static bool grp_soc_init = false;
         if(!grp_soc_init){
@@ -909,6 +912,7 @@ static void gropuSOC()
         matrix_multiply((float *)K, (float *)Z_H, &x_k, 1, 2, 1);
 
         cal_grp_soc = cal_grp_soc + x_k;
+        // printf("cal_grp_soc: %f, x_k: %f\n", cal_grp_soc, x_k);
 
         float K_H = 0;
         matrix_multiply((float *)K, (float *)H, &K_H, 1, 2, 1);
@@ -1167,6 +1171,11 @@ void soc_task(bool full, bool empty)
     //     printf("fdsa\n");
     // }
     
+    // if(callCount == 6200)
+    // {
+    //     printf("fdsa\n");
+
+    // }
     for (size_t i = 0; i < CELL_NUMS; i++)
     {
 
@@ -1195,7 +1204,7 @@ void soc_task(bool full, bool empty)
             // printf("soc error2: %f \n", g_socInfo[0].socEr2);
         // }
     }
-    //printf("call: %d, cur: %f, state: %d\n",callCount, *g_cur, g_group_state);
+    // printf("call: %d, cur: %f, state: %d\n",callCount, *g_cur, g_group_state);
 
     
     if(state == GROUP_STATE_standby)

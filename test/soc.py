@@ -46,7 +46,7 @@ totalAH = sum(cur)
 
 
 socAH = []
-init_soc = 0
+init_soc = 100
 socAH.append(init_soc/100*abs(totalAH))
 cumulative_sum = socAH[0]
 for current in cur:
