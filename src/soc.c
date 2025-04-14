@@ -811,21 +811,23 @@ static void gropuSOC()
         float min_soc_change_R_offset = fabs(minSOC - avgSOC);
         float max_soc_change_R_offset2 = max_soc_change_R_offset*max_soc_change_R_offset;
         float min_soc_change_R_offset2 = min_soc_change_R_offset*min_soc_change_R_offset;
-        if(maxSOC > 97)
-        {
-            max_soc_change_R_offset2 = 9*(100-maxSOC)/3; 
-        }
-        if(minSOC < 5)
-        {
-            min_soc_change_R_offset2 = 9*minSOC/5;
-        }
+
+
         if(max_soc_change_R_offset2 > 9)
         {
             max_soc_change_R_offset2 = 9; 
+            if(maxSOC > 97)
+            {
+                max_soc_change_R_offset2 = 9*(100-maxSOC)/3; 
+            }
         }
         if(min_soc_change_R_offset2 > 9)
         {
             min_soc_change_R_offset = 9; 
+            if(minSOC < 5)
+            {
+                min_soc_change_R_offset2 = 9*minSOC/5;
+            }
         }
         if(pureAH_lock)
         {
