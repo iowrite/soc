@@ -34,11 +34,16 @@ static void bubbleSort_ascend(uint16_t *inputArr, uint16_t *outputArr, uint16_t 
 
 
 uint32_t excel_second = 0;
+int g_port_init_soc;
 
+int main(int argc, char *argv[]) {
 
-int main() {
-
-
+    if(argc < 2)
+    {
+        printf("Usage: ./test <init_soc>\n");
+        return 0;
+    }
+    g_port_init_soc = atoi(argv[1]);
 
 /* ====================================== input data row len     ================================================= */
 
