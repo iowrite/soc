@@ -1,0 +1,12 @@
+{
+    "makefile.configureOnOpen": false,
+    "files.associations": {
+        "curve.h": "c",
+        "sox.h": "c",
+        "sox_private.h": "c",
+        "soh.h": "c",
+        "time.h": "c",
+        "unistd.h": "c",
+        "sox_config.h": "c"
+    }
+}

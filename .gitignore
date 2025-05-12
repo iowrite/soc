@@ -1,5 +1,5 @@
 .venv/
-.vscode/
+
 codegen/
 
 a.out
