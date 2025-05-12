@@ -8,8 +8,8 @@
 #include "sox_private.h"
 
 
-#define SOC0                                100
-#define SOC0_ER2                            25
+// #define SOC0                               0
+// #define SOC0_ER2                            25
 
 #if FULL_STD_CLIB
 
@@ -22,6 +22,11 @@ void __aeabi_assert (const char *expr, const char *file, int line) {
 
 
 #endif
+
+
+
+
+extern int g_port_init_soc;
 
 
 extern uint32_t excel_second;
@@ -37,24 +42,55 @@ uint32_t timebase_get_time_s(void)
 
 int8_t read_saved_soc(float *soc)
 {
-    soc[0] = SOC0;
-    soc[1] = SOC0;
-    soc[2] = SOC0;
-    soc[3] = SOC0;
-    soc[4] = SOC0;
-    soc[5] = SOC0;
-    soc[6] = SOC0;
-    soc[7] = SOC0;
-    soc[8] = SOC0;
-    soc[9] = SOC0;
-    soc[10] = SOC0;
-    soc[11] = SOC0;
-    soc[12] = SOC0;
-    soc[13] = SOC0;
-    soc[14] = SOC0;
-    soc[15] = SOC0;
+    soc[0] = g_port_init_soc;
+#if CELL_NUMS > 1
+    soc[1] = g_port_init_soc;
+#endif
+#if CELL_NUMS > 2
+    soc[2] = g_port_init_soc;
+#endif
+#if CELL_NUMS > 3
+    soc[3] = g_port_init_soc;
+#endif
+#if CELL_NUMS > 4
+    soc[4] = g_port_init_soc;
+#endif
+#if CELL_NUMS > 5
+    soc[5] = g_port_init_soc;
+#endif
+#if CELL_NUMS > 6
+    soc[6] = g_port_init_soc;
+#endif
+#if CELL_NUMS > 7
+    soc[7] = g_port_init_soc;
+#endif
+#if CELL_NUMS > 8
+    soc[8] = g_port_init_soc;
+#endif
+#if CELL_NUMS > 9
+    soc[9] = g_port_init_soc;
+#endif
+#if CELL_NUMS > 10
+    soc[10] = g_port_init_soc;
+#endif
+#if CELL_NUMS > 11
+    soc[11] = g_port_init_soc;
+#endif
+#if CELL_NUMS > 12
+    soc[12] = g_port_init_soc;
+#endif
+#if CELL_NUMS > 13
+    soc[13] = g_port_init_soc;
+#endif
+#if CELL_NUMS > 14
+    soc[14] = g_port_init_soc;
+#endif
+#if CELL_NUMS > 15
+    soc[15] = g_port_init_soc;
+#endif
 
 
+    
     return 0;
 }
 int8_t write_saved_soc(float *soc)
@@ -212,7 +248,7 @@ void port_soc_init(void)
     //     g_celSOC[i] = round(SOC0);
 
     // }
-    *g_grpSOC = round(SOC0);
+    *g_grpSOC = round(g_port_init_soc);
 }
 void port_soh_init(void)
 {
