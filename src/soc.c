@@ -17,7 +17,7 @@
 
 
 
-#define EKF_W(diffAH, cap, cur)                 ((50.0/(DIFF_T_SEC*1000) + CUR_SAMPLE_ERR_A/cur + CAP_ERR_AH/cap+SOH_ERR_PERCENT/100.0) *  diffAH)     
+#define EKF_W(diffAH, cap, cur)                 ((50.0/(DIFF_T_SEC*1000) + CUR_SAMPLE_ERR_A/cur + CAP_ERR_AH/cap+SOH_ERR_PERCENT/100.0) *  EKF_Q_K * diffAH)     
 #define EKF_Q(diffAH, cap, cur)                 (EKF_W(diffAH, cap, cur)*EKF_W(diffAH, cap, cur))                 
 #define EKF_R_1                                 (VOL_SAMPLE_ERR_MV_1*VOL_SAMPLE_ERR_MV_1)
 #define EKF_R_2                                 (VOL_SAMPLE_ERR_MV_2*VOL_SAMPLE_ERR_MV_2)
@@ -204,12 +204,14 @@ enum GroupState
 };
 static enum GroupState g_group_state;
 
+
+static enum GroupState last_group_state = GROUP_STATE_standby;
+static uint32_t standby_hold_time = 0;
+static uint32_t trans_dsg_acc_time = 0;
+static uint32_t trans_chg_acc_time = 0;
 enum GroupState check_current_group_state(float cur)
 {
-    static enum GroupState last_group_state = GROUP_STATE_standby;
-    static uint32_t standby_hold_time = 0;
-    static uint32_t trans_dsg_acc_time = 0;
-    static uint32_t trans_chg_acc_time = 0;
+
     // if(trans_chg_acc_time == 132){
     //     printf("herer\n");
     // }
@@ -269,6 +271,7 @@ enum GroupState check_current_group_state(float cur)
             g_group_state = GROUP_STATE_standby;
             standby_hold_time = timebase_get_time_s();
             last_group_state = GROUP_STATE_charging;
+            // check_current_group_state(cur);
         }else if(cur<-CUR_WINDOW_A){
             g_group_state = GROUP_STATE_transfer;
             last_group_state = GROUP_STATE_charging;
@@ -279,6 +282,7 @@ enum GroupState check_current_group_state(float cur)
             g_group_state = GROUP_STATE_standby;
             standby_hold_time = timebase_get_time_s();
             last_group_state = GROUP_STATE_discharging;
+            // check_current_group_state(cur);
         }else if(cur>CUR_WINDOW_A){
             g_group_state = GROUP_STATE_transfer;
             last_group_state = GROUP_STATE_discharging;
@@ -297,7 +301,7 @@ void mysoc_pureAH(struct SOC_Info *SOCinfo, float cur, uint16_t vol, int16_t tem
 
     const float capf = cap/10.0*(soh/100);
 
-    float diffAH = DIFF_T_SEC/3600.0*cur/capf*100;
+    float diffAH = 100*DIFF_T_SEC/3600.0*cur/capf;
     float SOCcal = SOCinfo->soc + diffAH;
     float SOCer2Cal = SOCinfo->socEr2 + EKF_Q(diffAH,capf, cur);
 
@@ -327,6 +331,10 @@ void mysoc_smooth(struct SOC_Info *SOCinfo, float cur, uint16_t vol, int16_t tem
     // if(callcount == 6018){
     //     printf("fds\n");
     // }
+    if(callcount%16 == 0 && callcount /16 == 6455)
+    {
+        printf("fdsa\n");
+    } 
     float newest_vol, oldest_vol;
     if(timebase_get_time_s()-SOCinfo->record_time > CELL_VOL_BUFFER_SAMPLE_TIME_S){
             SOCinfo->record_time = timebase_get_time_s();
@@ -349,7 +357,7 @@ void mysoc_smooth(struct SOC_Info *SOCinfo, float cur, uint16_t vol, int16_t tem
     
 
 
-    if(cur > 0 && vol > SOC_SMOOTH_START_VOL_CHG &&  SOCinfo->soc > 80|| cur < 0 && vol < SOC_SMOOTH_START_VOL_DSG && SOCinfo->soc < 20)
+    if(cur > 0 && vol > SOC_SMOOTH_START_VOL_CHG &&  SOCinfo->soc > 80|| cur < 0 && vol < SOC_SMOOTH_START_VOL_DSG && SOCinfo->soc < 30)
     {
         if(SOCinfo->soc_smooth == 0){
             SOCinfo->soc_smooth = SOCinfo->soc;                  
@@ -360,18 +368,25 @@ void mysoc_smooth(struct SOC_Info *SOCinfo, float cur, uint16_t vol, int16_t tem
             
             
         }else if(cur<0 && ((int)oldest_vol-(int)newest_vol)){
-			float buff_diff = 0;
-			if(oldest_vol-newest_vol < 1)			// current change, cell voltage restore briefly
+			float buff_diff = oldest_vol-newest_vol;
+			if(buff_diff < 1)			// current change, cell voltage restore briefly
 			{
 				buff_diff = 1;
 			}
-				
-            int smooth_empty_estimate_s = (vol-*g_dsg_stop_vol)/buff_diff*(CELL_VOL_BUFFER_LEN-1)*CELL_VOL_BUFFER_SAMPLE_TIME_S;
-            float smoothDiff = SOCinfo->soc_smooth/smooth_empty_estimate_s*(1+20*(vol-*g_dsg_stop_vol)/(SOC_SMOOTH_START_VOL_DSG-*g_dsg_stop_vol));
-            SOCinfo->soc_smooth -= smoothDiff;
-        //    if(callcount%16 == 8){
-        //        printf("dsg soc speedup %f,smooth_full_estimate_s: %d, soc_smooth %f\r\n", smoothDiff, smooth_empty_estimate_s, SOCinfo->soc_smooth);
-        //    }
+			if(callcount%16 == 0 && callcount /16 == 6261)
+            {
+                printf("fdsa\n");
+            } 
+            if(vol>*g_dsg_stop_vol){
+                int smooth_empty_estimate_s = (vol-*g_dsg_stop_vol)/buff_diff*(CELL_VOL_BUFFER_LEN-1)*CELL_VOL_BUFFER_SAMPLE_TIME_S;
+                float smoothDiff = SOCinfo->soc_smooth/smooth_empty_estimate_s*(2+20*(vol-*g_dsg_stop_vol)/(SOC_SMOOTH_START_VOL_DSG-*g_dsg_stop_vol));
+                SOCinfo->soc_smooth -= smoothDiff;
+                if(callcount%16 == 0){
+                    printf("callcount %d dsg soc speedup %f,smooth_full_estimate_s: %d, soc_smooth %f\r\n", callcount/16, smoothDiff, smooth_empty_estimate_s, SOCinfo->soc_smooth);
+                }
+            }
+
+
         }
     }
 
@@ -424,28 +439,28 @@ static uint32_t getEKF_R(float H_soc, uint16_t vol, const uint16_t *curve, const
     {
         H = curveK[SOC_POINT_NUM-1];
     }else{
-        H = (curveK[index-1] + (curveK[index]-curveK[index-1])*(vol-curve[index-1])/(curve[index]-curve[index-1]))/10.0;
+        H = (curveK[index-1] + (curveK[index]-curveK[index-1])*(vol-curve[index-1])/(curve[index]-curve[index-1]))/10.0f;
     }
 
-    if(H > H_soc)
+    if(H < H_soc)
     {
         H = H_soc;
     }
 
     float H_R;
-    if(H<2)
+    if(H<VOL_SAMPLE_ERR_MV_1_H)
     {
-        int t = abs(VOL_SAMPLE_ERR_MV_1-VOL_SAMPLE_ERR_MV_2);
-        H_R = (VOL_SAMPLE_ERR_MV_1+(2-H)*t)*(VOL_SAMPLE_ERR_MV_1+(2-H)*t);
-    }else if(H>4)
+        H_R = VOL_SAMPLE_ERR_MV_1*VOL_SAMPLE_ERR_MV_1;
+    }else if(H>VOL_SAMPLE_ERR_MV_4_H)
     {
-        H_R = VOL_SAMPLE_ERR_MV_3*VOL_SAMPLE_ERR_MV_3;
+        H_R = VOL_SAMPLE_ERR_MV_4*VOL_SAMPLE_ERR_MV_4;
     }else{
-        int t = abs(VOL_SAMPLE_ERR_MV_3-VOL_SAMPLE_ERR_MV_1);
-        H_R = (VOL_SAMPLE_ERR_MV_3+(H-2)*t)*(VOL_SAMPLE_ERR_MV_3+(H-2)*t);
+        int t = abs(VOL_SAMPLE_ERR_MV_2-VOL_SAMPLE_ERR_MV_3);
+        H_R = (VOL_SAMPLE_ERR_MV_3+(H-VOL_SAMPLE_ERR_MV_1_H)/(VOL_SAMPLE_ERR_MV_4_H-VOL_SAMPLE_ERR_MV_1_H)*t)*(VOL_SAMPLE_ERR_MV_3+(H-VOL_SAMPLE_ERR_MV_1_H)/(VOL_SAMPLE_ERR_MV_4_H-VOL_SAMPLE_ERR_MV_1_H)*t);
     }
     if(switch_curve_time){
-        return H_R+40000*switch_curve_time/600+10000; 
+        return H_R+25*switch_curve_time/600; 
+
     }else{
         return H_R;
     }
@@ -461,7 +476,7 @@ void mysocEKF(struct SOC_Info *SOCinfo, float cur, uint16_t vol, int16_t tempra,
     static int callCount = 0;
     callCount++;
     static float pureAHSUM = 0;
-    // if(callCount == 165680)
+    // if(callCount == 92)
     // {
     //     printf("fds\n");
 
@@ -499,13 +514,14 @@ void mysocEKF(struct SOC_Info *SOCinfo, float cur, uint16_t vol, int16_t tempra,
 
     float diffAH = DIFF_T_SEC/3600.0*cur/capf*100;
     float SOCcal = SOCinfo->soc + diffAH;
-    float Q = getEKF_Q(SOCcal, cur);
+    // float Q = getEKF_Q(SOCcal, cur);
+    float Q = EKF_Q(diffAH, capf, cur);
     float SOCer2Cal = SOCinfo->socEr2 + Q;
     pureAHSUM += diffAH;
     // printf("diffAH : %f, EKF_W : %f pureAH: %f\n", diffAH, EKF_W(diffAH,capf, cur), pureAHSUM);
     float H = 0, Hprev = 0, Hnext = 0;
     float estVol = 0, estVolPrev = 0, estVolNext = 0;
-    float SOCerCal = sqrt(SOCer2Cal);
+    // float SOCerCal = sqrt(SOCer2Cal);
     if(SOCcal < 0)
     {
         SOCcal = 0;
@@ -569,24 +585,25 @@ void mysocEKF(struct SOC_Info *SOCinfo, float cur, uint16_t vol, int16_t tempra,
     uint32_t ekfR = getEKF_R(H, vol, curve, curveK, SOCinfo->swith_curve_time);
 
 
-    if(SOCer2Cal>Q)
-    {
-        SOCer2Cal = Q;
-    }
+    // if(SOCer2Cal>Q)
+    // {
+    //     SOCer2Cal = Q;
+    // }
+
     K = SOCer2Cal*H/(H*SOCer2Cal*H+ekfR);
-    // if(callCount%16 == 13){
-    //     printf("soc: %f, R: %d, k: %f\n", SOCinfo->soc, ekfR, K);
+    // if(callCount%16 == 9){
+    //     printf("soc: %f, R: %d, k: %f, socer2cal %f, H %f, Q %f\n", SOCinfo->soc, ekfR, K, SOCer2Cal, H, Q);
     // }
     
     float res = SOCcal+K*((float)vol-estVol);
-    // if(callCount%16 == 9 ){
-    //     printf("callcount %d  H: %f K :%f  kcal : %f , vol: %d, estvol: %lf soc:%f \n", callCount, H, K, K*((float)vol-estVol), vol, estVol, SOCinfo->soc);
-    // }
-    float resEr2 = (1-K*H)*SOCer2Cal;
-    if(resEr2 > Q)
-    {
-        resEr2 = Q;
+    if(callCount%16 == 8 ){
+        printf("callcount %d  H: %f K :%f  kcal : %f , vol: %d, estvol: %lf soc:%f \n", callCount, H, K, K*((float)vol-estVol), vol, estVol, SOCinfo->soc);
     }
+    float resEr2 = (1-K*H)*SOCer2Cal;
+    // if(resEr2 > Q)
+    // {
+    //     resEr2 = Q;
+    // }
     float SOCerRes = sqrt(resEr2);
 
 
@@ -610,6 +627,7 @@ void mysocEKF(struct SOC_Info *SOCinfo, float cur, uint16_t vol, int16_t tempra,
             if(smooth_k > 1){
                 smooth_k = 1;
             }
+            // printf("smooth_k: %f\n", smooth_k);
             res = SOCinfo->soc + smooth_k*diffAH;
         }
     }else if(cur < 0)
@@ -637,7 +655,7 @@ void mysocEKF(struct SOC_Info *SOCinfo, float cur, uint16_t vol, int16_t tempra,
     SOCinfo->socEr2 = resEr2;
     // printf("soc : %f \n", 100-res);
     // printf("%d \n", callCount);
-    // if(callCount%16 == 9){
+    // if(callCount%16 == 0){
     //    printf("%d soc error2: %f Q:%f R:%d, H:%f, K:%lf kcal : %f , vol: %d, estvol: %lf soc: %f\n",callCount/16, SOCinfo->socEr2, Q, ekfR, H, K, K*((float)vol-estVol), vol, estVol, SOCinfo->soc);
     // }
     
@@ -783,7 +801,9 @@ static void gropuSOC()
 
 #define GRP_Q_MAX               25
 #define GRP_Q_Min               1
-#define GRP_Q                   0.01f
+#define GRP_Q_1                   0.1f
+#define GRP_Q_2                   0.1f
+#define GRP_Q_3                   0.0005f
 
 #define  E_HIGH_MIN       0.1f
 #define  E_HIGH_MAX       5
@@ -858,8 +878,29 @@ static void gropuSOC()
             {
                 minSOC_R = maxSOC_R -1;
             }
+        }else{
+            if(minSOC_R > 25)
+            { 
+                minSOC_R = 25;
+            }
+            if(maxSOC_R > 25)
+            {
+                maxSOC_R = 25;
+            }
+            if(*g_cur > 0)
+            {
+                if(maxSOC_R > minSOC_R){
+                    maxSOC_R = minSOC_R -1;
+                }
+            }
+            if(*g_cur < 0)
+            {
+                if(minSOC_R > maxSOC_R)
+                {
+                    minSOC_R = maxSOC_R -1;
+                }
+            }
         }
-
 
         // printf("last_avg_soc %f, maxSOC_R: %f, minSOC_R: %f, maxsoc %f, minsoc %f ", avgSOC, maxSOC_R, minSOC_R, maxSOC, minSOC);
         static float cal_grp_soc;
@@ -870,9 +911,18 @@ static void gropuSOC()
         }
         
 
-        static float grp_soc_p = 1;
-
-        float cal_grp_soc_p=grp_soc_p + GRP_Q;
+        static float grp_soc_p = 0.1;
+        float cal_grp_soc_p;
+        if(*g_cur > 0 && *g_grpSOC > 97)
+        {
+            cal_grp_soc_p=grp_soc_p + GRP_Q_1;
+        }else if(*g_cur > 0 && *g_grpSOC < 5)
+        {
+            cal_grp_soc_p=grp_soc_p + GRP_Q_2;
+        }else{
+            cal_grp_soc_p=grp_soc_p + GRP_Q_3;
+        }
+        
 
         //printf("kf soc: %f, p: %f \n", cal_grp_soc, grp_soc_p);
 
@@ -937,6 +987,16 @@ static void gropuSOC()
             grpsoc = 1;
         }
 
+        // 避免soc 反向抖动
+        if(*g_cur > 0 && grpsoc < *g_grpSOC)
+        {
+            return;
+        }
+        if(*g_cur < 0 && grpsoc > *g_grpSOC)
+        {
+            return; 
+        }
+
         static uint32_t smooth_count = 0;
         uint16_t smooth_soc = *g_grpSOC;
         if(abs(grpsoc - *g_grpSOC)>=2)
@@ -962,7 +1022,7 @@ static void gropuSOC()
         }else{
             *g_grpSOC = grpsoc;
         }
-        // printf("call: %d, hSOC:%d, lSOC:%d, grpSOC:%d\n",callCount, hSOC, lSOC, *g_grpSOC);
+        // printf("call: %d, maxSOC:%f, minSOC:%f, maxSOC_R:%f, minSOC_R %f, grpSoc %d \n",callCount, maxSOC, minSOC,maxSOC_R, minSOC_R , *g_grpSOC);
     }
 }
 
@@ -1031,10 +1091,13 @@ void soc_init()
                 if(soc_saved[i] < 0 || soc_saved[i] > 100){
                     soc_abnormal_flag[i] = true;
                 }
-                else if(fabs(soc_saved[i]-soc_lookuptable[i]) > 30)
+#if SOC_INIT_OCV_CAL_ENABLE
+                else if(fabs(soc_saved[i]-soc_lookuptable[i]) > SOC_INIT_OCV_CAL_DIFF_THRESHOLD)
                 {
                     soc_abnormal_flag[i] = true;
-                }else{
+                }
+#endif
+                else{
                     soc_abnormal_flag[i] = false;
                 }
             }
@@ -1087,6 +1150,14 @@ void soc_init()
 	port_soc_output();
 	soc_save(true);
 
+    for(int i = 0; i < CELL_NUMS; i++)
+    {
+        g_socInfo[i].soc_smooth = 0;
+    }
+    last_group_state = GROUP_STATE_standby;
+    standby_hold_time = 0;
+    trans_dsg_acc_time = 0;
+    trans_chg_acc_time = 0;
     
 }
 
@@ -1168,10 +1239,10 @@ void soc_task(bool full, bool empty)
     enum GroupState state = check_current_group_state(*g_cur);
     static uint32_t callCount = 0;
     callCount++;
-    // if(callCount == 132)
-    // {
-    //     printf("fdsa\n");
-    // }
+    if(callCount == 6843)
+    {
+        printf("fdsa\n");
+    }
     
     // if(callCount == 6200)
     // {
@@ -1186,11 +1257,11 @@ void soc_task(bool full, bool empty)
         // output soc
         if(g_socInfo[i].soc_smooth)
         {
-            if(*g_cur>0 &&  g_socInfo[i].soc_smooth>g_socInfo[i].soc){
-                g_celSOC[i] = g_socInfo[i].soc_smooth;
+            if(*g_cur>=0 &&  g_socInfo[i].soc_smooth>g_socInfo[i].soc){
+                g_celSOC[i] = round(g_socInfo[i].soc_smooth);
 //               printf("use smooth soc\n");
-            }else if(*g_cur<0 &&  g_socInfo[i].soc_smooth<g_socInfo[i].soc){
-                g_celSOC[i] = g_socInfo[i].soc_smooth;
+            }else if(*g_cur<=0 &&  g_socInfo[i].soc_smooth<g_socInfo[i].soc){
+                g_celSOC[i] = round(g_socInfo[i].soc_smooth);
 //               printf("use smooth soc\n");
             }else{
                 g_celSOC[i] = round(g_socInfo[i].soc);
@@ -1211,6 +1282,37 @@ void soc_task(bool full, bool empty)
     
     if(state == GROUP_STATE_standby)
     {
+        static uint32_t s_standby_timeCount = 0;
+        s_standby_timeCount ++;
+        if(s_standby_timeCount > 10*60)
+        {
+            for (size_t i = 0; i < CELL_NUMS; i++)
+            {
+                g_socInfo[i].pureAH_lock = false;
+                if(g_socInfo[i].soc_smooth && g_socInfo[i].soc_smooth < g_socInfo[i].soc){
+                    g_socInfo[i].soc = g_socInfo[i].soc_smooth;
+                    g_socInfo[i].soc_smooth = 0;
+                }
+                memset(g_socInfo[i].cell_vol_buffer, 0, sizeof(g_socInfo[i].cell_vol_buffer));
+                g_socInfo[i].cell_vol_buff_idx = 0;
+                g_socInfo[i].swith_curve_time = 0;
+                g_socInfo[i].last_curve = NULL;
+            }
+            s_standby_timeCount = 0;
+        }
+    }
+	
+	// XXX grp soc maybe need a mux lock when in rtos
+    gropuSOC();
+	
+	if(full)
+    {
+       for (size_t i = 0; i < CELL_NUMS; i++)
+       {
+           g_socInfo[i].soc = 100;
+           g_celSOC[i] = 100;
+       }
+        *g_grpSOC = 100;
         for (size_t i = 0; i < CELL_NUMS; i++)
         {
             g_socInfo[i].pureAH_lock = false;
@@ -1220,29 +1322,24 @@ void soc_task(bool full, bool empty)
             g_socInfo[i].swith_curve_time = 0;
             g_socInfo[i].last_curve = NULL;
         }
-        
-    }
-	
-	// XXX grp soc maybe need a mux lock when in rtos
-    gropuSOC();
-	
-	if(full)
-    {
-//        for (size_t i = 0; i < CELL_NUMS; i++)
-//        {
-//            g_socInfo[i].soc = 100;
-//            g_celSOC[i] = 100;
-//        }
-        *g_grpSOC = 100;
     }
     if(empty)
     {
-//        for (size_t i = 0; i < CELL_NUMS; i++)
-//        {
-//            g_socInfo[i].soc = 0;
-//            g_celSOC[i] = 0;
-//        }
+       for (size_t i = 0; i < CELL_NUMS; i++)
+       {
+           g_socInfo[i].soc = 0;
+           g_celSOC[i] = 0;
+       }
         *g_grpSOC = 0;
+        for (size_t i = 0; i < CELL_NUMS; i++)
+        {
+            g_socInfo[i].pureAH_lock = false;
+            g_socInfo[i].soc_smooth = 0;
+            memset(g_socInfo[i].cell_vol_buffer, 0, sizeof(g_socInfo[i].cell_vol_buffer));
+            g_socInfo[i].cell_vol_buff_idx = 0;
+            g_socInfo[i].swith_curve_time = 0;
+            g_socInfo[i].last_curve = NULL;
+        }
     }
 	// XXX grp soc maybe need a mux unlock when in rtos
 	

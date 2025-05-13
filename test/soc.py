@@ -13,6 +13,8 @@ warnings.filterwarnings("ignore", category=UserWarning, module="openpyxl")
 
 parser = argparse.ArgumentParser(description='Process some SOC data.')
 parser.add_argument('filepath', type=str, help='The path to the Excel file')
+parser.add_argument('--init_soc', type=float, default=0.0, help='Initial SOC value (default: 0.0)')
+parser.add_argument('--enable_stdsoc', action='store_true', help='Enable stdsoc calculation (default: False)')
 args = parser.parse_args()
 
 
@@ -46,14 +48,19 @@ totalAH = sum(cur)
 
 
 socAH = []
-init_soc = 100
-socAH.append(init_soc/100*abs(totalAH))
-cumulative_sum = socAH[0]
-for current in cur:
-    cumulative_sum += current
-    socAH.append(cumulative_sum)
 
-print("socAH:", socAH)
+init_soc = args.init_soc
+enable_stdsoc = args.enable_stdsoc
+
+if enable_stdsoc:
+    socAH.append(init_soc/100*abs(totalAH))
+    cumulative_sum = socAH[0]
+    for current in cur:
+        cumulative_sum += current
+        socAH.append(cumulative_sum)
+
+# print("socAH:", socAH)
+
 # try:
 #     # 使用pandas读取Excel文件中的特定列
 #     df = pd.read_excel('data/not_fix_temp/std_chg_0.5c.xlsx', usecols=['cap'])
@@ -198,21 +205,41 @@ plt.plot(output_x, [row[0] for row in two_dimensional_list_grp], label="grp soc"
 plt.plot(output_x, [row[1] for row in two_dimensional_list_grp], label="max soc")
 plt.plot(output_x, [row[2] for row in two_dimensional_list_grp], label="min soc")
 plt.plot(output_x, [row[3] for row in two_dimensional_list_grp], label="avg soc")
+if  enable_stdsoc:
+    plt.plot(output_x, [AH/abs(totalAH)*100 for AH in socAH], label="pureAH soc", color='grey')
 plt.ylim(-5, 105)
 plt.legend()
 
-plt.figure()
 
-plt.grid(True)
-plt.yticks(y_ticks)
-plt.plot(output_x, [row[0] for row in two_dimensional_list_grp], label="grp soc")
-print(len(output_x))
-print(len([AH/socAH[-1]*100 for AH in socAH]))
-plt.plot(output_x, [AH/abs(totalAH)*100 for AH in socAH], label="pureAH soc", color='grey')
-plt.ylim(-5, 105)
-plt.legend()
+if enable_stdsoc:
+    # Calculate the difference between grp soc and pureAH soc
+    difference = [abs(row[0] - (AH/abs(totalAH)*100)) for row, AH in zip(two_dimensional_list_grp, socAH)]
 
-print(totalAH/3600)
+    # Create a new figure for the difference
+    fig, ax1 = plt.subplots()
+
+    # Plot grp soc and pureAH soc as reference
+    ax1.plot(output_x, [row[0] for row in two_dimensional_list_grp], label="grp soc", color='blue')
+    ax1.plot(output_x, [AH/abs(totalAH)*100 for AH in socAH], label="pureAH soc", color='grey')
+    ax1.set_ylim(-5, 105)
+    ax1.set_ylabel("SOC (%)")
+    ax1.yaxis.label.set_color('blue')
+
+    # Create a second y-axis for the difference
+    ax2 = ax1.twinx()
+    ax2.plot(output_x, difference, label="Difference", color='red')
+    ax2.set_ylim(0, 10)  # Set the y-axis range to 0% to 10%
+    ax2.set_yticks(np.arange(0, 11, 1))
+    ax2.set_ylabel("Difference (%)")
+    ax2.yaxis.label.set_color('red')
+
+    # Show grid and legend
+    ax2.grid(True, axis='y', linestyle='--', alpha=0.6)
+    ax1.figure.legend(loc='upper right', bbox_to_anchor=(1,1), bbox_transform=ax1.transAxes)
+
+    plt.title("grp soc vs pureAH soc with Difference")
+
+    print(totalAH/3600)
 
 plt.show()
 
