@@ -110,6 +110,11 @@ int8_t sox_manual_set_soc(float soc)
 {
     for(int i = 0; i < CELL_NUMS; i++){
         g_socInfo[i].soc = soc;
+        g_celSOC[i] = soc;
+		if(g_socInfo[i].soc_smooth)
+		{
+			g_socInfo[i].soc_smooth = soc;
+		}
     }
     *g_grpSOC = (uint16_t)soc;
 
