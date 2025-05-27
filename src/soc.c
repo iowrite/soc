@@ -802,9 +802,9 @@ static void gropuSOC()
 
 #define GRP_Q_MAX               25
 #define GRP_Q_Min               1
-#define GRP_Q_1                   0.1f
+#define GRP_Q_1                   0.01f
 #define GRP_Q_2                   0.1f
-#define GRP_Q_3                   0.0005f
+#define GRP_Q_3                   0.0002f
 
 #define  E_HIGH_MIN       0.1f
 #define  E_HIGH_MAX       5
@@ -921,7 +921,12 @@ static void gropuSOC()
         {
             cal_grp_soc_p=grp_soc_p + GRP_Q_2;
         }else{
-            cal_grp_soc_p=grp_soc_p + GRP_Q_3;
+            float grp_soc_q_k = fabs(*g_cur)/10;
+            if(grp_soc_q_k < 0.5)
+            {
+                grp_soc_q_k = 0.5;
+            }
+            cal_grp_soc_p=grp_soc_p + GRP_Q_3*grp_soc_q_k;
         }
         
 
