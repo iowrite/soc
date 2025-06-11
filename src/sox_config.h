@@ -48,7 +48,8 @@
 #define SOC_INIT_OCV_CAL_ENABLE          0
 #define SOC_INIT_OCV_CAL_DIFF_THRESHOLD  30
 
-
+#define SOC_TEMPRA_WARM_CAP_OFFSET_1      1.0f
+#define SOC_TEMPRA_WARM_CAP_OFFSET_2      0.5f
 /***********************
  *  SOH Configuration
  **********************/

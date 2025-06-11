@@ -41,11 +41,28 @@ static const uint16_t get_cap(float cur, int16_t tempra)
 {
     int tidx = 0;
     tidx = (tempra+200)/100;
+    float tk = fabs((tempra % 50)/50.0f);
+    int tidx_low, tidx_high;
     if(tidx < 0){
         tidx = 0;
     }else if(tidx >= TEMP_POINT_NUM)
     {
         tidx = TEMP_POINT_NUM-1;
+        tidx_high = TEMP_POINT_NUM-1;
+    }
+    tidx_low = tidx;
+    if(tidx_high == TEMP_POINT_NUM-1)
+    {
+        tidx_high = TEMP_POINT_NUM-1;
+    }else{
+        tidx_high = tidx+1;
+    }
+
+    float mk;
+    if(tempra > 0){
+        mk = SOC_TEMPRA_WARM_CAP_OFFSET_1;
+    }else{
+        mk = SOC_TEMPRA_WARM_CAP_OFFSET_2;
     }
 
     if(cur > 0)
@@ -63,8 +80,7 @@ static const uint16_t get_cap(float cur, int16_t tempra)
         if(s_cap_list_chg[tidx][cidx] == 0){
             assert(0);
         }
-        return s_cap_list_chg[tidx][cidx];
-
+        return s_cap_list_chg[tidx_low][cidx] + (s_cap_list_chg[tidx_high][cidx]-s_cap_list_chg[tidx_low][cidx])*tk*mk;
     }else if(cur < 0)
     {
         float c = cur/100*10;
@@ -80,7 +96,7 @@ static const uint16_t get_cap(float cur, int16_t tempra)
         if(s_cap_list_dsg[tidx][cidx] == 0){
             assert(0);
         }
-        return s_cap_list_dsg[tidx][cidx];
+        return s_cap_list_dsg[tidx_low][cidx] + (s_cap_list_dsg[tidx_high][cidx]-s_cap_list_dsg[tidx_low][cidx])*tk*mk;
     }
 
 
