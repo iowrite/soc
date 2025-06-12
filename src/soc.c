@@ -39,6 +39,7 @@ struct SOC_Info g_socInfo[CELL_NUMS];
 
 static const uint16_t get_cap(float cur, int16_t tempra)
 {
+    int t_table[] = {-150, -50, 50, 150, 250, 350, 450, 550};
     int tidx = 0;
     tidx = (tempra+200)/100;
     float tk = fabs((tempra % 50)/50.0f);
@@ -80,7 +81,12 @@ static const uint16_t get_cap(float cur, int16_t tempra)
         if(s_cap_list_chg[tidx][cidx] == 0){
             assert(0);
         }
-        return s_cap_list_chg[tidx_low][cidx] + (s_cap_list_chg[tidx_high][cidx]-s_cap_list_chg[tidx_low][cidx])*tk*mk;
+        if(tempra < t_table[tidx])
+        {
+            return s_cap_list_chg[tidx][cidx];
+        }else{
+           return s_cap_list_chg[tidx_low][cidx] + (s_cap_list_chg[tidx_high][cidx]-s_cap_list_chg[tidx_low][cidx])*tk*mk; 
+        }
     }else if(cur < 0)
     {
         float c = cur/100*10;
@@ -96,10 +102,13 @@ static const uint16_t get_cap(float cur, int16_t tempra)
         if(s_cap_list_dsg[tidx][cidx] == 0){
             assert(0);
         }
-        return s_cap_list_dsg[tidx_low][cidx] + (s_cap_list_dsg[tidx_high][cidx]-s_cap_list_dsg[tidx_low][cidx])*tk*mk;
+        if(tempra < t_table[tidx])
+        {
+            return s_cap_list_dsg[tidx][cidx];
+        }else{
+            return s_cap_list_dsg[tidx_low][cidx] + (s_cap_list_dsg[tidx_high][cidx]-s_cap_list_dsg[tidx_low][cidx])*tk*mk;
+        }
     }
-
-
 
     return 0;
 }
