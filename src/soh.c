@@ -128,7 +128,7 @@ int8_t soh_task()
         sumSOH += g_celSOH[i];
     }
     
-    *g_grpSOH = sumSOH/16;
+    *g_grpSOH = sumSOH/CELL_NUMS;
 
 
     port_soh_output();

@@ -157,8 +157,18 @@ int main(int argc, char *argv[]) {
     {
         vol[j] = inputData[0].vol[j];
         //tmp[j] = inputData[i].avgTmp*10;
-        tmp[j] = inputData[0].tmp[j]*10;
+        // tmp[j] = inputData[0].tmp[j]*10;
     }
+
+    tmp[0] = inputData[0].tmp[0]*10;
+    for (size_t j = 0; j < 7; j++)
+    {
+        // vol[j] = inputData[0].vol[j];
+        //tmp[j] = inputData[i].avgTmp*10;
+        tmp[j*2+1] = inputData[0].tmp[j+1]*10;
+        tmp[j*2+2] = inputData[0].tmp[j+2]*10;
+    }
+    tmp[15] = inputData[0].tmp[8]*10;
 
     sox_init(&cur, vol, tmp, soc, &grpSOC.grpSOC, soh, &grpsoh, &cycleCount, &grpVol, &sigChgWH, &sigDsgWH, &accChgAH, &accDsgAH, &g_chg_stop_vol, &g_dsg_stop_vol);
     memcpy(outputData[0].soc, soc, 32);
