@@ -26,6 +26,10 @@ uint16_t s_dsg_stop_vol = 2900;
 
 int main(int argc, char *argv[]) 
 {
+    printf("argc: %d\n", argc);
+    for (int i = 0; i < argc; i++) {
+        printf("argv[%d]: %s\n", i, argv[i]);
+    }
 /*******************************************************************************
  * parse command line arguments
  *******************************************************************************/
@@ -37,11 +41,10 @@ int main(int argc, char *argv[])
                 printf("./mysoc -h for help information\n");
                 printf("./mysoc -i [excel input file] -s [init group soc value]\n");
                 return 0;
-                break;
             case 'i':
                 memcpy(input_file_name, optarg, strlen(optarg));
                 break;
-            case 'c':
+            case 's':
                 g_port_init_soc = atoi(optarg);
                 break;
             case '?':

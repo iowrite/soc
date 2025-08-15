@@ -5,7 +5,7 @@
             "request": "launch",
             "name": "Launch",
             "program": "${workspaceFolder}/test/mysoc",
-            "args": ["-h"],
+            "args": ["-i ../data/25d3c/chg.xlsx", "-s 100"],
             "cwd": "${workspaceFolder}/test"
         },
     ],
