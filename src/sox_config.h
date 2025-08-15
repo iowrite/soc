@@ -6,7 +6,25 @@
  **********************/
 #define CELL_NUMS                       16
 #define CUR_WINDOW_A                    4.0f             //A
+#define SOX_DEBUG                       0
 
+/***********************
+ *  PORT Configuration
+ **********************/
+#define PORT_TYPE_LINUX                     1             
+#define PORT_TYPE_MICROCONTROLLER           2              
+
+#define PORT_TYPE                           PORT_TYPE_LINUX
+
+#if PORT_TYPE == PORT_TYPE_LINUX
+    #define FULL_STD_CLIB       1
+#endif
+
+#if PORT_TYPE == PORT_TYPE_MICROCONTROLLER
+    #define FULL_STD_CLIB       0
+    #define PORT_ARM_AC_6       1                       // ARM Compiler 6 or ARM Compiler 5, 
+#endif
+ 
 
 /***********************
  *  SOC Configuration
@@ -50,6 +68,14 @@
 
 #define SOC_TEMPRA_WARM_CAP_OFFSET_1      1.0f
 #define SOC_TEMPRA_WARM_CAP_OFFSET_2      0.5f
+
+#define SOC_MAX_CALCULATE_VALUE          99
+#define SOC_MIN_CALCULATE_VALUE          1
+
+
+#define SOX_GROUP_FULL_CAL_CELL         1                                       // set all cell to 100% when group is full(one cell is full)
+#define SOX_GROUP_EMPTY_CAL_CELL        1                                       // set all cell to 0% when group is empty(one cell is empty)       
+
 /***********************
  *  SOH Configuration
  **********************/
@@ -68,6 +94,10 @@
 /***********************
  *  SOP Configuration
  **********************/
+
+
+
+
 
 
 

@@ -1,9 +1,11 @@
+#include <stdint.h>
 #ifndef     _SOX_COMMON_H
 #define     _SOX_COMMON_H
 
-// C = A x B
+#define UNUSED(x) (void)(x)
+
 /**
- * @brief matrix multiply
+ * @brief matrix multiply, C = A x B
  * @note A, B, C must be flatened
  * A: m x n
  * B: n x p
@@ -19,11 +21,21 @@ void matrix_multiply(float *A, float *B, float *C, int m, int n, int p);
 
 
 /**
- * @brief inverse matrix
+ * @brief inverse matrix, 2x2 matrix only
+ * @param A 2x2 matrix to be inverted
+ * @param inv_A 2x2 matrix to store the inverted result
  *
  */
 int inverse_matrix_2x2(float A[2][2], float inv_A[2][2]); 
 
+
+void bubbleSort_ascend(uint16_t *inputArr, uint16_t *outputArr, uint16_t size);
+
+
+void bubbleSort_ascend_float(float *inputArr, float *outputArr, uint16_t size);
+
+
+void bubbleSort_ascend_duble(float *inputArr, float *outputArr, uint16_t size);
 
 
 

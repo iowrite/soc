@@ -1,20 +1,40 @@
 #include <stdint.h>
+#include <stdbool.h>
+#include "sox_config.h"
+
 #ifndef _SOX_PRIVATE_H
 #define _SOX_PRIVATE_H
 
-extern float *g_cur;                        // A            *1
-extern float *g_grpVol;                     // vol          *1 
-extern uint16_t *g_celVol;                  // mv           *1
-extern int16_t *g_celTmp;                   // dregree      *10
-extern uint16_t *g_celSOC;                  // %            *10
-extern uint16_t *g_grpSOC;                  // %            *10
-extern float  *g_celSOH;                   // %            *1
-extern float  *g_grpSOH;                   // %            *1
-extern uint32_t *g_cycleCount;              // times        *1000
-extern float *g_accChgWH;                   // WH           *1
-extern float *g_accDsgWH;                   // WH           *1
-extern float *g_sigChgWH;                   // WH           *1
-extern float *g_sigDsgWH;                   // WH           *1
-extern uint16_t *g_chg_stop_vol;            // mv           *1
-extern uint16_t *g_dsg_stop_vol;            // mv           *1
+
+/*******************************************************************************
+ * global varible declaration(sox module internal use only)
+ *******************************************************************************/
+extern float        g_cur;                         // A          
+extern float        g_grpVol;                      // v      
+extern uint16_t     g_celVol[CELL_NUMS];;          // mv                   pointer may be better(small size but can't promise origin data be changed by other module)
+extern int16_t      g_celTmp[CELL_NUMS];;          // dregree              pointer may be better(small size but can't promise origin data be changed by other module)
+extern float        g_celSOC[CELL_NUMS];           // %         
+extern float        g_grpSOC;                      // %       
+extern float        g_celSOH[CELL_NUMS];           // %        
+extern float        g_grpSOH;                      // %            
+extern float        g_cycleCount;                  // times
+extern float        g_accChgWH;                    // WH          
+extern float        g_accDsgWH;                    // WH        
+extern float        g_accChgAH;                    // AH          
+extern float        g_accDsgAH;                    // AH       
+extern float        g_sigChgWH;                    // WH           
+extern float        g_sigDsgWH;                    // WH           
+extern uint16_t    *g_chg_stop_vol;               // mv                   pass in by init func, use pointer to sync parameter changed by user(user operation)     
+extern uint16_t    *g_dsg_stop_vol;               // mv                   pass in by init func, use pointer to sync parameter changed by user(user operation)   
+extern bool         g_empty;            
+extern bool         g_full;      
+
+
+/*******************************************************************************
+ * global macro definition(sox module internal use only)
+ *******************************************************************************/
+#define FORCE_SAVE  1
+#define AUTO_SAVE   0
+
+
 #endif

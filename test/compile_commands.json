@@ -1,0 +1,235 @@
+[
+  {
+    "arguments": [
+      "/usr/bin/clang",
+      "-xc",
+      "-std=gnu99",
+      "-Wall",
+      "-Wextra",
+      "-ffunction-sections",
+      "-fdata-sections",
+      "-O0",
+      "-g",
+      "-I",
+      "../src",
+      "-c",
+      "-o",
+      "build_dir/test.o",
+      "test.c"
+    ],
+    "directory": "/home/hm/Desktop/mysoc/test",
+    "file": "/home/hm/Desktop/mysoc/test/test.c",
+    "output": "/home/hm/Desktop/mysoc/test/build_dir/test.o"
+  },
+  {
+    "arguments": [
+      "/usr/bin/clang",
+      "-xc",
+      "-std=gnu99",
+      "-Wall",
+      "-Wextra",
+      "-ffunction-sections",
+      "-fdata-sections",
+      "-O0",
+      "-g",
+      "-I",
+      "../src",
+      "-c",
+      "-o",
+      "build_dir/port_linux.o",
+      "port/port_linux.c"
+    ],
+    "directory": "/home/hm/Desktop/mysoc/test",
+    "file": "/home/hm/Desktop/mysoc/test/port/port_linux.c",
+    "output": "/home/hm/Desktop/mysoc/test/build_dir/port_linux.o"
+  },
+  {
+    "arguments": [
+      "/usr/bin/clang",
+      "-xc",
+      "-std=c99",
+      "-Wall",
+      "-Wextra",
+      "-ffunction-sections",
+      "-fdata-sections",
+      "-O0",
+      "-g",
+      "-fPIC",
+      "-c",
+      "-o",
+      "build_dir/soc.o",
+      "../src/soc.c"
+    ],
+    "directory": "/home/hm/Desktop/mysoc/test",
+    "file": "/home/hm/Desktop/mysoc/src/soc.c",
+    "output": "/home/hm/Desktop/mysoc/test/build_dir/soc.o"
+  },
+  {
+    "arguments": [
+      "/usr/bin/clang",
+      "-xc",
+      "-std=c99",
+      "-Wall",
+      "-Wextra",
+      "-ffunction-sections",
+      "-fdata-sections",
+      "-O0",
+      "-g",
+      "-fPIC",
+      "-c",
+      "-o",
+      "build_dir/curve.o",
+      "../src/curve.c"
+    ],
+    "directory": "/home/hm/Desktop/mysoc/test",
+    "file": "/home/hm/Desktop/mysoc/src/curve.c",
+    "output": "/home/hm/Desktop/mysoc/test/build_dir/curve.o"
+  },
+  {
+    "arguments": [
+      "/usr/bin/clang",
+      "-xc",
+      "-std=c99",
+      "-Wall",
+      "-Wextra",
+      "-ffunction-sections",
+      "-fdata-sections",
+      "-O0",
+      "-g",
+      "-fPIC",
+      "-c",
+      "-o",
+      "build_dir/soh.o",
+      "../src/soh.c"
+    ],
+    "directory": "/home/hm/Desktop/mysoc/test",
+    "file": "/home/hm/Desktop/mysoc/src/soh.c",
+    "output": "/home/hm/Desktop/mysoc/test/build_dir/soh.o"
+  },
+  {
+    "arguments": [
+      "/usr/bin/clang",
+      "-xc",
+      "-std=c99",
+      "-Wall",
+      "-Wextra",
+      "-ffunction-sections",
+      "-fdata-sections",
+      "-O0",
+      "-g",
+      "-fPIC",
+      "-c",
+      "-o",
+      "build_dir/soe.o",
+      "../src/soe.c"
+    ],
+    "directory": "/home/hm/Desktop/mysoc/test",
+    "file": "/home/hm/Desktop/mysoc/src/soe.c",
+    "output": "/home/hm/Desktop/mysoc/test/build_dir/soe.o"
+  },
+  {
+    "arguments": [
+      "/usr/bin/clang",
+      "-xc",
+      "-std=c99",
+      "-Wall",
+      "-Wextra",
+      "-ffunction-sections",
+      "-fdata-sections",
+      "-O0",
+      "-g",
+      "-fPIC",
+      "-c",
+      "-o",
+      "build_dir/sop.o",
+      "../src/sop.c"
+    ],
+    "directory": "/home/hm/Desktop/mysoc/test",
+    "file": "/home/hm/Desktop/mysoc/src/sop.c",
+    "output": "/home/hm/Desktop/mysoc/test/build_dir/sop.o"
+  },
+  {
+    "arguments": [
+      "/usr/bin/clang",
+      "-xc",
+      "-std=c99",
+      "-Wall",
+      "-Wextra",
+      "-ffunction-sections",
+      "-fdata-sections",
+      "-O0",
+      "-g",
+      "-fPIC",
+      "-c",
+      "-o",
+      "build_dir/sox.o",
+      "../src/sox.c"
+    ],
+    "directory": "/home/hm/Desktop/mysoc/test",
+    "file": "/home/hm/Desktop/mysoc/src/sox.c",
+    "output": "/home/hm/Desktop/mysoc/test/build_dir/sox.o"
+  },
+  {
+    "arguments": [
+      "/usr/bin/clang",
+      "-xc",
+      "-std=c99",
+      "-Wall",
+      "-Wextra",
+      "-ffunction-sections",
+      "-fdata-sections",
+      "-O0",
+      "-g",
+      "-fPIC",
+      "-c",
+      "-o",
+      "build_dir/port.o",
+      "../src/port.c"
+    ],
+    "directory": "/home/hm/Desktop/mysoc/test",
+    "file": "/home/hm/Desktop/mysoc/src/port.c",
+    "output": "/home/hm/Desktop/mysoc/test/build_dir/port.o"
+  },
+  {
+    "arguments": [
+      "/usr/bin/clang",
+      "-xc",
+      "-std=c99",
+      "-Wall",
+      "-Wextra",
+      "-ffunction-sections",
+      "-fdata-sections",
+      "-O0",
+      "-g",
+      "-fPIC",
+      "-c",
+      "-o",
+      "build_dir/debug.o",
+      "../src/debug.c"
+    ],
+    "directory": "/home/hm/Desktop/mysoc/test",
+    "file": "/home/hm/Desktop/mysoc/src/debug.c",
+    "output": "/home/hm/Desktop/mysoc/test/build_dir/debug.o"
+  },
+  {
+    "arguments": [
+      "/usr/bin/clang",
+      "-xc",
+      "-std=c99",
+      "-Wall",
+      "-Wextra",
+      "-ffunction-sections",
+      "-fdata-sections",
+      "-O0",
+      "-g",
+      "-fPIC",
+      "-c",
+      "-o",
+      "build_dir/common.o",
+      "../src/common.c"
+    ],
+    "directory": "/home/hm/Desktop/mysoc/test",
+    "file": "/home/hm/Desktop/mysoc/src/common.c",
+    "output": "/home/hm/Desktop/mysoc/test/build_dir/common.o"
+  }
+]

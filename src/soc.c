@@ -4,60 +4,60 @@
 #include <stddef.h>
 #include <stdio.h>
 #include <string.h>
-#include <assert.h>
-#include <stdlib.h>
-// #include <cmsis_armclang.h>
+#include "sox_config.h"
+#if FULL_STD_CLIB
+    #include <assert.h>
+#endif 
+    #include <stdlib.h>
+#if PORT_ARM_AC_6
+    #include <cmsis_armclang.h>
+#endif
 #include "soc.h"
 #include "curve.h"
 #include "sox_private.h"
 #include "sox.h"
 #include "port.h"
-#include "sox_config.h"
 #include "common.h"
 
 
-
-
-#define EKF_W(diffAH, cap, cur)                 ((50.0/(DIFF_T_SEC*1000) + CUR_SAMPLE_ERR_A/cur + CAP_ERR_AH/cap+SOH_ERR_PERCENT/100.0) *  EKF_Q_K * diffAH)     
+#define EKF_W(diffAH, cap, cur)                 ((50.0f/(DIFF_T_SEC*1000) + CUR_SAMPLE_ERR_A/cur + CAP_ERR_AH/cap+SOH_ERR_PERCENT/100.0f) *  EKF_Q_K * diffAH)     
 #define EKF_Q(diffAH, cap, cur)                 (EKF_W(diffAH, cap, cur)*EKF_W(diffAH, cap, cur))                 
 #define EKF_R_1                                 (VOL_SAMPLE_ERR_MV_1*VOL_SAMPLE_ERR_MV_1)
 #define EKF_R_2                                 (VOL_SAMPLE_ERR_MV_2*VOL_SAMPLE_ERR_MV_2)
 #define EKF_R_3                                 (VOL_SAMPLE_ERR_MV_3*VOL_SAMPLE_ERR_MV_3)
 
-
 #define SOC0_ER2_SAVED                      100             // 10% error
 #define SOC0_ER2_LOOKUP_TABLE               900             // 30% error
+
+#define CHARGING(cur)       ((cur) > 0)
+#define DISCHARGING(cur)    ((cur) < 0)
+
 
 
 
 struct SOC_Info g_socInfo[CELL_NUMS];
 
-
-
-
-
-
-static const uint16_t get_cap(float cur, int16_t tempra)
+static uint16_t get_cap(float cur, int16_t tempra)
 {
     int t_table[] = {-150, -50, 50, 150, 250, 350, 450, 550};
     int tidx = 0;
     tidx = (tempra+200)/100;
-    float tk = fabs((tempra % 50)/50.0f);
-    int tidx_low, tidx_high;
+    float tk = fabsf((tempra % 50)/50.0f);
+    int tidx_low, tidx_high = 0;
     if(tidx < 0){
         tidx = 0;
+        tidx_low = tidx;
+        tidx_high = tidx + 1;
     }else if(tidx >= TEMP_POINT_NUM)
     {
         tidx = TEMP_POINT_NUM-1;
-        tidx_high = TEMP_POINT_NUM-1;
-    }
-    tidx_low = tidx;
-    if(tidx_high == TEMP_POINT_NUM-1)
-    {
+        tidx_low = tidx;
         tidx_high = TEMP_POINT_NUM-1;
     }else{
+        tidx_low = tidx;
         tidx_high = tidx+1;
     }
+
 
     float mk;
     if(tempra > 0){
@@ -79,7 +79,9 @@ static const uint16_t get_cap(float cur, int16_t tempra)
             cidx = 4;
         }
         if(s_cap_list_chg[tidx][cidx] == 0){
+#if FULL_STD_CLIB
             assert(0);
+#endif
         }
         if(tempra < t_table[tidx])
         {
@@ -100,7 +102,9 @@ static const uint16_t get_cap(float cur, int16_t tempra)
             cidx = 4;
         }
         if(s_cap_list_dsg[tidx][cidx] == 0){
+#if FULL_STD_CLIB
             assert(0);
+#endif
         }
         if(tempra < t_table[tidx])
         {
@@ -140,7 +144,9 @@ static const uint16_t * get_v(const uint16_t *chg_curve[TEMP_POINT_NUM][CUR_POIN
         {
             cidx = 4;
         }
+#if FULL_STD_CLIB
         assert(chg_curve[tidx][cidx] != NULL);
+#endif
         return chg_curve[tidx][cidx];
 
     }else if(cur < 0)
@@ -155,7 +161,9 @@ static const uint16_t * get_v(const uint16_t *chg_curve[TEMP_POINT_NUM][CUR_POIN
         {
             cidx = 4;
         }
+#if FULL_STD_CLIB
         assert(dsg_curve[tidx][cidx] != NULL);
+#endif
         return dsg_curve[tidx][cidx];
     }
     return NULL;
@@ -185,7 +193,9 @@ static const int16_t * get_k(const int16_t *chg_curve[TEMP_POINT_NUM][CUR_POINT_
         {
             cidx = 4;
         }
+#if FULL_STD_CLIB
         assert(chg_curve[tidx][cidx] != NULL);
+#endif
         return chg_curve[tidx][cidx];
 
     }else if(cur < 0)
@@ -200,7 +210,9 @@ static const int16_t * get_k(const int16_t *chg_curve[TEMP_POINT_NUM][CUR_POINT_
         {
             cidx = 4;
         }
+#if FULL_STD_CLIB
         assert(dsg_curve[tidx][cidx] != NULL);
+#endif
         return dsg_curve[tidx][cidx];
     }
     return NULL;
@@ -267,7 +279,7 @@ enum GroupState check_current_group_state(float cur)
         }
         break;
     case GROUP_STATE_transfer:
-        if(fabs(cur) < CUR_WINDOW_A){                               // reset state logic
+        if(fabsf(cur) < CUR_WINDOW_A){                               // reset state logic
             g_group_state = GROUP_STATE_standby;
             standby_hold_time = timebase_get_time_s();
         }else if(cur > CUR_WINDOW_A){
@@ -293,7 +305,7 @@ enum GroupState check_current_group_state(float cur)
         }
         break;
     case GROUP_STATE_charging:
-        if(fabs(cur)<CUR_WINDOW_A){
+        if(fabsf(cur)<CUR_WINDOW_A){
             g_group_state = GROUP_STATE_standby;
             standby_hold_time = timebase_get_time_s();
             last_group_state = GROUP_STATE_charging;
@@ -304,7 +316,7 @@ enum GroupState check_current_group_state(float cur)
         }
         break;
     case GROUP_STATE_discharging:
-        if(fabs(cur)<CUR_WINDOW_A){
+        if(fabsf(cur)<CUR_WINDOW_A){
             g_group_state = GROUP_STATE_standby;
             standby_hold_time = timebase_get_time_s();
             last_group_state = GROUP_STATE_discharging;
@@ -323,6 +335,7 @@ enum GroupState check_current_group_state(float cur)
 
 void mysoc_pureAH(struct SOC_Info *SOCinfo, float cur, uint16_t vol, int16_t tempra, float soh)
 {
+    UNUSED(vol);
     const uint16_t cap = get_cap(cur, tempra);
 
     const float capf = cap/10.0*(soh/100);
@@ -352,8 +365,12 @@ void mysoc_pureAH(struct SOC_Info *SOCinfo, float cur, uint16_t vol, int16_t tem
 
 void mysoc_smooth(struct SOC_Info *SOCinfo, float cur, uint16_t vol, int16_t tempra, float soh)
 {
+#if SOX_DEBUG
     static int callcount = 0;
     callcount++;
+#endif 
+    UNUSED(tempra);
+    UNUSED(soh);
     // if(callcount == 6018){
     //     printf("fds\n");
     // }
@@ -383,7 +400,7 @@ void mysoc_smooth(struct SOC_Info *SOCinfo, float cur, uint16_t vol, int16_t tem
     
 
 
-    if(cur > 0 && vol > SOC_SMOOTH_START_VOL_CHG &&  SOCinfo->soc > 80|| cur < 0 && vol < SOC_SMOOTH_START_VOL_DSG && SOCinfo->soc < 30)
+    if((cur > 0 && vol > SOC_SMOOTH_START_VOL_CHG &&  SOCinfo->soc > 80) || (cur < 0 && vol < SOC_SMOOTH_START_VOL_DSG && SOCinfo->soc < 30))
     {
         if(SOCinfo->soc_smooth == 0){
             SOCinfo->soc_smooth = SOCinfo->soc;                  
@@ -391,7 +408,7 @@ void mysoc_smooth(struct SOC_Info *SOCinfo, float cur, uint16_t vol, int16_t tem
 
         if(cur>0  && ((int)newest_vol-(int)oldest_vol)){
             int smooth_full_estimate_s = (*g_chg_stop_vol-vol)/(newest_vol-oldest_vol)*(CELL_VOL_BUFFER_LEN-1)*CELL_VOL_BUFFER_SAMPLE_TIME_S;
-            
+            UNUSED(smooth_full_estimate_s);                                                         // charge not use force smooth mothod(cell voltage curve of all "sop compatible situation" is  monotonically increasing, so temporary disable)
             
         }else if(cur<0 && ((int)oldest_vol-(int)newest_vol)){
 			float buff_diff = oldest_vol-newest_vol;
@@ -445,8 +462,6 @@ float getEKF_Q(float soc, float cur)
 
 static uint32_t getEKF_R(float H_soc, uint16_t vol, const uint16_t *curve, const int16_t *curveK, uint16_t switch_curve_time)
 {
-
-    float vol_R;
     int index = 0;
     for(int i = 0; i < SOC_POINT_NUM; i++)
     {
@@ -485,7 +500,7 @@ static uint32_t getEKF_R(float H_soc, uint16_t vol, const uint16_t *curve, const
         H_R = (VOL_SAMPLE_ERR_MV_3+(H-VOL_SAMPLE_ERR_MV_1_H)/(VOL_SAMPLE_ERR_MV_4_H-VOL_SAMPLE_ERR_MV_1_H)*t)*(VOL_SAMPLE_ERR_MV_3+(H-VOL_SAMPLE_ERR_MV_1_H)/(VOL_SAMPLE_ERR_MV_4_H-VOL_SAMPLE_ERR_MV_1_H)*t);
     }
     if(switch_curve_time){
-        return H_R+25*switch_curve_time/600; 
+        return H_R+25*switch_curve_time/600;                                    
 
     }else{
         return H_R;
@@ -498,10 +513,11 @@ static uint32_t getEKF_R(float H_soc, uint16_t vol, const uint16_t *curve, const
 
 void mysocEKF(struct SOC_Info *SOCinfo, float cur, uint16_t vol, int16_t tempra, float soh)
 {
-    
+#if SOX_DEBUG
     static int callCount = 0;
     callCount++;
     static float pureAHSUM = 0;
+#endif   
     // if(callCount == 92)
     // {
     //     printf("fds\n");
@@ -543,7 +559,9 @@ void mysocEKF(struct SOC_Info *SOCinfo, float cur, uint16_t vol, int16_t tempra,
     // float Q = getEKF_Q(SOCcal, cur);
     float Q = EKF_Q(diffAH, capf, cur);
     float SOCer2Cal = SOCinfo->socEr2 + Q;
+#if SOX_DEBUG
     pureAHSUM += diffAH;
+#endif
     // printf("diffAH : %f, EKF_W : %f pureAH: %f\n", diffAH, EKF_W(diffAH,capf, cur), pureAHSUM);
     float H = 0, Hprev = 0, Hnext = 0;
     float estVol = 0, estVolPrev = 0, estVolNext = 0;
@@ -630,8 +648,9 @@ void mysocEKF(struct SOC_Info *SOCinfo, float cur, uint16_t vol, int16_t tempra,
     // {
     //     resEr2 = Q;
     // }
+#if SOX_DEBUG
     float SOCerRes = sqrt(resEr2);
-
+#endif 
 
     if(res < 0)
     {
@@ -694,7 +713,7 @@ void mysocEKF(struct SOC_Info *SOCinfo, float cur, uint16_t vol, int16_t tempra,
 
 void mysoc(struct SOC_Info *SOCinfo, float cur, uint16_t vol, int16_t tempra, float soh)
 {
-    if(fabs(cur) > CUR_WINDOW_A)
+    if(fabsf(cur) > CUR_WINDOW_A)
     {
         if((tempra<0 && tempra > -200) || (tempra < PURE_AH_LOCK_TEMP_THRESHOLD && cur < -PURE_AH_LOCK_CUR_THRESHOLD)){
             SOCinfo->pureAH_lock = true;
@@ -719,74 +738,25 @@ void mysoc(struct SOC_Info *SOCinfo, float cur, uint16_t vol, int16_t tempra, fl
 }
 
 
-/* bubble sort : ascending */
-static void bubbleSort_ascend(uint16_t *inputArr, uint16_t *outputArr, uint16_t size)
-{
-    memcpy(outputArr, inputArr, size*sizeof(uint16_t));
-    for (size_t i = 0; i < size-1; i++)
-    {
-        for (size_t j = 0; j < size-i-1; j++)
-        {
-            if(outputArr[j] > outputArr[j+1])
-            {
-                uint16_t tmp = outputArr[j];
-                outputArr[j] = outputArr[j+1];
-                outputArr[j+1] = tmp;
-            }
-        }
-    }
-}
-
-static void bubbleSort_ascend_float(float *inputArr, float *outputArr, uint16_t size)
-{
-    memcpy(outputArr, inputArr, size*sizeof(float));
-    for (size_t i = 0; i < size-1; i++)
-    {
-        for (size_t j = 0; j < size-i-1; j++)
-        {
-            if(outputArr[j] > outputArr[j+1])
-            {
-                float tmp = outputArr[j];
-                outputArr[j] = outputArr[j+1];
-                outputArr[j+1] = tmp;
-            }
-        }
-    }
-}
-
-static void bubbleSort_ascend_duble(float *inputArr, float *outputArr, uint16_t size)
-{
-    memcpy(outputArr, inputArr, size*sizeof(float));
-    for (size_t i = 0; i < size-1; i++)
-    {
-        for (size_t j = 0; j < size-i-1; j++)
-        {
-            if(outputArr[j] > outputArr[j+1])
-            {
-                float tmp = outputArr[j];
-                outputArr[j] = outputArr[j+1];
-                outputArr[j+1] = tmp;
-            }
-        }
-    }
-}
 
 
 
 static void gropuSOC()
 {
+#if SOX_DEBUG
     static int callCount = 0;
     callCount++;
+#endif 
     float unsortedSOC[CELL_NUMS];
     bool pureAH_lock = false;
     for(int i = 0; i < CELL_NUMS; i++)
     {
         if(g_socInfo[i].soc_smooth)
         {
-            if(*g_cur>0 &&  g_socInfo[i].soc_smooth>g_socInfo[i].soc){
+            if(CHARGING(g_cur) &&  g_socInfo[i].soc_smooth>g_socInfo[i].soc){
                 unsortedSOC[i] = g_socInfo[i].soc_smooth;
 
-            }else if(*g_cur<0 &&  g_socInfo[i].soc_smooth<g_socInfo[i].soc){
+            }else if(DISCHARGING(g_cur) &&  g_socInfo[i].soc_smooth<g_socInfo[i].soc){
                 unsortedSOC[i] = g_socInfo[i].soc_smooth;
             }else{
                 unsortedSOC[i] = g_socInfo[i].soc;
@@ -822,7 +792,7 @@ static void gropuSOC()
     
     // uint16_t h = hSOC>lSOC?hSOC:lSOC;
     // uint16_t l = lSOC<hSOC?lSOC:hSOC;
-    uint16_t grpsoc;
+    float grpsoc;
     // uint16_t grpsoc = round((*g_grpSOC)/100.0*hSOC+(100-*g_grpSOC)/100.0*lSOC);
 
 #define GRP_Q_MAX               25
@@ -851,10 +821,10 @@ static void gropuSOC()
 
 
 
-    if(fabs(*g_cur)>CUR_WINDOW_A){
+    if(fabsf(g_cur)>CUR_WINDOW_A){
 
-        float max_soc_change_R_offset = fabs(maxSOC - avgSOC);
-        float min_soc_change_R_offset = fabs(minSOC - avgSOC);
+        float max_soc_change_R_offset = fabsf(maxSOC - avgSOC);
+        float min_soc_change_R_offset = fabsf(minSOC - avgSOC);
         float max_soc_change_R_offset2 = max_soc_change_R_offset*max_soc_change_R_offset;
         float min_soc_change_R_offset2 = min_soc_change_R_offset*min_soc_change_R_offset;
 
@@ -881,11 +851,11 @@ static void gropuSOC()
             min_soc_change_R_offset2 = 0;
         }
 
-        float maxSOC_R = R_HIGH_MIN + (1-*g_grpSOC/100.0f) * (R_HIGH_MAX- R_HIGH_MIN) + max_soc_change_R_offset2;
-        float minSOC_R = R_LOW_MIN + *g_grpSOC/100.0f * (R_LOW_MAX- R_LOW_MIN) + min_soc_change_R_offset2;
+        float maxSOC_R = R_HIGH_MIN + (1-g_grpSOC/100) * (R_HIGH_MAX- R_HIGH_MIN) + max_soc_change_R_offset2;
+        float minSOC_R = R_LOW_MIN + g_grpSOC/100 * (R_LOW_MAX- R_LOW_MIN) + min_soc_change_R_offset2;
 
 
-        if(*g_grpSOC > 50)
+        if(g_grpSOC > 50)
         {
             if(minSOC_R > 25)
             {
@@ -894,7 +864,7 @@ static void gropuSOC()
             if(maxSOC_R > minSOC_R){
                 maxSOC_R = minSOC_R -1;
             }
-        }else if(*g_grpSOC < 50)
+        }else if(g_grpSOC < 50)
         {
             if(maxSOC_R > 25)
             {
@@ -913,13 +883,13 @@ static void gropuSOC()
             {
                 maxSOC_R = 25;
             }
-            if(*g_cur > 0)
+            if(g_cur > 0)
             {
                 if(maxSOC_R > minSOC_R){
                     maxSOC_R = minSOC_R -1;
                 }
             }
-            if(*g_cur < 0)
+            if(g_cur < 0)
             {
                 if(minSOC_R > maxSOC_R)
                 {
@@ -933,23 +903,23 @@ static void gropuSOC()
         static bool grp_soc_init = false;
         if(!grp_soc_init){
             grp_soc_init = true;
-            cal_grp_soc = *g_grpSOC;
+            cal_grp_soc = g_grpSOC;
         }
         
 
-        static float grp_soc_p = 0.1;
+        static float grp_soc_p = 0.1f;
         float cal_grp_soc_p;
-        if(*g_cur > 0 && *g_grpSOC > 97)
+        if(CHARGING(g_cur) && g_grpSOC > 97)
         {
             cal_grp_soc_p=grp_soc_p + GRP_Q_1;
-        }else if(*g_cur > 0 && *g_grpSOC < 5)
+        }else if(CHARGING(g_cur) && g_grpSOC < 5)
         {
             cal_grp_soc_p=grp_soc_p + GRP_Q_2;
         }else{
-            float grp_soc_q_k = fabs(*g_cur)/10;
-            if(grp_soc_q_k < 0.5)
+            float grp_soc_q_k = fabs(g_cur)/10;
+            if(grp_soc_q_k < 0.5f)
             {
-                grp_soc_q_k = 0.5;
+                grp_soc_q_k = 0.5f;
             }
             cal_grp_soc_p=grp_soc_p + GRP_Q_3*grp_soc_q_k;
         }
@@ -957,14 +927,26 @@ static void gropuSOC()
 
         //printf("kf soc: %f, p: %f \n", cal_grp_soc, grp_soc_p);
 
-        float H[2][1] = {1, 1};
-        float H_t[1][2] = {1, 1};
-        float Z[2][1] = {minSOC, maxSOC};
-        float R[2][2] = {    minSOC_R,       1       ,
-                                1       ,       maxSOC_R,
-                            };
+        float H[2][1] = {
+            {1}, 
+            {1}
+        };
+        float H_t[1][2] = {
+            {1, 1}
+        };
+        float Z[2][1] = {
+            {minSOC}, 
+            {maxSOC}
+        };
+        float R[2][2] = {    
+            {minSOC_R, 1        },
+            {1       , maxSOC_R },
+    };
         float S[2][2] = {0};
-        float H_P[2][1] = {cal_grp_soc_p, cal_grp_soc_p};
+        float H_P[2][1] = {
+            {cal_grp_soc_p}, 
+            {cal_grp_soc_p}
+        };
         matrix_multiply((float *)H_P, (float *)H_t, (float *)S, 2, 1, 2);
         for(int i=0; i<2; i++)
         {
@@ -978,14 +960,19 @@ static void gropuSOC()
         float S_i[2][2] = {0};
         inverse_matrix_2x2(S, S_i);
 
-        float P_H_t[1][2] = {cal_grp_soc_p, cal_grp_soc_p};
+        float P_H_t[1][2] = {
+            {cal_grp_soc_p, cal_grp_soc_p}
+        };
 
         float K[1][2] = {0};
         matrix_multiply((float *)P_H_t, (float *)S_i, (float *)K, 1, 2, 2);
 
 
         float Z_H[2][1] = {0};
-        float H_x[2][1] = {cal_grp_soc, cal_grp_soc};
+        float H_x[2][1] = {
+            {cal_grp_soc}, 
+            {cal_grp_soc}
+        };
         for(int i=0; i<2; i++)
         {
             Z_H[i][0] = Z[i][0] - H_x[i][0];
@@ -1002,8 +989,8 @@ static void gropuSOC()
         grp_soc_p = (1-K_H)*cal_grp_soc_p;
 
 
-        grpsoc = round(cal_grp_soc);
-
+        // grpsoc = round(cal_grp_soc);
+        grpsoc = cal_grp_soc;
 
 
 
@@ -1019,23 +1006,23 @@ static void gropuSOC()
         }
 
         // 避免soc 反向抖动
-        if(*g_cur > 0 && grpsoc < *g_grpSOC)
+        if(CHARGING(g_cur) && grpsoc < g_grpSOC)
         {
             return;
         }
-        if(*g_cur < 0 && grpsoc > *g_grpSOC)
+        if(DISCHARGING(g_cur) && grpsoc > g_grpSOC)
         {
             return; 
         }
 
         static uint32_t smooth_count = 0;
-        uint16_t smooth_soc = *g_grpSOC;
-        if(abs(grpsoc - *g_grpSOC)>=2)
+        uint16_t smooth_soc = g_grpSOC;
+        if(fabsf(grpsoc - g_grpSOC)>=2)
         {        
             if(timebase_get_time_s()-smooth_count > (uint32_t)2)
             {
                 smooth_count = timebase_get_time_s();
-                if(grpsoc > *g_grpSOC)
+                if(grpsoc > g_grpSOC)
                 {
                     smooth_soc++;
                 }else{
@@ -1047,11 +1034,11 @@ static void gropuSOC()
                 }else if(smooth_soc < 1){
                     smooth_soc = 1;
                 }
-                *g_grpSOC = smooth_soc;
+                g_grpSOC = smooth_soc;
 
             }
         }else{
-            *g_grpSOC = grpsoc;
+            g_grpSOC = grpsoc;
         }
         // printf("call: %d, maxSOC:%f, minSOC:%f, maxSOC_R:%f, minSOC_R %f, grpSoc %d \n",callCount, maxSOC, minSOC,maxSOC_R, minSOC_R , *g_grpSOC);
     }
@@ -1063,6 +1050,7 @@ static void gropuSOC()
  */
 static float vol2soc(uint16_t vol, int16_t tempra)
 {
+    UNUSED(tempra);                                     // not used now, but may be used in future
     float soc = 0;
     
     for(int i = 0; i < OCV_POINT_NUM; i++)
@@ -1106,7 +1094,7 @@ void soc_init()
     bool soc_abnormal_flag[CELL_NUMS];
 	memset(soc_abnormal_flag, false, sizeof(soc_abnormal_flag));
     // read saved soc(last soc before shutdown)
-	bool save = false;
+	bool force_save = false;
     int8_t ret = read_saved_soc(soc_saved);
     // if(soc_saved[0] > 90 || soc_saved[0] < 10)
     // {
@@ -1149,7 +1137,7 @@ void soc_init()
     for (size_t i = 0; i < CELL_NUMS; i++)
     {
         if(soc_abnormal_flag[i]){
-			save = true;
+			force_save = true;
             g_socInfo[i].soc = soc_lookuptable[i];
             g_socInfo[i].socEr2 = SOC0_ER2_LOOKUP_TABLE;
         }else{
@@ -1160,7 +1148,7 @@ void soc_init()
 
     // read saved group soc(last soc before shutdown)
     ret = read_saved_soc_group(&soc_saved_group);
-    *g_grpSOC = soc_saved_group;
+    g_grpSOC = soc_saved_group;
     float sum_soc = 0;
     float avg_soc = 0;
     float unsorted_soc[CELL_NUMS];
@@ -1175,17 +1163,15 @@ void soc_init()
     if(ret == 0){
         if(soc_saved_group < (sorted_soc[0] - 1) || soc_saved_group > (sorted_soc[CELL_NUMS-1]+1))
         {
-            *g_grpSOC = round(avg_soc);
+            g_grpSOC = avg_soc;
         }
     }else{
-        *g_grpSOC = round(avg_soc);
+        g_grpSOC = avg_soc;
     }
 
 
-    port_soc_init();
-	
-	port_soc_output();
-	soc_save(save);
+
+	soc_save(force_save);
 
     for(int i = 0; i < CELL_NUMS; i++)
     {
@@ -1212,13 +1198,13 @@ void soc_save(bool force)
         // cell soc save check
         for(int i = 0; i < CELL_NUMS; i++)
         {
-            if(fabs(g_celSOC[i]-lastsoc[i]) > SOC_SAVE_DIFF_PERCENT)
+            if(fabsf(g_celSOC[i]-lastsoc[i]) > SOC_SAVE_DIFF_PERCENT)
             {
                 save = true;
             }
         }
         // group soc save check
-        if(fabs(*g_grpSOC-last_grpsoc) > SOC_GRP_SAVE_DIFF_PERCENT)
+        if(fabsf(g_grpSOC-last_grpsoc) > SOC_GRP_SAVE_DIFF_PERCENT)
         {
             grp_save = true;
         }
@@ -1242,8 +1228,8 @@ void soc_save(bool force)
                 save = false;
             }
             if(grp_save){
-                last_grpsoc = *g_grpSOC;
-                write_saved_soc_group(*g_grpSOC);
+                last_grpsoc = g_grpSOC;
+                write_saved_soc_group(g_grpSOC);
                 grp_save = false;
             }
         }   
@@ -1259,7 +1245,7 @@ void soc_save(bool force)
         // {
         //     __BKPT(0);
         // }
-        write_saved_soc_group(*g_grpSOC);
+        write_saved_soc_group(g_grpSOC);
     }
 
 
@@ -1278,12 +1264,11 @@ void soc_save(bool force)
  */
 void soc_task(bool full, bool empty)
 {
-    port_soc_input();
-
-
-    enum GroupState state = check_current_group_state(*g_cur);
+    enum GroupState state = check_current_group_state(g_cur);
+#if SOX_DEBUG
     static uint32_t callCount = 0;
     callCount++;
+#endif
 //    if(callCount == 6843)
 //    {
 //        printf("fdsa\n");
@@ -1297,23 +1282,23 @@ void soc_task(bool full, bool empty)
     for (size_t i = 0; i < CELL_NUMS; i++)
     {
 
-        mysoc(&g_socInfo[i], *g_cur, g_celVol[i], g_celTmp[i], g_celSOH[i]);
+        mysoc(&g_socInfo[i], g_cur, g_celVol[i], g_celTmp[i], g_celSOH[i]);
 
         // output soc
         if(g_socInfo[i].soc_smooth)
         {
-            if(*g_cur>=0 &&  g_socInfo[i].soc_smooth>g_socInfo[i].soc){
-                g_celSOC[i] = round(g_socInfo[i].soc_smooth);
+            if(g_cur>=0 &&  g_socInfo[i].soc_smooth>g_socInfo[i].soc){
+                g_celSOC[i] = g_socInfo[i].soc_smooth;
 //               printf("use smooth soc\n");
-            }else if(*g_cur<=0 &&  g_socInfo[i].soc_smooth<g_socInfo[i].soc){
-                g_celSOC[i] = round(g_socInfo[i].soc_smooth);
+            }else if(g_cur<=0 &&  g_socInfo[i].soc_smooth<g_socInfo[i].soc){
+                g_celSOC[i] = g_socInfo[i].soc_smooth;
 //               printf("use smooth soc\n");
             }else{
-                g_celSOC[i] = round(g_socInfo[i].soc);
+                g_celSOC[i] = g_socInfo[i].soc;
             }
         }
         else{
-            g_celSOC[i] = round(g_socInfo[i].soc);
+            g_celSOC[i] = g_socInfo[i].soc;
         }
         
 
@@ -1358,12 +1343,15 @@ void soc_task(bool full, bool empty)
 	
 	if(full)
     {
+#if SOX_GROUP_FULL_CAL_CELL
        for (size_t i = 0; i < CELL_NUMS; i++)
        {
            g_socInfo[i].soc = 100;
            g_celSOC[i] = 100;
        }
-        *g_grpSOC = 100;
+#endif 
+        g_grpSOC = 100;
+        // reset some state
         for (size_t i = 0; i < CELL_NUMS; i++)
         {
             g_socInfo[i].pureAH_lock = false;
@@ -1376,12 +1364,15 @@ void soc_task(bool full, bool empty)
     }
     if(empty)
     {
+#if SOX_GROUP_EMPTY_CAL_CELL
        for (size_t i = 0; i < CELL_NUMS; i++)
        {
            g_socInfo[i].soc = 0;
            g_celSOC[i] = 0;
        }
-        *g_grpSOC = 0;
+#endif
+        g_grpSOC = 0;
+        // reset some state
         for (size_t i = 0; i < CELL_NUMS; i++)
         {
             g_socInfo[i].pureAH_lock = false;
@@ -1395,7 +1386,6 @@ void soc_task(bool full, bool empty)
 	// XXX grp soc maybe need a mux unlock when in rtos
 	
     //printf("call: %d, grpsoc: %d\n", callCount, *g_grpSOC);
-    port_soc_output();
 
 }
 

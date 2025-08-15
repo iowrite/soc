@@ -3,6 +3,7 @@
 #include <stddef.h>
 #include <string.h>
 #include <stdlib.h>
+#include <math.h>
 #include "sox.h"
 #include "sox_private.h"
 #include "port.h"
@@ -27,7 +28,7 @@ int8_t  soh_init()
     }else{
         cycleTime = 0;
     }
-    *g_cycleCount = cycleTime;
+    g_cycleCount = cycleTime;
 
     // read last soh(saved before last poweroff)
     float soh_saved[CELL_NUMS];
@@ -60,7 +61,7 @@ int8_t  soh_init()
         
     }
 
-    float soh = 100 - 20 * (*g_cycleCount/1000.0/REFERENCE_CYCLE_TIME);
+    float soh = 100 - 20 * (g_cycleCount/1000.0/REFERENCE_CYCLE_TIME);
     for(size_t i = 0; i < CELL_NUMS; i++)
     {
         if(soh_abnormal_flag[i] == true){
@@ -74,13 +75,10 @@ int8_t  soh_init()
 
 
     memcpy(s_lastSOC, g_celSOC, sizeof(s_lastSOC));
-    s_lastGrpSOC = *g_grpSOC;
+    s_lastGrpSOC = g_grpSOC;
 
-    port_soh_init();
-	
-	
-	port_soh_output();
-	soh_save(true);
+
+	soh_save(FORCE_SAVE);
     return 0;
 }
 
@@ -91,15 +89,13 @@ int8_t  soh_init()
 int8_t soh_task()
 {
 
-    port_soh_input();
-
     // bug: lost some cycle when charge change to discharge or discharge to charge
-    if(*g_grpSOC <= s_lastGrpSOC-1){
-        *g_cycleCount += 5*(s_lastGrpSOC-*g_grpSOC);
-        s_lastGrpSOC  = *g_grpSOC;
-    }else if(*g_grpSOC >= s_lastGrpSOC+1){
-        *g_cycleCount += 5*(*g_grpSOC-s_lastGrpSOC);
-        s_lastGrpSOC  = *g_grpSOC;
+    if(g_grpSOC <= s_lastGrpSOC-1){
+        g_cycleCount += 5*(s_lastGrpSOC-g_grpSOC);
+        s_lastGrpSOC  = g_grpSOC;
+    }else if(g_grpSOC >= s_lastGrpSOC+1){
+        g_cycleCount += 5*(g_grpSOC-s_lastGrpSOC);
+        s_lastGrpSOC  = g_grpSOC;
         
     }
 
@@ -108,7 +104,7 @@ int8_t soh_task()
     {
         if (g_celSOC[i] <= s_lastSOC[i]-10 || g_celSOC[i] >= s_lastSOC[i]+10)
         {
-            int delta = abs(g_celSOC[i] - s_lastSOC[i])/10;
+            int delta = fabsf(g_celSOC[i] - s_lastSOC[i])/10;
             if(g_celTmp[i] <= 250)
             {
                 float subk = 20.0/5000;
@@ -128,10 +124,9 @@ int8_t soh_task()
         sumSOH += g_celSOH[i];
     }
     
-    *g_grpSOH = sumSOH/16;
+    g_grpSOH = sumSOH/CELL_NUMS;
 
 
-    port_soh_output();
     // printf("cycle: %d  SOH: %f\n", *g_cycleCount, *g_grpSOH);
     return 0;
 }
@@ -143,21 +138,21 @@ void soh_save(bool force)
         static float  last_cycleCount = 0;
         bool save_flag = false;
         static uint32_t save_time = 0;
-        if(last_cycleCount - *g_cycleCount > 1000)
+        if(last_cycleCount - g_cycleCount > 1000)
         {
             save_flag = true;
-            last_cycleCount = *g_cycleCount;
+            last_cycleCount = g_cycleCount;
         }
         if(timebase_get_time_s() - save_time > 60*60*24*7)
         {
             if(save_flag){
-                write_saved_cycle(*g_cycleCount);
+                write_saved_cycle(g_cycleCount);
                 write_saved_soh(g_celSOH);
             }
             save_time = timebase_get_time_s();
         }
     }else{
-            write_saved_cycle(*g_cycleCount);
+            write_saved_cycle(g_cycleCount);
             write_saved_soh(g_celSOH);
     }
 
