@@ -1144,6 +1144,7 @@ void soc_init()
             g_socInfo[i].soc = soc_saved[i];
             g_socInfo[i].socEr2 = SOC0_ER2_SAVED;
         }
+        g_celSOC[i] = g_socInfo[i].soc;
     }
 
     // read saved group soc(last soc before shutdown)

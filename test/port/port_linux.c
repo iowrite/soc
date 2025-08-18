@@ -65,7 +65,11 @@ int8_t write_saved_soc_group(uint16_t grpsoc)
 
 int8_t read_saved_soh(float *soh)
 {
-    *soh = 100;
+    for(int i = 0; i < CELL_NUMS; i++)
+    {
+        soh[i] = 100;
+    }
+    
     return 0;
 }
 int8_t write_saved_soh(float *soh)

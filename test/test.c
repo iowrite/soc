@@ -1,3 +1,4 @@
+#include <math.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdint.h>
@@ -8,7 +9,7 @@
 #include <assert.h>
 #include <xlsxio_read.h>
 #include "sox.h"
-
+#include <ctype.h>
 
 uint32_t g_excel_second = 0;
 extern int g_port_init_soc;
@@ -26,13 +27,9 @@ uint16_t s_dsg_stop_vol = 2900;
 
 int main(int argc, char *argv[]) 
 {
-    printf("argc: %d\n", argc);
-    for (int i = 0; i < argc; i++) {
-        printf("argv[%d]: %s\n", i, argv[i]);
-    }
-/*******************************************************************************
+/******************************************************************************
  * parse command line arguments
- *******************************************************************************/
+ ******************************************************************************/
     char input_file_name[100] = {0};
     char opt;
     while((opt = getopt(argc, argv, "hi:s:")) != -1) {
@@ -42,7 +39,15 @@ int main(int argc, char *argv[])
                 printf("./mysoc -i [excel input file] -s [init group soc value]\n");
                 return 0;
             case 'i':
-                memcpy(input_file_name, optarg, strlen(optarg));
+                for(unsigned int i = 0; i < strlen(optarg); i++){               // filter leading empty char
+                    if(isspace(optarg[i]))
+                    {
+                        continue;
+                    }else{
+                        memcpy(input_file_name, optarg+i, strlen(optarg)-i);
+                        break;
+                    }
+                }
                 break;
             case 's':
                 g_port_init_soc = atoi(optarg);
@@ -69,11 +74,11 @@ int main(int argc, char *argv[])
         fprintf(stderr, "Error opening .xlsx file\n");
         return 1;
     }
-    int excel_row = 0;
+    int s_excel_row = 0;
     // get total row count
     if ((sheet = xlsxioread_sheet_open(xlsxioread, sheetname, XLSXIOREAD_SKIP_EMPTY_ROWS)) != NULL) {
         while (xlsxioread_sheet_next_row(sheet)) {
-            excel_row++;
+            s_excel_row++;
         }
         xlsxioread_sheet_close(sheet);
     }
@@ -93,40 +98,40 @@ int main(int argc, char *argv[])
         int vol[16];
         float tmp[9];
     };
-    struct SOX_Excel_Input *sox_excel_input = malloc(sizeof(struct SOX_Excel_Input) * excel_row);
+    struct SOX_Excel_Input *sox_excel_input = malloc(sizeof(struct SOX_Excel_Input) * s_excel_row);
     if ((xlsxioread = xlsxioread_open(input_file_name)) == NULL) {
         fprintf(stderr, "Error opening .xlsx file\n");
         return 1;
     }
-    excel_row = 0;
+    s_excel_row = 0;
     if ((sheet = xlsxioread_sheet_open(xlsxioread, sheetname, XLSXIOREAD_SKIP_EMPTY_ROWS)) != NULL) {
         //read all rows
         while (xlsxioread_sheet_next_row(sheet)) {
             int excel_col = 0;
-            if(excel_row >= 1) //filter the first line
+            if(s_excel_row >= 1) //filter the first line(header)
             {
                 //read all columns
                 double cell_value;
                 while (xlsxioread_sheet_next_cell_float(sheet, &cell_value)) {
                     if(excel_col == 9){                                         // group voltage
-                        sox_excel_input[excel_row].grpVol = cell_value;
+                        sox_excel_input[s_excel_row-1].grpVol = cell_value;
                     }
                     else if(excel_col == 11){                                   // group current    
-                        sox_excel_input[excel_row].cur = cell_value;
+                        sox_excel_input[s_excel_row-1].cur = cell_value;
                     }   
                     else if(excel_col == 12){                                   // group soc(microcontroller calculated)
-                        sox_excel_input[excel_row].groupSoc = cell_value;
+                        sox_excel_input[s_excel_row-1].groupSoc = cell_value;
                     }
                     else if(excel_col >= 76 && excel_col < 92){                 // cell voltage
-                        sox_excel_input[excel_row].vol[excel_col-76] = (int)cell_value;
+                        sox_excel_input[s_excel_row-1].vol[excel_col-76] = (int)cell_value;
                     }
                     else if(excel_col >= 108 && excel_col < 117){               // cell temperature
-                        sox_excel_input[excel_row].tmp[excel_col-108] = cell_value;
+                        sox_excel_input[s_excel_row-1].tmp[excel_col-108] = cell_value;
                     }
                     excel_col++;
                 }
             }
-            excel_row++;
+            s_excel_row++;
         }
         xlsxioread_sheet_close(sheet);
     }
@@ -147,8 +152,8 @@ int main(int argc, char *argv[])
         float grpSOC;
     };
 
-    struct Cell_SOC_Output *cell_soc_output = malloc(sizeof(struct Cell_SOC_Output)*excel_row);
-    struct Group_SOC_Output *group_soc_output = malloc(sizeof(struct Group_SOC_Output)*excel_row);
+    struct Cell_SOC_Output *cell_soc_output = malloc(sizeof(struct Cell_SOC_Output)*(s_excel_row-1)); // exclude header
+    struct Group_SOC_Output *group_soc_output = malloc(sizeof(struct Group_SOC_Output)*s_excel_row);  // exclude header but add init value
 
     // init sox
     struct SOX_Init_Attr attr = {
@@ -163,7 +168,7 @@ int main(int argc, char *argv[])
 
 
     
-    for(int i = 0; i < excel_row; i++)
+    for(int i = 0; i < s_excel_row; i++)
     {
         // prepare input data
         struct SOX_Input input = {
@@ -172,15 +177,17 @@ int main(int argc, char *argv[])
             .full = false,
             .empty = false,
         };
-        memcpy(input.vol, sox_excel_input[i].vol, sizeof(input.vol));
+        for (int i = 0; i < 16; i++) {
+            input.vol[i] = sox_excel_input[i].vol[i];
+        }
         // temp 9 to 16
-        input.tmp[0] = sox_excel_input[i].tmp[0];
+        input.tmp[0] = roundf(sox_excel_input[i].tmp[0]*10);
         for (size_t j = 0; j < 7; j++)
         {
-            input.tmp[j*2+1] = sox_excel_input[i].tmp[j+1];
-            input.tmp[j*2+2] = sox_excel_input[i].tmp[j+2];
+            input.tmp[j*2+1] = roundf(sox_excel_input[i].tmp[j+1]*10);
+            input.tmp[j*2+2] = roundf(sox_excel_input[i].tmp[j+2]*10);
         }
-        input.tmp[15] = sox_excel_input[i].tmp[8];
+        input.tmp[15] = roundf(sox_excel_input[i].tmp[8]*10);
 
         // caculate
         sox_task(&input);
@@ -205,7 +212,7 @@ int main(int argc, char *argv[])
     output_cell_soc_simulate_fd = fopen("output_cell_soc_simulate.csv", "w");
 
     // Write the array to the file
-    for (int i = 0; i < excel_row; i++)
+    for (int i = 0; i < s_excel_row; i++)
     {
         for (int j = 0; j < 16; j++)
         {
@@ -229,7 +236,7 @@ int main(int argc, char *argv[])
     output_group_soc_mcu_fd = fopen("output_group_soc_mcu.csv", "w");
 
     // Write the array to the file
-    for (int i = 0; i < excel_row-1; i++)
+    for (int i = 0; i < s_excel_row-1; i++)
     {
         fprintf(output_group_soc_mcu_fd, "%f ", sox_excel_input[i].groupSoc);
         fprintf(output_group_soc_mcu_fd, "\n");
@@ -245,7 +252,7 @@ int main(int argc, char *argv[])
     output_group_soc_simulate_fd = fopen("output_group_soc_simulate.csv", "w");
 
     // Write the array to the file
-    for (int i = 0; i < excel_row; i++)
+    for (int i = 0; i < s_excel_row; i++)
     {
         fprintf(output_group_soc_simulate_fd, "%f ", group_soc_output[i].grpSOC);
         fprintf(output_group_soc_simulate_fd, "\n");
@@ -259,7 +266,7 @@ int main(int argc, char *argv[])
 /******************************************************************************
  * call python to draw the result
  ******************************************************************************/
-    system("fish -c 'source ../.venv/bin/activate.fish && python3 soc.py");
+    system("fish -c 'source ../.venv/bin/activate.fish && python3 soc.py'");
 
 
     return 0;
