@@ -177,8 +177,8 @@ int main(int argc, char *argv[])
             .full = false,
             .empty = false,
         };
-        for (int i = 0; i < 16; i++) {
-            input.vol[i] = sox_excel_input[i].vol[i];
+        for (int j = 0; j < 16; j++) {
+            input.vol[j] = sox_excel_input[i].vol[j];
         }
         // temp 9 to 16
         input.tmp[0] = roundf(sox_excel_input[i].tmp[0]*10);
