@@ -8,6 +8,7 @@ mysoc
 **/*.d
 *.map
 *.idx
+*.a
 
 *.txt
 *.csv

@@ -531,6 +531,7 @@ void mysocEKF(struct SOC_Info *SOCinfo, float cur, uint16_t vol, int16_t tempra,
     const uint16_t *curve = get_curve_v(cur, tempra);
     const int16_t *curveK = get_curve_k(cur, tempra);
     const uint16_t cap = get_cap(cur, tempra);
+    // printf("cap: %d\n", cap);
 
     if(SOCinfo->last_curve != curve)
     {
@@ -552,7 +553,7 @@ void mysocEKF(struct SOC_Info *SOCinfo, float cur, uint16_t vol, int16_t tempra,
     //     printf("callCount: %d\n", callCount/16);
     // }
 
-    const float capf = cap/10.0*(soh/100);
+    const float capf = cap/10.0f*(soh/100);
 
     float diffAH = DIFF_T_SEC/3600.0*cur/capf*100;
     float SOCcal = SOCinfo->soc + diffAH;
