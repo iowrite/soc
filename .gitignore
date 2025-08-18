@@ -6,8 +6,12 @@ a.out
 mysoc
 **/*.o
 **/*.d
+*.map
+*.idx
 
-save_soc_grp.txt
-save_soc.txt
+*.txt
+*.csv
+
+
 
 .~*.xlsx
