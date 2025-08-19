@@ -255,22 +255,36 @@
 
 import pandas as pd
 import matplotlib.pyplot as plt
+import sys
 
 # 读取CSV文件
 df = pd.read_csv('output_cell_soc_simulate.csv', header=None)  # 假设没有标题行
 
 # 创建图表
 plt.figure(figsize=(12, 8))
+# 设置窗口标题为脚本的第一个参数（如果提供了的话）
+if len(sys.argv) > 1:
+    window_title = " ".join(sys.argv[1:])  # 合并所有参数
+else:
+    window_title = "Cell SOC Simulation"  # 默认名称
+plt.gcf().canvas.manager.set_window_title(window_title)
 
 # 绘制每一列的数据
 for i in range(16):
-    plt.plot(df[i], label=f'Column {i+1}')
+    plt.plot(df[i], label=f'cell {i+1}')
 
-plt.xlabel('Index')
-plt.ylabel('Value')
-plt.title('CSV Data Visualization (16 Columns)')
+plt.xlabel('excel input step(row)')
+plt.ylabel('soc')
+plt.title('cell soc')
 plt.legend(bbox_to_anchor=(1.05, 1), loc='upper left')
 plt.tight_layout()
+
+
+# # 保存图片
+# output_image_path = window_title+'.png' 
+# plt.savefig(output_image_path, dpi=300, bbox_inches='tight')
+# print(f"图片已保存至: {output_image_path}")
+
 plt.show()
 
 

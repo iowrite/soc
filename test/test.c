@@ -27,6 +27,12 @@ uint16_t s_dsg_stop_vol = 2900;
 
 int main(int argc, char *argv[]) 
 {
+    char whole_cmd[200] = {0};
+    for (int i = 0; i < argc; i++) {
+        strcat(whole_cmd, argv[i]);
+        strcat(whole_cmd, " ");
+    }
+    printf("%s\n", whole_cmd);
 /******************************************************************************
  * parse command line arguments
  ******************************************************************************/
@@ -266,7 +272,13 @@ int main(int argc, char *argv[])
 /******************************************************************************
  * call python to draw the result
  ******************************************************************************/
-    system("fish -c 'source ../.venv/bin/activate.fish && python3 soc.py'");
+    char call_python_cmd[200] = {0};
+    strcat(call_python_cmd, "fish -c \"source /home/hm/Desktop/mysoc/.venv/bin/activate.fish && python3 /home/hm/Desktop/mysoc/test/soc.py ");      // absolute path, fix next version
+    strcat(call_python_cmd,"'");
+    strcat(call_python_cmd, whole_cmd);
+    strcat(call_python_cmd,"' \"");
+    printf("%s\n", call_python_cmd);
+    system(call_python_cmd);
 
 
     return 0;

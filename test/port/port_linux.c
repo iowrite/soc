@@ -32,7 +32,7 @@ int8_t read_saved_soc(float *soc)
 }
 int8_t write_saved_soc(float *soc)
 {
-    FILE* save_soc = fopen("save_soc.txt", "a+");
+    FILE* save_soc = fopen("save_soc.txt", "w");
     fprintf(save_soc, "%d -> ", g_excel_second);
     for(int i = 0; i < CELL_NUMS; i++)
     {
@@ -53,7 +53,7 @@ int8_t read_saved_soc_group(uint16_t *grpsoc)
 }
 int8_t write_saved_soc_group(uint16_t grpsoc)
 {
-    FILE* save_soc_grp = fopen("save_soc_grp.txt", "a+");
+    FILE* save_soc_grp = fopen("save_soc_grp.txt", "w");
     fprintf(save_soc_grp, "%d -> ", g_excel_second);
 
     fprintf(save_soc_grp, "%d", grpsoc);
