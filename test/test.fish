@@ -1,4 +1,4 @@
-#! /usr/bin/fish
+#!/usr/bin/fish
 
 # 初始化静态计数器
 set -g run_in_tempdir_counter 0
@@ -8,33 +8,65 @@ function run_in_tempdir
     set cmd $argv[1]
     set args $argv[2..-1]
     
-    # 增加计数器
+    # 增加计数器并创建唯一目录
     set -g run_in_tempdir_counter (math $run_in_tempdir_counter + 1)
-    
-    # 创建带序号的工作目录
     set tempdir "work_dir/$run_in_tempdir_counter"
     mkdir -p $tempdir
     echo "Created directory: $tempdir"
 
-    # 在后台执行命令并清理目录
-    begin
-        pushd $tempdir > /dev/null
-        eval $cmd $args
-        popd > /dev/null
-        echo "Cleaned up directory: $tempdir"
-    end &
+    # 在子shell中执行命令并放入后台
+    fish -c "
+        cd $tempdir
+        $cmd $args &
+    "
     
     # 返回临时目录路径
     echo $tempdir
 end
 
-rm -rf "./work_dir/*"
+# 清理工作目录
+rm -rf ./work_dir/*
 
-run_in_tempdir /home/hm/Desktop/mysoc/test/mysoc -i /home/hm/Desktop/mysoc/data/25d1c/chg.xlsx -s 0
-run_in_tempdir /home/hm/Desktop/mysoc/test/mysoc -i /home/hm/Desktop/mysoc/data/25d2c/chg.xlsx -s 0
-run_in_tempdir /home/hm/Desktop/mysoc/test/mysoc -i /home/hm/Desktop/mysoc/data/25d3c/chg.xlsx -s 0
-run_in_tempdir /home/hm/Desktop/mysoc/test/mysoc -i /home/hm/Desktop/mysoc/data/25d4c/chg.xlsx -s 0
-run_in_tempdir /home/hm/Desktop/mysoc/test/mysoc -i /home/hm/Desktop/mysoc/data/25d5c/chg.xlsx -s 0
+# 运行
 
-# 等待所有后台任务完成
-wait
+
+
+
+
+
+# 25 degree charge and discharge
+run_in_tempdir /home/hm/Desktop/mysoc/test/mysoc -i /home/hm/Desktop/mysoc/data/25d1c/chg.xlsx -s 0 -c
+run_in_tempdir /home/hm/Desktop/mysoc/test/mysoc -i /home/hm/Desktop/mysoc/data/25d2c/chg.xlsx -s 0 -c
+run_in_tempdir /home/hm/Desktop/mysoc/test/mysoc -i /home/hm/Desktop/mysoc/data/25d3c/chg.xlsx -s 0 -c
+run_in_tempdir /home/hm/Desktop/mysoc/test/mysoc -i /home/hm/Desktop/mysoc/data/25d4c/chg.xlsx -s 0 -c
+run_in_tempdir /home/hm/Desktop/mysoc/test/mysoc -i /home/hm/Desktop/mysoc/data/25d5c/chg_retest.xlsx -s 0 -c
+
+run_in_tempdir /home/hm/Desktop/mysoc/test/mysoc -i /home/hm/Desktop/mysoc/data/25d1c/dsg.xlsx -s 100 -c
+run_in_tempdir /home/hm/Desktop/mysoc/test/mysoc -i /home/hm/Desktop/mysoc/data/25d2c/dsg.xlsx -s 100 -c
+run_in_tempdir /home/hm/Desktop/mysoc/test/mysoc -i /home/hm/Desktop/mysoc/data/25d3c/dsg.xlsx -s 100 -c
+run_in_tempdir /home/hm/Desktop/mysoc/test/mysoc -i /home/hm/Desktop/mysoc/data/25d4c/dsg.xlsx -s 100 -c
+run_in_tempdir /home/hm/Desktop/mysoc/test/mysoc -i /home/hm/Desktop/mysoc/data/25d5c/dsg.xlsx -s 100 -c
+
+# 35 degree charge and discharge
+run_in_tempdir /home/hm/Desktop/mysoc/test/mysoc -i /home/hm/Desktop/mysoc/data/35d1c/chg.xlsx -s 0 -c
+run_in_tempdir /home/hm/Desktop/mysoc/test/mysoc -i /home/hm/Desktop/mysoc/data/35d2c/chg.xlsx -s 0 -c
+run_in_tempdir /home/hm/Desktop/mysoc/test/mysoc -i /home/hm/Desktop/mysoc/data/35d3c/chg.xlsx -s 0 -c
+run_in_tempdir /home/hm/Desktop/mysoc/test/mysoc -i /home/hm/Desktop/mysoc/data/35d4c/chg.xlsx -s 0 -c
+run_in_tempdir /home/hm/Desktop/mysoc/test/mysoc -i /home/hm/Desktop/mysoc/data/35d5c/chg_retest.xlsx -s 0 -c
+
+run_in_tempdir /home/hm/Desktop/mysoc/test/mysoc -i /home/hm/Desktop/mysoc/data/35d1c/dsg.xlsx -s 100 -c
+run_in_tempdir /home/hm/Desktop/mysoc/test/mysoc -i /home/hm/Desktop/mysoc/data/35d2c/dsg.xlsx -s 100 -c
+run_in_tempdir /home/hm/Desktop/mysoc/test/mysoc -i /home/hm/Desktop/mysoc/data/35d3c/dsg.xlsx -s 100 -c
+run_in_tempdir /home/hm/Desktop/mysoc/test/mysoc -i /home/hm/Desktop/mysoc/data/35d4c/dsg.xlsx -s 100 -c
+run_in_tempdir /home/hm/Desktop/mysoc/test/mysoc -i /home/hm/Desktop/mysoc/data/35d5c/dsg.xlsx -s 100 -c
+
+# 45 degree charge and discharge
+run_in_tempdir /home/hm/Desktop/mysoc/test/mysoc -i /home/hm/Desktop/mysoc/data/45d1c/chg.xlsx -s 0 -c
+run_in_tempdir /home/hm/Desktop/mysoc/test/mysoc -i /home/hm/Desktop/mysoc/data/45d2c/chg.xlsx -s 0 -c
+run_in_tempdir /home/hm/Desktop/mysoc/test/mysoc -i /home/hm/Desktop/mysoc/data/45d3c/chg.xlsx -s 0 -c
+run_in_tempdir /home/hm/Desktop/mysoc/test/mysoc -i /home/hm/Desktop/mysoc/data/45d5c/chg.xlsx -s 0 -c
+
+run_in_tempdir /home/hm/Desktop/mysoc/test/mysoc -i /home/hm/Desktop/mysoc/data/45d1c/dsg.xlsx -s 100 -c
+run_in_tempdir /home/hm/Desktop/mysoc/test/mysoc -i /home/hm/Desktop/mysoc/data/45d2c/dsg.xlsx -s 100 -c
+run_in_tempdir /home/hm/Desktop/mysoc/test/mysoc -i /home/hm/Desktop/mysoc/data/45d3c/dsg.xlsx -s 100 -c
+run_in_tempdir /home/hm/Desktop/mysoc/test/mysoc -i /home/hm/Desktop/mysoc/data/45d5c/dsg.xlsx -s 100 -c

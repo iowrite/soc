@@ -910,10 +910,10 @@ static void gropuSOC()
 
         static float grp_soc_p = 0.1f;
         float cal_grp_soc_p;
-        if(CHARGING(g_cur) && g_grpSOC > 97)
+        if(CHARGING(g_cur) && g_grpSOC > 95)
         {
             cal_grp_soc_p=grp_soc_p + GRP_Q_1;
-        }else if(CHARGING(g_cur) && g_grpSOC < 5)
+        }else if(CHARGING(g_cur) && g_grpSOC < 10)
         {
             cal_grp_soc_p=grp_soc_p + GRP_Q_2;
         }else{

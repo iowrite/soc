@@ -23,7 +23,7 @@ uint16_t s_chg_stop_vol = 3600;
 uint16_t s_dsg_stop_vol = 2900;
 
 
-
+static bool compare_pure_AH_SOC = false;
 
 int main(int argc, char *argv[]) 
 {
@@ -38,13 +38,13 @@ int main(int argc, char *argv[])
  ******************************************************************************/
     char input_file_name[100] = {0};
     char opt;
-    while((opt = getopt(argc, argv, "hi:s:")) != -1) {
+    while((opt = getopt(argc, argv, "hi:s:c")) != -1) {                         
         switch(opt) {
-            case 'h':
+            case 'h':   // h for help
                 printf("./mysoc -h for help information\n");
                 printf("./mysoc -i [excel input file] -s [init group soc value]\n");
                 return 0;
-            case 'i':
+            case 'i':   // i for input file
                 for(unsigned int i = 0; i < strlen(optarg); i++){               // filter leading empty char
                     if(isspace(optarg[i]))
                     {
@@ -55,8 +55,11 @@ int main(int argc, char *argv[])
                     }
                 }
                 break;
-            case 's':
+            case 's':   // s for set init soc
                 g_port_init_soc = atoi(optarg);
+                break;
+            case 'c':   // c for compare pure AH soc
+                compare_pure_AH_SOC = true;
                 break;
             case '?':
                 printf("invalid option: %c\n", optopt);
@@ -222,7 +225,7 @@ int main(int argc, char *argv[])
     {
         for (int j = 0; j < 16; j++)
         {
-            fprintf(output_cell_soc_simulate_fd, "%f, ", cell_soc_output[i].soc[j]);
+            fprintf(output_cell_soc_simulate_fd, "%f ", cell_soc_output[i].soc[j]);
         }
         fprintf(output_cell_soc_simulate_fd, "\n");
     }
@@ -248,6 +251,28 @@ int main(int argc, char *argv[])
         fprintf(output_group_soc_mcu_fd, "\n");
     }
     fclose(output_group_soc_mcu_fd);
+
+
+
+    system("rm output_group_cur_mcu.csv");
+    if(compare_pure_AH_SOC){
+        // group current(microcontroler sample)
+        FILE *output_group_cur_mcu_fd;
+
+        // Open the file for writing(always overwrite)
+        output_group_cur_mcu_fd = fopen("output_group_cur_mcu.csv", "w");
+
+        // Write the array to the file
+        for (int i = 0; i < s_excel_row-1; i++)
+        {
+            fprintf(output_group_cur_mcu_fd, "%f ", sox_excel_input[i].cur);
+            fprintf(output_group_cur_mcu_fd, "\n");
+        }
+        fclose(output_group_cur_mcu_fd);
+    }
+
+
+
 
 
 

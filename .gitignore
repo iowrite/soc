@@ -2,6 +2,7 @@
 
 codegen/
 
+work_dir/
 a.out
 mysoc
 **/*.o
