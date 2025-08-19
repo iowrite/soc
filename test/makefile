@@ -21,19 +21,19 @@ mysoc: 	build_dir/test.o \
 
 
 CFLAGS 		= -xc -std=gnu99 -Wall -Wextra -ffunction-sections -fdata-sections -O0 -g
-
+INCLUDE     = ../src
 
 build_dir/test.o: test.c build_dir/test.d
-	clang $(CFLAGS) -I ../src -c  $<  -o $@
+	clang $(CFLAGS) -I $(INCLUDE) -c  $<  -o $@
 	
 build_dir/port_linux.o: ./port/port_linux.c build_dir/port_linux.d
-	clang $(CFLAGS) -I ../src -c  $<  -o $@
+	clang $(CFLAGS) -I $(INCLUDE) -c  $<  -o $@
 
 
 build_dir/test.d: test.c | build_dir
-	clang -I ../src -M $< -MF $@ -MT build_dir/test.o
+	clang -I $(INCLUDE) -M $< -MF $@ -MT build_dir/test.o
 build_dir/port_linux.d: ./port/port_linux.c | build_dir
-	clang -I ../src -M $< -MF $@ -MT build_dir/port_linux.o
+	clang -I $(INCLUDE) -M $< -MF $@ -MT build_dir/port_linux.o
 
 ../src/build_dir/libmyekfsoc.a:
 	make -C ../src
