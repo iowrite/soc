@@ -1,3 +1,4 @@
+#include <math.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdint.h>
@@ -6,218 +7,268 @@
 #include <unistd.h>
 #include <string.h>
 #include <assert.h>
-
+#include <xlsxio_read.h>
 #include "sox.h"
-#include "test.h"
+#include <ctype.h>
 
-#define FIFO_NAME "myfifo"
-#define ARRAY_SIZE 5
+uint32_t g_excel_second = 0;
+extern int g_port_init_soc;
 
-/* bubble sort : ascending */
-static void bubbleSort_ascend(uint16_t *inputArr, uint16_t *outputArr, uint16_t size)
+
+float    s_init_grpsoh = 100;
+uint32_t s_init_cycleCount = 0;
+
+
+uint16_t s_chg_stop_vol = 3600;
+uint16_t s_dsg_stop_vol = 2900;
+
+
+static bool compare_pure_AH_SOC = false;
+
+int main(int argc, char *argv[]) 
 {
-    memcpy(outputArr, inputArr, size*sizeof(uint16_t));
-    for (size_t i = 0; i < size-1; i++)
-    {
-        for (size_t j = 0; j < size-i-1; j++)
-        {
-            if(outputArr[j] > outputArr[j+1])
-            {
-                uint16_t tmp = outputArr[j];
-                outputArr[j] = outputArr[j+1];
-                outputArr[j+1] = tmp;
-            }
+    char whole_cmd[200] = {0};
+    for (int i = 0; i < argc; i++) {
+        strcat(whole_cmd, argv[i]);
+        strcat(whole_cmd, " ");
+    }
+    printf("%s\n", whole_cmd);
+/******************************************************************************
+ * parse command line arguments
+ ******************************************************************************/
+    char input_file_name[100] = {0};
+    char opt;
+    while((opt = getopt(argc, argv, "hi:s:c")) != -1) {                         
+        switch(opt) {
+            case 'h':   // h for help
+                printf("./mysoc -h for help information\n");
+                printf("./mysoc -i [excel input file] -s [init group soc value]\n");
+                return 0;
+            case 'i':   // i for input file
+                for(unsigned int i = 0; i < strlen(optarg); i++){               // filter leading empty char
+                    if(isspace(optarg[i]))
+                    {
+                        continue;
+                    }else{
+                        memcpy(input_file_name, optarg+i, strlen(optarg)-i);
+                        break;
+                    }
+                }
+                break;
+            case 's':   // s for set init soc
+                g_port_init_soc = atoi(optarg);
+                break;
+            case 'c':   // c for compare pure AH soc
+                compare_pure_AH_SOC = true;
+                break;
+            case '?':
+                printf("invalid option: %c\n", optopt);
+                break;
+            case ':':
+                printf("option <%c> need argument\n", optopt);
+                break;
         }
     }
-}
 
 
 
-uint32_t excel_second = 0;
-int g_port_init_soc;
-
-int main(int argc, char *argv[]) {
-
-    if(argc < 2)
-    {
-        printf("Usage: ./test <init_soc>\n");
-        return 0;
+/*******************************************************************************
+ * count total row count
+ *******************************************************************************/
+    xlsxioreadersheet sheet;
+    const char* sheetname = NULL;
+    //open .xlsx file for reading
+    xlsxioreader xlsxioread;
+    if ((xlsxioread = xlsxioread_open(input_file_name)) == NULL) {
+        fprintf(stderr, "Error opening .xlsx file\n");
+        return 1;
     }
-    g_port_init_soc = atoi(argv[1]);
+    int s_excel_row = 0;
+    // get total row count
+    if ((sheet = xlsxioread_sheet_open(xlsxioread, sheetname, XLSXIOREAD_SKIP_EMPTY_ROWS)) != NULL) {
+        while (xlsxioread_sheet_next_row(sheet)) {
+            s_excel_row++;
+        }
+        xlsxioread_sheet_close(sheet);
+    }
+    //clean up
+    xlsxioread_close(xlsxioread);
 
-/* ====================================== input data row len     ================================================= */
 
-    int fd1 = open("socfifo_write_input_row_len", O_RDONLY);
-    int input_row_len = 0;
-    read(fd1, &input_row_len, sizeof(input_row_len)) != sizeof(input_row_len);
-    close(fd1);
-    unlink("socfifo_write_input_row_len");
-    printf("recv: input_row_len = %d\n", input_row_len);
-    
-    
-/* ======================================= input data================================================ */
-    sleep(1);
 
-    int fd2 = open("socfifo_write_input", O_RDONLY);
-    struct input{
+/*******************************************************************************
+ * parse excel input data 
+ *******************************************************************************/
+    // reopen .xlsx file for reading content, read values from first sheet
+    struct SOX_Excel_Input{
         float grpVol;
         float cur;
-        float avgTmp;
-        float vol[16];
+        float groupSoc;
+        int vol[16];
         float tmp[9];
     };
-
-    struct input *inputData = malloc(sizeof (struct input) * input_row_len);
-    memset(inputData, 0, sizeof(struct input)*input_row_len);
-
-    uint8_t *b = (uint8_t *)inputData;
-    int count = sizeof (struct input) * input_row_len;
-    printf("count = %d\n", count);
-    int r = 0;
-    while(count>0)
-    {
-        r = read(fd2, b, 65536);
-        count -= r;
-        b += r;
+    struct SOX_Excel_Input *sox_excel_input = malloc(sizeof(struct SOX_Excel_Input) * s_excel_row);
+    if ((xlsxioread = xlsxioread_open(input_file_name)) == NULL) {
+        fprintf(stderr, "Error opening .xlsx file\n");
+        return 1;
     }
-    close(fd2);
-    unlink("socfifo_write_input");
-    printf("recv: inputData. total bytes = %ld\n", sizeof(struct input)*input_row_len);
-
-
-
-    for (size_t i = 0; i < input_row_len; i++)
-    {
-        // printf("inputData[%d].cur = %f\n", i, inputData[i].cur);
-        // if(inputData[i].cur < 0)
-        // {
-        //     assert(0);
-        // }
+    s_excel_row = 0;
+    if ((sheet = xlsxioread_sheet_open(xlsxioread, sheetname, XLSXIOREAD_SKIP_EMPTY_ROWS)) != NULL) {
+        //read all rows
+        while (xlsxioread_sheet_next_row(sheet)) {
+            int excel_col = 0;
+            if(s_excel_row >= 1) //filter the first line(header)
+            {
+                //read all columns
+                double cell_value;
+                while (xlsxioread_sheet_next_cell_float(sheet, &cell_value)) {
+                    if(excel_col == 9){                                         // group voltage
+                        sox_excel_input[s_excel_row-1].grpVol = cell_value;
+                    }
+                    else if(excel_col == 11){                                   // group current    
+                        sox_excel_input[s_excel_row-1].cur = cell_value;
+                    }   
+                    else if(excel_col == 12){                                   // group soc(microcontroller calculated)
+                        sox_excel_input[s_excel_row-1].groupSoc = cell_value;
+                    }
+                    else if(excel_col >= 76 && excel_col < 92){                 // cell voltage
+                        sox_excel_input[s_excel_row-1].vol[excel_col-76] = (int)cell_value;
+                    }
+                    else if(excel_col >= 108 && excel_col < 117){               // cell temperature
+                        sox_excel_input[s_excel_row-1].tmp[excel_col-108] = cell_value;
+                    }
+                    excel_col++;
+                }
+            }
+            s_excel_row++;
+        }
+        xlsxioread_sheet_close(sheet);
     }
+    //clean up
+    xlsxioread_close(xlsxioread);
+
     
 
-    /************************************* compute ************************************************ */
-
-
-    struct SOC_Info
+/*******************************************************************************
+ * compute 
+ *******************************************************************************/
+    struct Cell_SOC_Output
     {
-        uint16_t soc[16];
+        float soc[16];
     };
-    struct GrpSOC
+    struct Group_SOC_Output
     {
-        uint16_t grpSOC;
-        uint16_t maxcelsoc;
-        uint16_t mincelsoc;
-        uint16_t avgcelsoc;
+        float grpSOC;
     };
 
-    struct SOC_Info *outputData = malloc(sizeof(struct SOC_Info)*(input_row_len+1));
-    struct GrpSOC *outputDataGrp = malloc(sizeof(struct GrpSOC)*(input_row_len+1));
+    struct Cell_SOC_Output *cell_soc_output = malloc(sizeof(struct Cell_SOC_Output)*(s_excel_row-1)); // exclude header
+    struct Group_SOC_Output *group_soc_output = malloc(sizeof(struct Group_SOC_Output)*s_excel_row);  // exclude header but add init value
 
-    // struct SOC_Info info = {
-    //     .soc = 20,
-    //     .socEr2 = 400
-    // };
-    // memcpy(&outputData[0], &info, sizeof (struct SOC_Info));
-    // for(size_t i = 0; i <  input_row_len; i++)
-    // {
+    // init sox
+    struct SOX_Init_Attr attr = {
+        .chg_stop_vol = &s_chg_stop_vol,
+        .dsg_stop_vol = &s_dsg_stop_vol,
+    };
 
-    //     mysoc(&info, inputData[i].cur, (uint16_t)inputData[i].vol[0], 250);
-    //     memcpy(&outputData[i+1], &info, sizeof (struct SOC_Info));
-    // }
+    sox_init(&attr);
+    // get init output data
+    get_cell_soc_ary(cell_soc_output[0].soc);
+    group_soc_output[0].grpSOC = get_group_soc();
 
-    float cur;
-    uint16_t vol[16];  
-    int16_t tmp[16];
-    // for(size_t i = 0; i < 16; i++)
-    // {
-    //     tmp[i] = 250;
-    // }
-    uint16_t soc[16];
-    float soh[16];
-    float grpsoh = 100;
-    uint32_t cycleCount = 0;
-    float grpVol = 0;
-    float sigChgWH = 0;
-    float accChgAH = 0;
-    float sigDsgWH = 0;
-    float accDsgAH = 0;
-    uint16_t g_chg_stop_vol = 3600;
-    uint16_t g_dsg_stop_vol = 2900;
-    for (size_t i = 0; i < 16; i++)
-    {
-        soh[i] = 100;
-    }
+
     
-    struct GrpSOC grpSOC;
-
-    memset(soc, 0, sizeof soc);
-
-    for (size_t j = 0; j < 16; j++)
+    for(int i = 0; i < s_excel_row; i++)
     {
-        vol[j] = inputData[0].vol[j];
-        //tmp[j] = inputData[i].avgTmp*10;
-        // tmp[j] = inputData[0].tmp[j]*10;
-    }
-
-    tmp[0] = inputData[0].tmp[0]*10;
-    for (size_t j = 0; j < 7; j++)
-    {
-        // vol[j] = inputData[0].vol[j];
-        //tmp[j] = inputData[i].avgTmp*10;
-        tmp[j*2+1] = inputData[0].tmp[j+1]*10;
-        tmp[j*2+2] = inputData[0].tmp[j+2]*10;
-    }
-    tmp[15] = inputData[0].tmp[8]*10;
-
-    sox_init(&cur, vol, tmp, soc, &grpSOC.grpSOC, soh, &grpsoh, &cycleCount, &grpVol, &sigChgWH, &sigDsgWH, &accChgAH, &accDsgAH, &g_chg_stop_vol, &g_dsg_stop_vol);
-    memcpy(outputData[0].soc, soc, 32);
-    memcpy(outputDataGrp, &grpSOC.grpSOC, 2);
-    uint16_t soc_sorted[16];
-    bubbleSort_ascend(soc, soc_sorted, 16);
-    outputDataGrp[0].maxcelsoc = soc_sorted[15];
-    outputDataGrp[0].mincelsoc = soc_sorted[0];
-
-    for (size_t i = 0; i < 16; i++)
-    {
-        outputDataGrp[0].avgcelsoc += soc[i];
-    }
-    outputDataGrp[0].avgcelsoc /= 16;
-    
-
-
-    for(size_t i = 0; i < input_row_len; i++)
-    {
-        excel_second++;
-        grpVol = inputData[i].grpVol;
-        // printf("inputData[%d].grpVol = %f\n", i, grpVol);
-        cur = inputData[i].cur;
-        for (size_t j = 0; j < 16; j++)
-        {
-            vol[j] = inputData[i].vol[j];
-            //tmp[j] = inputData[i].avgTmp*10;
+        // prepare input data
+        struct SOX_Input input = {
+            .cur = sox_excel_input[i].cur,
+            .grpVol = sox_excel_input[i].grpVol,
+            .full = false,
+            .empty = false,
+        };
+        for (int j = 0; j < 16; j++) {
+            input.vol[j] = sox_excel_input[i].vol[j];
         }
-
-        tmp[0]  = inputData[i].tmp[0]*10;
-        for(int j = 0; j < 7; j++)
+        // temp 9 to 16
+        input.tmp[0] = roundf(sox_excel_input[i].tmp[0]*10);
+        for (size_t j = 0; j < 7; j++)
         {
-            tmp[j*2+1] = inputData[i].tmp[j+1]*10;
-            tmp[j*2+2] = inputData[i].tmp[j+2]*10;
+            input.tmp[j*2+1] = roundf(sox_excel_input[i].tmp[j+1]*10);
+            input.tmp[j*2+2] = roundf(sox_excel_input[i].tmp[j+2]*10);
         }
-        tmp[15] = inputData[i].tmp[8]*10;
+        input.tmp[15] = roundf(sox_excel_input[i].tmp[8]*10);
 
-        sox_task(0, 0);
+        // caculate
+        sox_task(&input);
+        // output
+        get_cell_soc_ary(cell_soc_output[i+1].soc);
+        group_soc_output[i+1].grpSOC = get_group_soc();
 
-        memcpy(outputData[i+1].soc, soc, 32);
-        memcpy(&outputDataGrp[i+1], &grpSOC.grpSOC, 2);
-        bubbleSort_ascend(soc, soc_sorted, 16);
-        outputDataGrp[i+1].maxcelsoc = soc_sorted[15];
-        outputDataGrp[i+1].mincelsoc = soc_sorted[0];
-        for (size_t k = 0; k < 16; k++)
+        g_excel_second++;
+    }
+
+
+
+
+
+/******************************************************************************
+ * write output data to file
+ ******************************************************************************/
+    // cell soc:simulate calculate
+    FILE *output_cell_soc_simulate_fd;
+
+    // Open the file for writing(always overwrite)
+    output_cell_soc_simulate_fd = fopen("output_cell_soc_simulate.csv", "w");
+
+    // Write the array to the file
+    for (int i = 0; i < s_excel_row; i++)
+    {
+        for (int j = 0; j < 16; j++)
         {
-            outputDataGrp[i+1].avgcelsoc += soc[k];
+            fprintf(output_cell_soc_simulate_fd, "%f ", cell_soc_output[i].soc[j]);
         }
-        outputDataGrp[i+1].avgcelsoc /= 16;
+        fprintf(output_cell_soc_simulate_fd, "\n");
+    }
+    fclose(output_cell_soc_simulate_fd);
+
+
+
+    // cell soc: mcu calculate
+    // todo: no mcu soc data to export currently
+
+
+
+    // group soc(microcontroler calculate)
+    FILE *output_group_soc_mcu_fd;
+
+    // Open the file for writing(always overwrite)
+    output_group_soc_mcu_fd = fopen("output_group_soc_mcu.csv", "w");
+
+    // Write the array to the file
+    for (int i = 0; i < s_excel_row-1; i++)
+    {
+        fprintf(output_group_soc_mcu_fd, "%f ", sox_excel_input[i].groupSoc);
+        fprintf(output_group_soc_mcu_fd, "\n");
+    }
+    fclose(output_group_soc_mcu_fd);
+
+
+
+    system("rm output_group_cur_mcu.csv");
+    if(compare_pure_AH_SOC){
+        // group current(microcontroler sample)
+        FILE *output_group_cur_mcu_fd;
+
+        // Open the file for writing(always overwrite)
+        output_group_cur_mcu_fd = fopen("output_group_cur_mcu.csv", "w");
+
+        // Write the array to the file
+        for (int i = 0; i < s_excel_row-1; i++)
+        {
+            fprintf(output_group_cur_mcu_fd, "%f ", sox_excel_input[i].cur);
+            fprintf(output_group_cur_mcu_fd, "\n");
+        }
+        fclose(output_group_cur_mcu_fd);
     }
 
 
@@ -225,70 +276,34 @@ int main(int argc, char *argv[]) {
 
 
 
+    // group soc(simulate calculate)
+    FILE *output_group_soc_simulate_fd;
 
+    // Open the file for writing(always overwrite)
+    output_group_soc_simulate_fd = fopen("output_group_soc_simulate.csv", "w");
 
-    /************************************* output  cell soc************************************************ */
-    int fd3;
-
-    // Create the FIFO if it doesn't exist
-    mkfifo("socfifo_output", 0666);
-
-    // Open the FIFO for writing
-    fd3 = open("socfifo_output", O_WRONLY);
-    if (fd3 == -1) {
-        perror("open");
-        exit(EXIT_FAILURE);
+    // Write the array to the file
+    for (int i = 0; i < s_excel_row; i++)
+    {
+        fprintf(output_group_soc_simulate_fd, "%f ", group_soc_output[i].grpSOC);
+        fprintf(output_group_soc_simulate_fd, "\n");
     }
-
-    // Write the array to the FIFO
-    if (write(fd3, outputData, sizeof(struct SOC_Info)*(input_row_len+1)) != sizeof(struct SOC_Info)*(input_row_len+1)) {
-        perror("write");
-        close(fd3);
-        unlink("socfifo_output");  // Remove the FIFO file
-        exit(EXIT_FAILURE);
-    }
-
-    // Close the FIFO and remove the FIFO file
-    close(fd3);
-    unlink("socfifo_output");
-
-    printf("cell soc Array sent successfully\n");
-
-    /************************************* output  grp soc************************************************ */
-    int fd4;
-
-    // Create the FIFO if it doesn't exist
-    mkfifo("grpsocfifo_output", 0666);
-
-    // Open the FIFO for writing
-    fd4 = open("grpsocfifo_output", O_WRONLY);
-    if (fd4 == -1) {
-        perror("open");
-        exit(EXIT_FAILURE);
-    }
-
-    // Write the array to the FIFO
-    if (write(fd4, outputDataGrp, sizeof( struct GrpSOC)*(input_row_len+1)) != sizeof(struct GrpSOC)*(input_row_len+1)) {
-        perror("write");
-        close(fd4);
-        unlink("grpsocfifo_output");  // Remove the FIFO file
-        exit(EXIT_FAILURE);
-    }
-
-    // Close the FIFO and remove the FIFO file
-    close(fd4);
-    unlink("grpsocfifo_output");
-
-    printf("grp soc Array sent successfully\n");
+    fclose(output_group_soc_simulate_fd);
 
 
 
 
 
-
-
-
-
+/******************************************************************************
+ * call python to draw the result
+ ******************************************************************************/
+    char call_python_cmd[200] = {0};
+    strcat(call_python_cmd, "fish -c \"source /home/hm/Desktop/mysoc/.venv/bin/activate.fish && python3 /home/hm/Desktop/mysoc/test/soc.py ");      // absolute path, fix next version
+    strcat(call_python_cmd,"'");
+    strcat(call_python_cmd, whole_cmd);
+    strcat(call_python_cmd,"' \"");
+    printf("%s\n", call_python_cmd);
+    system(call_python_cmd);
 
 
     return 0;

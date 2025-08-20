@@ -1,12 +1,19 @@
 .venv/
-
+.cache/
 codegen/
+work_dir/
 
 a.out
 mysoc
 **/*.o
+**/*.d
+*.map
+*.idx
+*.a
 
-save_soc_grp.txt
-save_soc.txt
+*.txt
+*.csv
+
+
 
 .~*.xlsx

@@ -1,10 +1,9 @@
 #include <stdio.h>
+#include <stdint.h>
+#include <string.h>
 
-
-
-// C = A x B
 /**
- * @brief matrix multiply
+ * @brief matrix multiply, C = A x B
  * @note A, B, C must be flatened
  * A: m x n
  * B: n x p
@@ -30,8 +29,9 @@ void matrix_multiply(float *A, float *B, float *C, int m, int n, int p)
 
 
 /**
- * @brief inverse matrix
- *
+ * @brief inverse matrix, 2x2 matrix only
+ * @param A 2x2 matrix to be inverted
+ * @param inv_A 2x2 matrix to store the inverted result
  */
 int inverse_matrix_2x2(float A[2][2], float inv_A[2][2]) 
 {
@@ -48,6 +48,64 @@ int inverse_matrix_2x2(float A[2][2], float inv_A[2][2])
 
     return 0; 
 }
+
+
+
+/* bubble sort : ascending */
+void bubbleSort_ascend(uint16_t *inputArr, uint16_t *outputArr, uint16_t size)
+{
+    memcpy(outputArr, inputArr, size*sizeof(uint16_t));
+    for (size_t i = 0; i < size-1; i++)
+    {
+        for (size_t j = 0; j < size-i-1; j++)
+        {
+            if(outputArr[j] > outputArr[j+1])
+            {
+                uint16_t tmp = outputArr[j];
+                outputArr[j] = outputArr[j+1];
+                outputArr[j+1] = tmp;
+            }
+        }
+    }
+}
+void bubbleSort_ascend_float(float *inputArr, float *outputArr, uint16_t size)
+{
+    memcpy(outputArr, inputArr, size*sizeof(float));
+    for (size_t i = 0; i < size-1; i++)
+    {
+        for (size_t j = 0; j < size-i-1; j++)
+        {
+            if(outputArr[j] > outputArr[j+1])
+            {
+                float tmp = outputArr[j];
+                outputArr[j] = outputArr[j+1];
+                outputArr[j+1] = tmp;
+            }
+        }
+    }
+}
+
+void bubbleSort_ascend_duble(float *inputArr, float *outputArr, uint16_t size)
+{
+    memcpy(outputArr, inputArr, size*sizeof(float));
+    for (size_t i = 0; i < size-1; i++)
+    {
+        for (size_t j = 0; j < size-i-1; j++)
+        {
+            if(outputArr[j] > outputArr[j+1])
+            {
+                float tmp = outputArr[j];
+                outputArr[j] = outputArr[j+1];
+                outputArr[j+1] = tmp;
+            }
+        }
+    }
+}
+
+
+
+
+
 
 
 
