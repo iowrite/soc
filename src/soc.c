@@ -940,8 +940,8 @@ static void gropuSOC()
             {maxSOC}
         };
         float R[2][2] = {    
-            {minSOC_R, 1        },
-            {1       , maxSOC_R },
+            {minSOC_R, 0        },
+            {0       , maxSOC_R },
     };
         float S[2][2] = {0};
         float H_P[2][1] = {

@@ -7,7 +7,8 @@
             "program": "${workspaceFolder}/test/mysoc",
             // "args": ["-i ./test.xlsx", "-s 100"],
             // "args": ["-i ../data/25d3c/dsg.xlsx", "-s 100"],
-            "args": ["-i ../data/25d3c/chg.xlsx", "-s 0"],
+            // "args": ["-i ../data/25d3c/chg.xlsx", "-s 0"],
+            "args": ["-i /home/hm/Desktop/mysoc/data/self_test/100_dsg4.xlsx", "-s 100"],
             "cwd": "${workspaceFolder}/test"
         },
     ],
