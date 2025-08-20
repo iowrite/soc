@@ -120,28 +120,49 @@ rm -rf ./work_dir/*
 # run_in_tempdir /home/hm/Desktop/mysoc/test/mysoc -i /home/hm/Desktop/mysoc/data/self_test_factory/99_25d_dsg.xlsx -s 99
 
 # ZhangLei test: first round
-run_in_tempdir /home/hm/Desktop/mysoc/test/mysoc -i /home/hm/Desktop/mysoc/data/test/zl_test_1/data/-5d/dsg.xlsx -s 100 -c
+# run_in_tempdir /home/hm/Desktop/mysoc/test/mysoc -i /home/hm/Desktop/mysoc/data/test/zl_test_1/data/-5d/dsg.xlsx -s 100 -c
 
-run_in_tempdir /home/hm/Desktop/mysoc/test/mysoc -i /home/hm/Desktop/mysoc/data/test/zl_test_1/data/5d/chg.xlsx -s 0 -c
-run_in_tempdir /home/hm/Desktop/mysoc/test/mysoc -i /home/hm/Desktop/mysoc/data/test/zl_test_1/data/5d/dsg.xlsx -s 100 -c
-run_in_tempdir /home/hm/Desktop/mysoc/test/mysoc -i /home/hm/Desktop/mysoc/data/test/zl_test_1/data/5d/0_dynamic.xlsx -s 0
+# run_in_tempdir /home/hm/Desktop/mysoc/test/mysoc -i /home/hm/Desktop/mysoc/data/test/zl_test_1/data/5d/chg.xlsx -s 0 -c
+# run_in_tempdir /home/hm/Desktop/mysoc/test/mysoc -i /home/hm/Desktop/mysoc/data/test/zl_test_1/data/5d/dsg.xlsx -s 100 -c
+# run_in_tempdir /home/hm/Desktop/mysoc/test/mysoc -i /home/hm/Desktop/mysoc/data/test/zl_test_1/data/5d/0_dynamic.xlsx -s 0
 
-run_in_tempdir /home/hm/Desktop/mysoc/test/mysoc -i /home/hm/Desktop/mysoc/data/test/zl_test_1/data/15d/chg.xlsx -s 0 -c
-run_in_tempdir /home/hm/Desktop/mysoc/test/mysoc -i /home/hm/Desktop/mysoc/data/test/zl_test_1/data/15d/dsg.xlsx -s 100 -c
-run_in_tempdir /home/hm/Desktop/mysoc/test/mysoc -i /home/hm/Desktop/mysoc/data/test/zl_test_1/data/15d/dsg_retest_1.xlsx -s 100 -c
-run_in_tempdir /home/hm/Desktop/mysoc/test/mysoc -i /home/hm/Desktop/mysoc/data/test/zl_test_1/data/15d/dsg_retest_2.xlsx -s 100 -c
-run_in_tempdir /home/hm/Desktop/mysoc/test/mysoc -i /home/hm/Desktop/mysoc/data/test/zl_test_1/data/15d/0_dynamic.xlsx -s 0
+# run_in_tempdir /home/hm/Desktop/mysoc/test/mysoc -i /home/hm/Desktop/mysoc/data/test/zl_test_1/data/15d/chg.xlsx -s 0 -c
+# run_in_tempdir /home/hm/Desktop/mysoc/test/mysoc -i /home/hm/Desktop/mysoc/data/test/zl_test_1/data/15d/dsg.xlsx -s 100 -c
+# run_in_tempdir /home/hm/Desktop/mysoc/test/mysoc -i /home/hm/Desktop/mysoc/data/test/zl_test_1/data/15d/dsg_retest_1.xlsx -s 100 -c
+# run_in_tempdir /home/hm/Desktop/mysoc/test/mysoc -i /home/hm/Desktop/mysoc/data/test/zl_test_1/data/15d/dsg_retest_2.xlsx -s 100 -c
+# run_in_tempdir /home/hm/Desktop/mysoc/test/mysoc -i /home/hm/Desktop/mysoc/data/test/zl_test_1/data/15d/0_dynamic.xlsx -s 0
 
-run_in_tempdir /home/hm/Desktop/mysoc/test/mysoc -i /home/hm/Desktop/mysoc/data/test/zl_test_1/data/25d/chg.xlsx -s 0 -c
-run_in_tempdir /home/hm/Desktop/mysoc/test/mysoc -i /home/hm/Desktop/mysoc/data/test/zl_test_1/data/25d/dsg.xlsx -s 100 -c
-run_in_tempdir /home/hm/Desktop/mysoc/test/mysoc -i /home/hm/Desktop/mysoc/data/test/zl_test_1/data/25d/100_dynamic.xlsx -s 100
+# run_in_tempdir /home/hm/Desktop/mysoc/test/mysoc -i /home/hm/Desktop/mysoc/data/test/zl_test_1/data/25d/chg.xlsx -s 0 -c
+# run_in_tempdir /home/hm/Desktop/mysoc/test/mysoc -i /home/hm/Desktop/mysoc/data/test/zl_test_1/data/25d/dsg.xlsx -s 100 -c
+# run_in_tempdir /home/hm/Desktop/mysoc/test/mysoc -i /home/hm/Desktop/mysoc/data/test/zl_test_1/data/25d/100_dynamic.xlsx -s 100
 
-run_in_tempdir /home/hm/Desktop/mysoc/test/mysoc -i /home/hm/Desktop/mysoc/data/test/zl_test_1/data/35d/chg.xlsx -s 0 -c
-run_in_tempdir /home/hm/Desktop/mysoc/test/mysoc -i /home/hm/Desktop/mysoc/data/test/zl_test_1/data/35d/dsg.xlsx -s 100 -c
-run_in_tempdir /home/hm/Desktop/mysoc/test/mysoc -i /home/hm/Desktop/mysoc/data/test/zl_test_1/data/35d/0_dynamic.xlsx -s 0
-run_in_tempdir /home/hm/Desktop/mysoc/test/mysoc -i /home/hm/Desktop/mysoc/data/test/zl_test_1/data/35d/100_dynamic.xlsx -s 100
+# run_in_tempdir /home/hm/Desktop/mysoc/test/mysoc -i /home/hm/Desktop/mysoc/data/test/zl_test_1/data/35d/chg.xlsx -s 0 -c
+# run_in_tempdir /home/hm/Desktop/mysoc/test/mysoc -i /home/hm/Desktop/mysoc/data/test/zl_test_1/data/35d/dsg.xlsx -s 100 -c
+# run_in_tempdir /home/hm/Desktop/mysoc/test/mysoc -i /home/hm/Desktop/mysoc/data/test/zl_test_1/data/35d/0_dynamic.xlsx -s 0
+# run_in_tempdir /home/hm/Desktop/mysoc/test/mysoc -i /home/hm/Desktop/mysoc/data/test/zl_test_1/data/35d/100_dynamic.xlsx -s 100
 
-run_in_tempdir /home/hm/Desktop/mysoc/test/mysoc -i /home/hm/Desktop/mysoc/data/test/zl_test_1/data/35d/chg.xlsx -s 0 -c
-run_in_tempdir /home/hm/Desktop/mysoc/test/mysoc -i /home/hm/Desktop/mysoc/data/test/zl_test_1/data/35d/dsg.xlsx -s 100 -c
-run_in_tempdir /home/hm/Desktop/mysoc/test/mysoc -i /home/hm/Desktop/mysoc/data/test/zl_test_1/data/35d/0_dynamic.xlsx -s 0
-run_in_tempdir /home/hm/Desktop/mysoc/test/mysoc -i /home/hm/Desktop/mysoc/data/test/zl_test_1/data/35d/100_dynamic.xlsx -s 100
+# run_in_tempdir /home/hm/Desktop/mysoc/test/mysoc -i /home/hm/Desktop/mysoc/data/test/zl_test_1/data/35d/chg.xlsx -s 0 -c
+# run_in_tempdir /home/hm/Desktop/mysoc/test/mysoc -i /home/hm/Desktop/mysoc/data/test/zl_test_1/data/35d/dsg.xlsx -s 100 -c
+# run_in_tempdir /home/hm/Desktop/mysoc/test/mysoc -i /home/hm/Desktop/mysoc/data/test/zl_test_1/data/35d/0_dynamic.xlsx -s 0
+# run_in_tempdir /home/hm/Desktop/mysoc/test/mysoc -i /home/hm/Desktop/mysoc/data/test/zl_test_1/data/35d/100_dynamic.xlsx -s 100
+
+
+# ZhangLei test: second round
+# run_in_tempdir /home/hm/Desktop/mysoc/test/mysoc -i /home/hm/Desktop/mysoc/data/test2/5d/dsg.xlsx -s 100 -c
+
+# run_in_tempdir /home/hm/Desktop/mysoc/test/mysoc -i /home/hm/Desktop/mysoc/data/test2/15d/chg.xlsx -s 0 -c
+# run_in_tempdir /home/hm/Desktop/mysoc/test/mysoc -i /home/hm/Desktop/mysoc/data/test2/15d/dsg.xlsx -s 100 -c
+
+# run_in_tempdir /home/hm/Desktop/mysoc/test/mysoc -i /home/hm/Desktop/mysoc/data/test2/25d/chg.xlsx -s 0 -c
+# run_in_tempdir /home/hm/Desktop/mysoc/test/mysoc -i /home/hm/Desktop/mysoc/data/test2/25d/dsg.xlsx -s 100 -c
+
+# run_in_tempdir /home/hm/Desktop/mysoc/test/mysoc -i /home/hm/Desktop/mysoc/data/test2/35d/chg.xlsx -s 0 -c
+# run_in_tempdir /home/hm/Desktop/mysoc/test/mysoc -i /home/hm/Desktop/mysoc/data/test2/35d/dsg.xlsx -s 100 -c
+
+# run_in_tempdir /home/hm/Desktop/mysoc/test/mysoc -i /home/hm/Desktop/mysoc/data/test2/45d/chg.xlsx -s 0 -c
+# run_in_tempdir /home/hm/Desktop/mysoc/test/mysoc -i /home/hm/Desktop/mysoc/data/test2/45d/dsg.xlsx -s 100 -c
+
+
+# cat /home/hm/Desktop/mysoc/data/test2/diynamic_long_time/low_temp_part_* > /home/hm/Desktop/mysoc/data/test2/diynamic_long_time/50_long_low_temp.xlsx
+# cp /home/hm/Desktop/mysoc/data/test2/diynamic_long_time/50_long_low_temp.xlsx /home/hm/Desktop/mysoc/test/work_dir/
+# run_in_tempdir /home/hm/Desktop/mysoc/test/mysoc -i /home/hm/Desktop/mysoc/test/work_dir/50_long_low_temp.xlsx -s 50
