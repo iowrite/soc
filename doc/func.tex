@@ -1,3 +1,8 @@
+https://www.latexlive.com/
+
+
+
+
 SOC_{k} = SOC_{k-1} + \frac{cur*\Delta t}{cap} + w
 
 \hat{vol} = f(SOC_{k}, cur, temperature) + v
@@ -37,6 +42,6 @@ Z = \begin{bmatrix}
 
 K = P_{k}^{-} \cdot H^{T} \cdot (H \cdot P_{k}^{-} \cdot H^{T} + R)^{-1} 
 
-\hat{SOCGRP_{k}}  = \hat{SOCGRP_{k}^{-}} + K * (z - H \cdot \hat{SOCGRP_{k}^{-}})
+\hat{SOCGRP_{k}}  = \hat{SOCGRP_{k}^{-}} + K \cdot (z - H \cdot \hat{SOCGRP_{k}^{-}})
 
-P_{k} = (1-K*H)*P_{K}^{-}
+P_{k} = (1-K \cdot H) \cdot P_{K}^{-}
