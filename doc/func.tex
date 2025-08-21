@@ -30,12 +30,12 @@ Z = \begin{bmatrix}
 
 
  R = \begin{bmatrix}
-    R_{low}  & 1\\
-     1 & R_{high}
+    R_{low}  & 0\\
+     0 & R_{high}
     \end{bmatrix}
 
 
-K = \frac{P_{k}^{-} \cdot H^{T}}{H \cdot P_{k}^{-} \cdot H^{T} + R}  
+K = P_{k}^{-} \cdot H^{T} \cdot (H \cdot P_{k}^{-} \cdot H^{T} + R)^{-1} 
 
 \hat{SOCGRP_{k}}  = \hat{SOCGRP_{k}^{-}} + K * (z - H \cdot \hat{SOCGRP_{k}^{-}})
 
