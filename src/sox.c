@@ -14,6 +14,9 @@
 /*******************************************************************************
  * global varible instant(sox module internal use only)
  ******************************************************************************/
+uint32_t     g_sox_version =    EKF_SOX_VERSION_MAJOR<<16 
+                              | EKF_SOX_VERSION_MINOR<<8
+                              | EKF_SOX_VERSION_DEBUG;
 float        g_cur;                         // A          
 float        g_grpVol;                      // v      
 uint16_t     g_celVol[CELL_NUMS];;          // mv                   pointer may be better(small size but can't promise origin data be changed by other module)
