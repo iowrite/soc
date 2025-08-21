@@ -245,39 +245,22 @@ void sop_save(bool force);
 #### 4.1.5 sox.c
 ![](doc/sox_module.png)
 ```
+struct SOX_Input{
+    float       cur;                       
+    uint16_t    vol[CELL_NUMS];
+    int16_t     tmp[CELL_NUMS];
+    float       grpVol;
+    bool        full;
+    bool        empty;
+};
+
 /**
  * @brief 初始化, 指定输入输出的数据地址
- * @param cur 电流数组地址
- * @param vol 单体电压数组地址
- * @param tmp 单体温度数组地址
- * @param soc 单体 SOC 数组地址
- * @param grpSOC 组 SOC 地址
- * @param soh 单体 SOH 数组地址
- * @param grpSOH 组 SOH 地址
- * @param cycleCount 循环次数地址
- * @param grpVol 组电压地址
- * @param sigChgWH 单次充电量地址
- * @param sigDsgWH 单次放电量地址
- * @param accChgWH 累计充电量地址
- * @param accDsgWH 累计放电量地址
- * @param g_chg_stop_vol 放空电压地址
- * @param g_dsg_stop_vol 放空电压地址
+ * @param input
+ * @return  0 success
+ * @return -1 fail
  */
-int8_t sox_init( 
-    float *cur,              
-    uint16_t *vol, 
-    int16_t *tmp, 
-    uint16_t *soc, 
-    uint16_t *grpSOC , 
-    float *soh, float *grpSOH, 
-    uint32_t *cycleCount,
-    float *grpVol,
-    float *sigChgWH,
-    float *sigDsgWH,
-    float *accChgWH,
-    float *accDsgWH,
-    uint16_t *g_chg_stop_vol,
-    uint16_t *g_dsg_stop_vol);
+int8_t sox_init(struct SOX_Input *input);
 
 /**
  * @brief 总 SOX 计算任务(包括 SOC, SOH, SOE, SOP), 需周期性调用
@@ -406,5 +389,5 @@ int8_t read_saved_soe(float *totalChgWh, float *totalDsgWh);
 int8_t write_saved_soe(float totalChgWh, float totalDsgWh);
 ```
 
-
+[移植指南](doc/port.md)
 
