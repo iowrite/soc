@@ -19,12 +19,12 @@ __attribute__((weak)) int8_t write_saved_soc(float *soc)
     UNUSED(soc);
     return 0;
 }
-__attribute__((weak)) int8_t read_saved_soc_group(uint16_t *grpsoc)
+__attribute__((weak)) int8_t read_saved_soc_group(float *grpsoc)
 {
     UNUSED(grpsoc);
     return 0;
 }
-__attribute__((weak)) int8_t write_saved_soc_group(uint16_t grpsoc)
+__attribute__((weak)) int8_t write_saved_soc_group(float grpsoc)
 {
     UNUSED(grpsoc);
     return 0;

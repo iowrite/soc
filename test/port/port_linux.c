@@ -46,17 +46,17 @@ int8_t write_saved_soc(float *soc)
 
 
 
-int8_t read_saved_soc_group(uint16_t *grpsoc)
+int8_t read_saved_soc_group(float *grpsoc)
 {
     *grpsoc = g_port_init_soc;
     return 0;
 }
-int8_t write_saved_soc_group(uint16_t grpsoc)
+int8_t write_saved_soc_group(float grpsoc)
 {
     FILE* save_soc_grp = fopen("save_soc_grp.txt", "w");
     fprintf(save_soc_grp, "%d -> ", g_excel_second);
 
-    fprintf(save_soc_grp, "%d", grpsoc);
+    fprintf(save_soc_grp, "%f", grpsoc);
 
     fprintf(save_soc_grp, "\n");
     fclose(save_soc_grp);
