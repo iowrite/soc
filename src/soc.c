@@ -243,6 +243,12 @@ enum GroupState
 static enum GroupState g_group_state;
 
 
+
+
+/**
+ * @brief detect system state: standy, charge, discharge, transformation
+ * @note 1. standby to charge/discharge, go to transform state(in the first 30 minutes)
+ */
 static enum GroupState last_group_state = GROUP_STATE_standby;
 static uint32_t standby_hold_time = 0;
 static uint32_t trans_dsg_acc_time = 0;
@@ -1088,7 +1094,7 @@ static void vol2soc_batch(uint16_t *vol, int16_t *tempra, float *soc)
 void soc_init()
 {
     float soc_saved[CELL_NUMS];
-    uint16_t soc_saved_group;
+    float soc_saved_group;
     float soc_lookuptable[CELL_NUMS];
     float soc_firstPowerUp[CELL_NUMS];
     memset(soc_firstPowerUp, 0xff, sizeof(soc_firstPowerUp));
@@ -1163,7 +1169,7 @@ void soc_init()
     avg_soc = sum_soc/CELL_NUMS;
     bubbleSort_ascend_float(unsorted_soc, sorted_soc, CELL_NUMS);
     if(ret == 0){
-        if(soc_saved_group < (sorted_soc[0] - 1) || soc_saved_group > (sorted_soc[CELL_NUMS-1]+1))
+        if(soc_saved_group < sorted_soc[0] || soc_saved_group > sorted_soc[CELL_NUMS-1])
         {
             g_grpSOC = avg_soc;
         }

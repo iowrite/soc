@@ -11,8 +11,8 @@
 #include "soh.h"
 
 
-static uint16_t s_lastSOC[CELL_NUMS];
-static uint16_t s_lastGrpSOC;
+static float s_lastSOC[CELL_NUMS];
+static float s_lastGrpSOC;
 int8_t  soh_init()
 {
     // read last cycle time(saved before last poweroff)
@@ -91,10 +91,10 @@ int8_t soh_task()
 
     // bug: lost some cycle when charge change to discharge or discharge to charge
     if(g_grpSOC <= s_lastGrpSOC-1){
-        g_cycleCount += 5*(s_lastGrpSOC-g_grpSOC);
+        g_cycleCount += (s_lastGrpSOC-g_grpSOC)/200.0f;
         s_lastGrpSOC  = g_grpSOC;
     }else if(g_grpSOC >= s_lastGrpSOC+1){
-        g_cycleCount += 5*(g_grpSOC-s_lastGrpSOC);
+        g_cycleCount += (g_grpSOC-s_lastGrpSOC)/200.0f;
         s_lastGrpSOC  = g_grpSOC;
         
     }
@@ -102,22 +102,22 @@ int8_t soh_task()
     float sumSOH = 0;
     for (size_t i = 0; i < CELL_NUMS; i++)
     {
-        if (g_celSOC[i] <= s_lastSOC[i]-10 || g_celSOC[i] >= s_lastSOC[i]+10)
+        if (g_celSOC[i] <= s_lastSOC[i]-1 || g_celSOC[i] >= s_lastSOC[i]+1)
         {
-            int delta = fabsf(g_celSOC[i] - s_lastSOC[i])/10;
+            float delta = fabsf(g_celSOC[i] - s_lastSOC[i]);
             if(g_celTmp[i] <= 250)
             {
-                float subk = 20.0/5000;
-                g_celSOH[i] -= 0.01*delta*0.5*subk;
+                float subk = 20.0f/5000;
+                g_celSOH[i] -= delta*0.5f*subk;
             }else if(g_celTmp[i] < 450)
             {
                 // printf("11111111111111\n");
-                float subk = 20.0/(5000-((g_celTmp[i] - 250)/200.0)*3000);
-                g_celSOH[i] -= 0.01*delta*0.5*subk;
+                float subk = 20.0f/(5000-((g_celTmp[i] - 250)/200.0f)*3000);
+                g_celSOH[i] -= delta*0.5f*subk;
             }else{
                 // printf("2222222222222222\n");
-                float subk = 20.0/2000;
-                g_celSOH[i] -= 0.01*delta*0.5*subk;
+                float subk = 20.0f/2000;
+                g_celSOH[i] -= delta*0.5f*subk;
             }
             s_lastSOC[i] = g_celSOC[i];
         }
@@ -138,7 +138,7 @@ void soh_save(bool force)
         static float  last_cycleCount = 0;
         bool save_flag = false;
         static uint32_t save_time = 0;
-        if(last_cycleCount - g_cycleCount > 1000)
+        if(last_cycleCount - g_cycleCount > 1)
         {
             save_flag = true;
             last_cycleCount = g_cycleCount;

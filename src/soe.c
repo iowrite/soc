@@ -55,70 +55,69 @@ int8_t soe_init()
 int8_t soe_task()
 {
 
-    if(g_accChgWH && g_accDsgWH && g_sigChgWH && g_sigDsgWH){
-        if(g_cur > 0){
-            g_accChgWH += g_cur * g_grpVol /3600;
-        }else{
-            g_accDsgWH += fabsf(g_cur * g_grpVol /3600);
-        }
-        static int state = 0, lastState = 0;
-        UNUSED(lastState);                                  // this function is impleted not good, it need a better implementation                                  
-        
-        switch(state){
-            case 0:                                         // standby
-				g_sigChgWH = 0;
-                g_sigDsgWH = 0;
-                lastState = state;
-                if(g_cur > CUR_WINDOW_A)
-                {
-
-                    state = 1;
-                }else if(g_cur < -CUR_WINDOW_A)
-                {
-                    state = 3;
-                }
-                
-                break;
-            case 1:                                         // charge
-                lastState = state;
-                if(g_cur> CUR_WINDOW_A)
-                {
-                    g_sigChgWH += g_cur * g_grpVol /3600;
-                }else if(g_cur < -CUR_WINDOW_A)
-                {
-                    state = 2;
-                }else{
-					state = 0;
-				}
-                break;
-            case 2:                                         // charge to discharge
-                g_sigChgWH = 0;
-                g_sigDsgWH = 0;
-                lastState = state;
-                state = 3;
-                break;
-            case 3:                                         // discharge        
-                lastState = state;
-                if(g_cur < -CUR_WINDOW_A){
-                    g_sigDsgWH += fabsf(g_cur * g_grpVol /3600);
-                }else if(g_cur > CUR_WINDOW_A)
-                {
-                    state = 4;
-                }else{
-					state = 0;
-				}
-                break;
-            case 4:                                         // discharge to charge
-                g_sigChgWH = 0;
-                g_sigDsgWH = 0;
-                lastState = state;
-                state = 1;
-                break;
-            default:
-                break;
-        
-        }
+    if(g_cur > 0){
+        g_accChgWH += g_cur * g_grpVol /3600;
+    }else{
+        g_accDsgWH += fabsf(g_cur * g_grpVol /3600);
     }
+    static int state = 0, lastState = 0;
+    UNUSED(lastState);                                  // this function is impleted not good, it need a better implementation                                  
+    
+    switch(state){
+        case 0:                                         // standby
+            g_sigChgWH = 0;
+            g_sigDsgWH = 0;
+            lastState = state;
+            if(g_cur > CUR_WINDOW_A)
+            {
+
+                state = 1;
+            }else if(g_cur < -CUR_WINDOW_A)
+            {
+                state = 3;
+            }
+            
+            break;
+        case 1:                                         // charge
+            lastState = state;
+            if(g_cur> CUR_WINDOW_A)
+            {
+                g_sigChgWH += g_cur * g_grpVol /3600;
+            }else if(g_cur < -CUR_WINDOW_A)
+            {
+                state = 2;
+            }else{
+                state = 0;
+            }
+            break;
+        case 2:                                         // charge to discharge
+            g_sigChgWH = 0;
+            g_sigDsgWH = 0;
+            lastState = state;
+            state = 3;
+            break;
+        case 3:                                         // discharge        
+            lastState = state;
+            if(g_cur < -CUR_WINDOW_A){
+                g_sigDsgWH += fabsf(g_cur * g_grpVol /3600);
+            }else if(g_cur > CUR_WINDOW_A)
+            {
+                state = 4;
+            }else{
+                state = 0;
+            }
+            break;
+        case 4:                                         // discharge to charge
+            g_sigChgWH = 0;
+            g_sigDsgWH = 0;
+            lastState = state;
+            state = 1;
+            break;
+        default:
+            break;
+    
+    }
+    
 
     // printf("sigChg:%f,  sigDsg:%f, accChgWH:%f, accDsgWH:%f\n",*g_sigChgWH, *g_sigDsgWH, *g_accChgWH, *g_accDsgWH);
     return 0;

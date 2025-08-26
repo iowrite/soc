@@ -8,7 +8,7 @@
 /**
  * @brief get a timestamp in seconds
  */
-__attribute__((weak))  uint32_t timebase_get_time_s(void);
+uint32_t timebase_get_time_s(void);
 
 
 
@@ -18,7 +18,7 @@ __attribute__((weak))  uint32_t timebase_get_time_s(void);
  * @return  0: valid
  *         -1: invalid
  */
-__attribute__((weak))  int8_t read_saved_soc(float *soc);
+int8_t read_saved_soc(float *soc);
 
 
 
@@ -28,7 +28,7 @@ __attribute__((weak))  int8_t read_saved_soc(float *soc);
  * @return  0: valid
  *         -1: invalid
  */
-__attribute__((weak))  int8_t read_saved_soc_group(uint16_t *grpsoc);
+int8_t read_saved_soc_group(float *grpsoc);
 
 
 
@@ -38,7 +38,7 @@ __attribute__((weak))  int8_t read_saved_soc_group(uint16_t *grpsoc);
  * @return  0: valid
  *         -1: invalid
  */
-__attribute__((weak))  int8_t write_saved_soc(float *soc);
+int8_t write_saved_soc(float *soc);
 
 
 
@@ -48,7 +48,7 @@ __attribute__((weak))  int8_t write_saved_soc(float *soc);
  * @return  0: valid
  *         -1: invalid
  */
-__attribute__((weak))  int8_t write_saved_soc_group(uint16_t grpsoc);
+int8_t write_saved_soc_group(float grpsoc);
 
 
 
@@ -58,7 +58,7 @@ __attribute__((weak))  int8_t write_saved_soc_group(uint16_t grpsoc);
  * @return  0: valid
  *         -1: invalid
  */
-__attribute__((weak))  int8_t read_saved_soh(float *soh);
+int8_t read_saved_soh(float *soh);
 
 
 
@@ -68,7 +68,7 @@ __attribute__((weak))  int8_t read_saved_soh(float *soh);
  * @return  0: valid
  *         -1: invalid
  */
-__attribute__((weak))  int8_t write_saved_soh(float *soh);
+int8_t write_saved_soh(float *soh);
 
 
 
@@ -78,7 +78,7 @@ __attribute__((weak))  int8_t write_saved_soh(float *soh);
  * @return  0: valid
  *         -1: invalid
  */
-__attribute__((weak))  int8_t read_saved_cycle(uint32_t *cycleTime);
+int8_t read_saved_cycle(uint32_t *cycleTime);
 
 
 
@@ -88,7 +88,7 @@ __attribute__((weak))  int8_t read_saved_cycle(uint32_t *cycleTime);
  * @return  0: valid
  *         -1: invalid
  */
-__attribute__((weak))  int8_t write_saved_cycle(uint32_t cycleTime);
+int8_t write_saved_cycle(uint32_t cycleTime);
 
 
 
@@ -101,7 +101,7 @@ __attribute__((weak))  int8_t write_saved_cycle(uint32_t cycleTime);
  * @return  0: valid
  *         -1: invalid
  */
-__attribute__((weak))  int8_t read_saved_soe(float *totalChgWh, float *totalDsgWh, float *totalChgAh, float *totalDsgAh);
+int8_t read_saved_soe(float *totalChgWh, float *totalDsgWh, float *totalChgAh, float *totalDsgAh);
 
 
 
@@ -114,7 +114,7 @@ __attribute__((weak))  int8_t read_saved_soe(float *totalChgWh, float *totalDsgW
  * @return  0: valid
  *         -1: invalid
  */
-__attribute__((weak))  int8_t write_saved_soe(float totalChgWh, float totalDsgWh, float totalChgAh, float totalDsgAh);
+int8_t write_saved_soe(float totalChgWh, float totalDsgWh, float totalChgAh, float totalDsgAh);
 
 
 
