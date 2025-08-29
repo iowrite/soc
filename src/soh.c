@@ -105,6 +105,7 @@ int8_t soh_task()
         if (g_celSOC[i] <= s_lastSOC[i]-1 || g_celSOC[i] >= s_lastSOC[i]+1)
         {
             float delta = fabsf(g_celSOC[i] - s_lastSOC[i]);
+            delta = delta*0.01f;
             if(g_celTmp[i] <= 250)
             {
                 float subk = 20.0f/5000;
