@@ -131,8 +131,13 @@ if __name__ == "__main__":
     if(voltage_list[0] > voltage_list[1]):
         voltage_list.reverse()
         print("平均电压列表(从小到大): (101 points)\n", voltage_list)
+        plt.grid(axis='y', linestyle='--')
+        plt.yticks(range(2800, 3600, 100))
     else:
         print("平均电压列表: (101 points)\n", voltage_list)
+        plt.grid(axis='y', linestyle='--')
+        plt.yticks(range(3200, 3600, 50))
+    # 添加网格和y轴刻度
 
     print("\n============================\n")
 

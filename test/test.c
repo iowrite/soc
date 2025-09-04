@@ -9,6 +9,7 @@
 #include <assert.h>
 #include <xlsxio_read.h>
 #include "sox.h"
+#include "sox_config.h"
 #include <ctype.h>
 
 uint32_t g_excel_second = 0;
@@ -24,6 +25,14 @@ uint16_t s_dsg_stop_vol = 2900;
 
 
 static bool compare_pure_AH_SOC = false;
+
+
+#if PORT_SIM_PROJECT_JIGUANG
+static void project_jiguang_cell_tempature_map(int16_t *input, float *output);
+#elif PORT_SIM_PROJECT_STACK
+static void project_stack_cell_tempature_map(int16_t *input, float *output);
+#endif
+
 
 int main(int argc, char *argv[]) 
 {
@@ -104,8 +113,8 @@ int main(int argc, char *argv[])
         float grpVol;
         float cur;
         float groupSoc;
-        int vol[16];
-        float tmp[9];
+        int vol[CELL_NUMS];
+        float tmp[CELL_NUMS];
     };
     struct SOX_Excel_Input *sox_excel_input = malloc(sizeof(struct SOX_Excel_Input) * s_excel_row);
     if ((xlsxioread = xlsxioread_open(input_file_name)) == NULL) {
@@ -154,7 +163,7 @@ int main(int argc, char *argv[])
  *******************************************************************************/
     struct Cell_SOC_Output
     {
-        float soc[16];
+        float soc[CELL_NUMS];
     };
     struct Group_SOC_Output
     {
@@ -186,18 +195,15 @@ int main(int argc, char *argv[])
             .full = false,
             .empty = false,
         };
-        for (int j = 0; j < 16; j++) {
+        for (int j = 0; j < CELL_NUMS; j++) {
             input.vol[j] = sox_excel_input[i].vol[j];
         }
-        // temp 9 to 16
-        input.tmp[0] = roundf(sox_excel_input[i].tmp[0]*10);
-        for (size_t j = 0; j < 7; j++)
-        {
-            input.tmp[j*2+1] = roundf(sox_excel_input[i].tmp[j+1]*10);
-            input.tmp[j*2+2] = roundf(sox_excel_input[i].tmp[j+2]*10);
-        }
-        input.tmp[15] = roundf(sox_excel_input[i].tmp[8]*10);
-
+        // asign temp input(map input)
+#if PORT_SIM_PROJECT_STACK
+        project_stack_cell_tempature_map(input.tmp, sox_excel_input[i].tmp);
+#elif PORT_SIM_PROJECT_JIGUANG
+        project_jiguang_cell_tempature_map(input.tmp, sox_excel_input[i].tmp);
+#endif
         // caculate
         sox_task(&input);
         // output
@@ -223,7 +229,7 @@ int main(int argc, char *argv[])
     // Write the array to the file
     for (int i = 0; i < s_excel_row; i++)
     {
-        for (int j = 0; j < 16; j++)
+        for (int j = 0; j < CELL_NUMS; j++)
         {
             fprintf(output_cell_soc_simulate_fd, "%f ", cell_soc_output[i].soc[j]);
         }
@@ -310,3 +316,31 @@ int main(int argc, char *argv[])
 }
 
 
+
+
+#if PORT_SIM_PROJECT_JIGUANG
+static void project_jiguang_cell_tempature_map(int16_t *input, float *output)
+{
+    input[0] = roundf(output[0]*10);
+    input[1] = roundf(output[1]*10);
+    input[2] = roundf(output[2]*10);
+    input[3] = roundf(output[2]*10);
+    input[4] = roundf(output[3]*10);
+    input[4] = roundf(output[4]*10);
+}
+#endif
+
+#if PORT_SIM_PROJECT_STACK
+static void project_stack_cell_tempature_map(int16_t *input, float *output)
+{
+
+    input[0] = roundf(output[0]*10);
+    for (size_t j = 0; j < 7; j++)
+    {
+        input[j*2+1] = roundf(output[j+1]*10);
+        input[j*2+2] = roundf(output[j+2]*10);
+    }
+    input[15] = roundf(output[8]*10);
+}
+
+#endif

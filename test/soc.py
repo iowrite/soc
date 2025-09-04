@@ -45,7 +45,7 @@ plt.gcf().canvas.manager.set_window_title(window_title)
 
 plt.subplot(1,2,1)
 # 绘制每一列的数据
-for i in range(16):
+for i in range(df_cell_soc.shape[1]):
     plt.plot(df_cell_soc[i], label=f'cell {i+1}')
 plt.xlabel('excel input step(row)')
 plt.ylabel('soc')

@@ -112,11 +112,9 @@ int8_t soh_task()
                 g_celSOH[i] -= delta*0.5f*subk;
             }else if(g_celTmp[i] < 450)
             {
-                // printf("11111111111111\n");
                 float subk = 20.0f/(5000-((g_celTmp[i] - 250)/200.0f)*3000);
                 g_celSOH[i] -= delta*0.5f*subk;
             }else{
-                // printf("2222222222222222\n");
                 float subk = 20.0f/2000;
                 g_celSOH[i] -= delta*0.5f*subk;
             }
@@ -127,8 +125,6 @@ int8_t soh_task()
     
     g_grpSOH = sumSOH/CELL_NUMS;
 
-
-    // printf("cycle: %d  SOH: %f\n", *g_cycleCount, *g_grpSOH);
     return 0;
 }
 

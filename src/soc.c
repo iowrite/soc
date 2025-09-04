@@ -428,7 +428,7 @@ void mysoc_smooth(struct SOC_Info *SOCinfo, float cur, uint16_t vol, int16_t tem
 //            } 
             if(vol>*g_dsg_stop_vol){
                 int smooth_empty_estimate_s = (vol-*g_dsg_stop_vol)/buff_diff*(CELL_VOL_BUFFER_LEN-1)*CELL_VOL_BUFFER_SAMPLE_TIME_S;
-                float smoothDiff = SOCinfo->soc_smooth/smooth_empty_estimate_s*(2+20*(vol-*g_dsg_stop_vol)/(SOC_SMOOTH_START_VOL_DSG-*g_dsg_stop_vol));
+                float smoothDiff = SOCinfo->soc_smooth/smooth_empty_estimate_s*(2+(int)(20*(vol-*g_dsg_stop_vol)/(SOC_SMOOTH_START_VOL_DSG-*g_dsg_stop_vol)));
                 SOCinfo->soc_smooth -= smoothDiff;
 //                if(callcount%16 == 0){
 //                    printf("callcount %d dsg soc speedup %f,smooth_full_estimate_s: %d, soc_smooth %f\r\n", callcount/16, smoothDiff, smooth_empty_estimate_s, SOCinfo->soc_smooth);
@@ -478,32 +478,32 @@ static uint32_t getEKF_R(float H_soc, uint16_t vol, const uint16_t *curve, const
             break;
         }
     }
-    float H;
+    float K;                    // curve slope
     if(index == 0)
     {
-        H = curveK[0];
+        K = curveK[0];
     }else if(index == SOC_POINT_NUM)
     {
-        H = curveK[SOC_POINT_NUM-1];
+        K = curveK[SOC_POINT_NUM-1];
     }else{
-        H = (curveK[index-1] + (curveK[index]-curveK[index-1])*(vol-curve[index-1])/(curve[index]-curve[index-1]))/10.0f;
+        K = (curveK[index-1] + (float)(curveK[index]-curveK[index-1])*(vol-curve[index-1])/(curve[index]-curve[index-1]))/10.0f;
     }
 
-    if(H < H_soc)
+    if(K < H_soc)
     {
-        H = H_soc;
+        K = H_soc;
     }
 
-    float H_R;
-    if(H<VOL_SAMPLE_ERR_MV_1_H)
+    int H_R;
+    if(K<VOL_SAMPLE_ERR_MV_1_H)
     {
         H_R = VOL_SAMPLE_ERR_MV_1*VOL_SAMPLE_ERR_MV_1;
-    }else if(H>VOL_SAMPLE_ERR_MV_4_H)
+    }else if(K>VOL_SAMPLE_ERR_MV_4_H)
     {
         H_R = VOL_SAMPLE_ERR_MV_4*VOL_SAMPLE_ERR_MV_4;
     }else{
         int t = abs(VOL_SAMPLE_ERR_MV_2-VOL_SAMPLE_ERR_MV_3);
-        H_R = (VOL_SAMPLE_ERR_MV_3+(H-VOL_SAMPLE_ERR_MV_1_H)/(VOL_SAMPLE_ERR_MV_4_H-VOL_SAMPLE_ERR_MV_1_H)*t)*(VOL_SAMPLE_ERR_MV_3+(H-VOL_SAMPLE_ERR_MV_1_H)/(VOL_SAMPLE_ERR_MV_4_H-VOL_SAMPLE_ERR_MV_1_H)*t);
+        H_R = (VOL_SAMPLE_ERR_MV_3+(K-VOL_SAMPLE_ERR_MV_1_H)/(VOL_SAMPLE_ERR_MV_4_H-VOL_SAMPLE_ERR_MV_1_H)*t)*(VOL_SAMPLE_ERR_MV_3+(K-VOL_SAMPLE_ERR_MV_1_H)/(VOL_SAMPLE_ERR_MV_4_H-VOL_SAMPLE_ERR_MV_1_H)*t);
     }
     if(switch_curve_time){
         return H_R+25*switch_curve_time/600;                                    
@@ -595,8 +595,8 @@ void mysocEKF(struct SOC_Info *SOCinfo, float cur, uint16_t vol, int16_t tempra,
         }else if(SOCcal < 95)
         {
             float sock = ((int)SOCcal%5+SOCcal-(int)SOCcal)/5;
-            estVolPrev = curve[(int)SOCcal/5+4];
-            estVolNext = curve[(int)SOCcal/5+1+4];
+            estVolPrev = curve[(int)(SOCcal/5)+4];
+            estVolNext = curve[(int)(SOCcal/5)+1+4];
             estVol = estVolPrev + sock*(estVolNext-estVolPrev);
         }    
         else{
@@ -616,8 +616,8 @@ void mysocEKF(struct SOC_Info *SOCinfo, float cur, uint16_t vol, int16_t tempra,
         }else if(SOCcal < 95)
         {
             float Hk = ((int)SOCcal%5+SOCcal-(int)SOCcal)/5;
-            Hprev = (float)curveK[((int)SOCcal/5+4)]/10;
-            Hnext = (float)curveK[(int)SOCcal/5+1+4]/10;
+            Hprev = (float)curveK[((int)(SOCcal/5)+4)]/10;
+            Hnext = (float)curveK[(int)(SOCcal/5)+1+4]/10;
             H = Hprev + Hk*(Hnext-Hprev); 
         }    
         else{

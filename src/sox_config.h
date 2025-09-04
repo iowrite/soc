@@ -18,6 +18,8 @@
 
 #if PORT_TYPE == PORT_TYPE_LINUX
     #define FULL_STD_CLIB       1
+    #define PORT_SIM_PROJECT_STACK      1
+    #define PORT_SIM_PROJECT_JIGUANG    0
 #endif
 
 #if PORT_TYPE == PORT_TYPE_MICROCONTROLLER
