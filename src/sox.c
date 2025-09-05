@@ -103,7 +103,7 @@ int8_t sox_manual_set_soc(float soc)
     for(int i = 0; i < CELL_NUMS; i++){
         g_socInfo[i].soc = soc;
         g_celSOC[i] = soc;
-		if(g_socInfo[i].soc_smooth)
+		if(g_socInfo[i].soc_smooth > 0)
 		{
 			g_socInfo[i].soc_smooth = soc;
 		}
@@ -121,7 +121,7 @@ int8_t sox_manual_set_soh(float soh, uint32_t cycleCount)
         g_celSOH[i] = soh;
     }
     g_grpSOH = soh;
-    g_cycleCount = cycleCount;
+    g_cycleCount = (float)cycleCount;
 
     soh_save(true);
     return 0;

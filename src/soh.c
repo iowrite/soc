@@ -17,7 +17,7 @@ int8_t  soh_init()
 {
     // read last cycle time(saved before last poweroff)
     uint32_t cycleTime;
-    uint8_t ret = read_saved_cycle(&cycleTime);
+    int8_t ret = read_saved_cycle(&cycleTime);
     if(ret == 0){
         if(cycleTime == 0xffffffff){    // first powerup(empty eeprom or flash)
             cycleTime = 0;
@@ -28,7 +28,7 @@ int8_t  soh_init()
     }else{
         cycleTime = 0;
     }
-    g_cycleCount = cycleTime;
+    g_cycleCount = (float)cycleTime;
 
     // read last soh(saved before last poweroff)
     float soh_saved[CELL_NUMS];
@@ -61,7 +61,7 @@ int8_t  soh_init()
         
     }
 
-    float soh = 100 - 20 * (g_cycleCount/1000.0/REFERENCE_CYCLE_TIME);
+    float soh = 100 - 20 * (g_cycleCount/1000.0f/REFERENCE_CYCLE_TIME);
     for(size_t i = 0; i < CELL_NUMS; i++)
     {
         if(soh_abnormal_flag[i] == true){
@@ -143,13 +143,13 @@ void soh_save(bool force)
         if(timebase_get_time_s() - save_time > 60*60*24*7)
         {
             if(save_flag){
-                write_saved_cycle(g_cycleCount);
+                write_saved_cycle((uint32_t)g_cycleCount);
                 write_saved_soh(g_celSOH);
             }
             save_time = timebase_get_time_s();
         }
     }else{
-            write_saved_cycle(g_cycleCount);
+            write_saved_cycle((uint32_t)g_cycleCount);
             write_saved_soh(g_celSOH);
     }
 

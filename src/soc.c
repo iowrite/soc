@@ -69,7 +69,7 @@ static uint16_t get_cap(float cur, int16_t tempra)
     if(cur > 0)
     {
         float c = cur/100*10;
-        int cidx = round(c)-1;
+        int cidx = (int)roundf(c)-1;
         if(cidx < 0)
         {
             cidx = 0;
@@ -87,12 +87,12 @@ static uint16_t get_cap(float cur, int16_t tempra)
         {
             return s_cap_list_chg[tidx][cidx];
         }else{
-           return s_cap_list_chg[tidx_low][cidx] + (s_cap_list_chg[tidx_high][cidx]-s_cap_list_chg[tidx_low][cidx])*tk*mk; 
+           return (uint16_t)(s_cap_list_chg[tidx_low][cidx] + (s_cap_list_chg[tidx_high][cidx]-s_cap_list_chg[tidx_low][cidx])*tk*mk); 
         }
     }else if(cur < 0)
     {
         float c = cur/100*10;
-        int cidx = -round(c)-1;
+        int cidx = -(int)roundf(c)-1;
         if(cidx < 0)
         {
             cidx = 0;
@@ -110,7 +110,7 @@ static uint16_t get_cap(float cur, int16_t tempra)
         {
             return s_cap_list_dsg[tidx][cidx];
         }else{
-            return s_cap_list_dsg[tidx_low][cidx] + (s_cap_list_dsg[tidx_high][cidx]-s_cap_list_dsg[tidx_low][cidx])*tk*mk;
+            return (uint16_t)(s_cap_list_dsg[tidx_low][cidx] + (s_cap_list_dsg[tidx_high][cidx]-s_cap_list_dsg[tidx_low][cidx])*tk*mk);
         }
     }
 
@@ -135,7 +135,7 @@ static const uint16_t * get_v(const uint16_t *chg_curve[TEMP_POINT_NUM][CUR_POIN
     if(cur > 0)
     {
         float c = cur/100*10;
-        int cidx = round(c)-1;
+        int cidx = (int)roundf(c)-1;
         if(cidx < 0)
         {
             cidx = 0;
@@ -152,7 +152,7 @@ static const uint16_t * get_v(const uint16_t *chg_curve[TEMP_POINT_NUM][CUR_POIN
     }else if(cur < 0)
     {
         float c = cur/100*10;
-        int cidx = -round(c)-1;
+        int cidx = -(int)roundf(c)-1;
         if(cidx < 0)
         {
             cidx = 0;
@@ -184,7 +184,7 @@ static const int16_t * get_k(const int16_t *chg_curve[TEMP_POINT_NUM][CUR_POINT_
     if(cur > 0)
     {
         float c = cur/100*10;
-        int cidx = round(c)-1;
+        int cidx = (int)round(c)-1;
         if(cidx < 0)
         {
             cidx = 0;
@@ -201,7 +201,7 @@ static const int16_t * get_k(const int16_t *chg_curve[TEMP_POINT_NUM][CUR_POINT_
     }else if(cur < 0)
     {
         float c = cur/100*10;
-        int cidx = -round(c)-1;
+        int cidx = -(int)round(c)-1;
         if(cidx < 0)
         {
             cidx = 0;
@@ -344,9 +344,9 @@ void mysoc_pureAH(struct SOC_Info *SOCinfo, float cur, uint16_t vol, int16_t tem
     UNUSED(vol);
     const uint16_t cap = get_cap(cur, tempra);
 
-    const float capf = cap/10.0*(soh/100);
+    const float capf = cap/10.0f*(soh/100);
 
-    float diffAH = 100*DIFF_T_SEC/3600.0*cur/capf;
+    float diffAH = 100*DIFF_T_SEC/3600.0f*cur/capf;
     float SOCcal = SOCinfo->soc + diffAH;
     float SOCer2Cal = SOCinfo->socEr2 + EKF_Q(diffAH,capf, cur);
 
@@ -413,7 +413,7 @@ void mysoc_smooth(struct SOC_Info *SOCinfo, float cur, uint16_t vol, int16_t tem
         }
 
         if(cur>0  && ((int)newest_vol-(int)oldest_vol)){
-            int smooth_full_estimate_s = (*g_chg_stop_vol-vol)/(newest_vol-oldest_vol)*(CELL_VOL_BUFFER_LEN-1)*CELL_VOL_BUFFER_SAMPLE_TIME_S;
+            int smooth_full_estimate_s = (int)((*g_chg_stop_vol-vol)/(newest_vol-oldest_vol)*(CELL_VOL_BUFFER_LEN-1)*CELL_VOL_BUFFER_SAMPLE_TIME_S);
             UNUSED(smooth_full_estimate_s);                                                         // charge not use force smooth mothod(cell voltage curve of all "sop compatible situation" is  monotonically increasing, so temporary disable)
             
         }else if(cur<0 && ((int)oldest_vol-(int)newest_vol)){
@@ -422,13 +422,10 @@ void mysoc_smooth(struct SOC_Info *SOCinfo, float cur, uint16_t vol, int16_t tem
 			{
 				buff_diff = 1;
 			}
-//			if(callcount%16 == 0 && callcount /16 == 6261)
-//            {
-//                printf("fdsa\n");
-//            } 
+
             if(vol>*g_dsg_stop_vol){
-                int smooth_empty_estimate_s = (vol-*g_dsg_stop_vol)/buff_diff*(CELL_VOL_BUFFER_LEN-1)*CELL_VOL_BUFFER_SAMPLE_TIME_S;
-                float smoothDiff = SOCinfo->soc_smooth/smooth_empty_estimate_s*(2+(int)(20*(vol-*g_dsg_stop_vol)/(SOC_SMOOTH_START_VOL_DSG-*g_dsg_stop_vol)));
+                int smooth_empty_estimate_s = (int)((vol-*g_dsg_stop_vol)/buff_diff*(CELL_VOL_BUFFER_LEN-1)*CELL_VOL_BUFFER_SAMPLE_TIME_S);
+                float smoothDiff = SOCinfo->soc_smooth/(float)smooth_empty_estimate_s*(float)(2+(int)(20*(vol-*g_dsg_stop_vol)/(SOC_SMOOTH_START_VOL_DSG-*g_dsg_stop_vol)));
                 SOCinfo->soc_smooth -= smoothDiff;
 //                if(callcount%16 == 0){
 //                    printf("callcount %d dsg soc speedup %f,smooth_full_estimate_s: %d, soc_smooth %f\r\n", callcount/16, smoothDiff, smooth_empty_estimate_s, SOCinfo->soc_smooth);
@@ -441,7 +438,7 @@ void mysoc_smooth(struct SOC_Info *SOCinfo, float cur, uint16_t vol, int16_t tem
 
     if(SOCinfo->soc_smooth < 0)
     {
-        SOCinfo->soc_smooth = 0.1;             // not equal to 0(zero mean smooth not enable)
+        SOCinfo->soc_smooth = 0.1f;             // not equal to 0(zero mean smooth not enable)
     }else if(SOCinfo->soc_smooth > 100)
     {
         SOCinfo->soc_smooth = 100;
@@ -450,17 +447,6 @@ void mysoc_smooth(struct SOC_Info *SOCinfo, float cur, uint16_t vol, int16_t tem
 }
 
 
-float getEKF_Q(float soc, float cur)
-{
-    if(cur > 0)
-    {
-        return (soc/100 + (soc/100*MAX_EKF_Q_PERCENT)*(soc/100*MAX_EKF_Q_PERCENT));
-    }else{
-        return (soc/100 + ((100-soc)/100*MAX_EKF_Q_PERCENT)*((100-soc)/100*MAX_EKF_Q_PERCENT));
-    }
-
-    return nan("");
-}
 
 
 
@@ -494,7 +480,7 @@ static uint32_t getEKF_R(float H_soc, uint16_t vol, const uint16_t *curve, const
         K = H_soc;
     }
 
-    int H_R;
+    uint32_t H_R;
     if(K<VOL_SAMPLE_ERR_MV_1_H)
     {
         H_R = VOL_SAMPLE_ERR_MV_1*VOL_SAMPLE_ERR_MV_1;
@@ -503,7 +489,8 @@ static uint32_t getEKF_R(float H_soc, uint16_t vol, const uint16_t *curve, const
         H_R = VOL_SAMPLE_ERR_MV_4*VOL_SAMPLE_ERR_MV_4;
     }else{
         int t = abs(VOL_SAMPLE_ERR_MV_2-VOL_SAMPLE_ERR_MV_3);
-        H_R = (VOL_SAMPLE_ERR_MV_3+(K-VOL_SAMPLE_ERR_MV_1_H)/(VOL_SAMPLE_ERR_MV_4_H-VOL_SAMPLE_ERR_MV_1_H)*t)*(VOL_SAMPLE_ERR_MV_3+(K-VOL_SAMPLE_ERR_MV_1_H)/(VOL_SAMPLE_ERR_MV_4_H-VOL_SAMPLE_ERR_MV_1_H)*t);
+        H_R = (uint32_t)(VOL_SAMPLE_ERR_MV_3+(K-VOL_SAMPLE_ERR_MV_1_H)/(VOL_SAMPLE_ERR_MV_4_H-VOL_SAMPLE_ERR_MV_1_H)*(float)t)
+             *(uint32_t)(VOL_SAMPLE_ERR_MV_3+(K-VOL_SAMPLE_ERR_MV_1_H)/(VOL_SAMPLE_ERR_MV_4_H-VOL_SAMPLE_ERR_MV_1_H)*(float)t);
     }
     if(switch_curve_time){
         return H_R+25*switch_curve_time/600;                                    
@@ -561,9 +548,8 @@ void mysocEKF(struct SOC_Info *SOCinfo, float cur, uint16_t vol, int16_t tempra,
 
     const float capf = cap/10.0f*(soh/100);
 
-    float diffAH = DIFF_T_SEC/3600.0*cur/capf*100;
+    float diffAH = DIFF_T_SEC/3600.0f*cur/capf*100;
     float SOCcal = SOCinfo->soc + diffAH;
-    // float Q = getEKF_Q(SOCcal, cur);
     float Q = EKF_Q(diffAH, capf, cur);
     float SOCer2Cal = SOCinfo->socEr2 + Q;
 #if SOX_DEBUG
@@ -588,19 +574,19 @@ void mysocEKF(struct SOC_Info *SOCinfo, float cur, uint16_t vol, int16_t tempra,
     }else{
         if(SOCcal < 5)
         {
-            float sock = SOCcal-(int)SOCcal;
+            float sock = modff(SOCcal, NULL);
             estVolPrev = curve[(int)SOCcal];
             estVolNext = curve[(int)SOCcal+1];
             estVol = estVolPrev + sock*(estVolNext-estVolPrev);
         }else if(SOCcal < 95)
         {
-            float sock = ((int)SOCcal%5+SOCcal-(int)SOCcal)/5;
+            float sock = fmodf(SOCcal, 5)/5;
             estVolPrev = curve[(int)(SOCcal/5)+4];
             estVolNext = curve[(int)(SOCcal/5)+1+4];
             estVol = estVolPrev + sock*(estVolNext-estVolPrev);
         }    
         else{
-            float sock = SOCcal-(int)SOCcal;
+            float sock = modff(SOCcal, NULL);
             estVolPrev = curve[23+(int)SOCcal-95];
             estVolNext = curve[23+(int)SOCcal-95+1];
             estVol = estVolPrev + sock*(estVolNext-estVolPrev);
@@ -609,19 +595,19 @@ void mysocEKF(struct SOC_Info *SOCinfo, float cur, uint16_t vol, int16_t tempra,
 
         if(SOCcal < 5)
         {
-            float Hk = SOCcal-(int)SOCcal;
+            float Hk = modff(SOCcal, NULL);
             Hprev = (float)curveK[((int)SOCcal)]/10;
             Hnext = (float)curveK[(int)SOCcal+1]/10;
             H = Hprev + Hk*(Hnext-Hprev); 
         }else if(SOCcal < 95)
         {
-            float Hk = ((int)SOCcal%5+SOCcal-(int)SOCcal)/5;
+            float Hk = fmodf(SOCcal,5)/5;
             Hprev = (float)curveK[((int)(SOCcal/5)+4)]/10;
             Hnext = (float)curveK[(int)(SOCcal/5)+1+4]/10;
             H = Hprev + Hk*(Hnext-Hprev); 
         }    
         else{
-            float Hk = SOCcal-(int)SOCcal;
+            float Hk = modff(SOCcal, NULL);
             Hprev = (float)curveK[23+(int)SOCcal-95]/10;
             Hnext = (float)curveK[23+(int)SOCcal-95+1]/10;
             H = Hprev + Hk*(Hnext-Hprev); 
@@ -641,7 +627,7 @@ void mysocEKF(struct SOC_Info *SOCinfo, float cur, uint16_t vol, int16_t tempra,
     //     SOCer2Cal = Q;
     // }
 
-    K = SOCer2Cal*H/(H*SOCer2Cal*H+ekfR);
+    K = SOCer2Cal*H/(H*SOCer2Cal*H+(float)ekfR);
     // if(callCount%16 == 9){
     //     printf("soc: %f, R: %d, k: %f, socer2cal %f, H %f, Q %f\n", SOCinfo->soc, ekfR, K, SOCer2Cal, H, Q);
     // }
@@ -746,8 +732,6 @@ void mysoc(struct SOC_Info *SOCinfo, float cur, uint16_t vol, int16_t tempra, fl
 
 
 
-
-
 static void gropuSOC()
 {
 #if SOX_DEBUG
@@ -758,7 +742,7 @@ static void gropuSOC()
     bool pureAH_lock = false;
     for(int i = 0; i < CELL_NUMS; i++)
     {
-        if(g_socInfo[i].soc_smooth)
+        if(g_socInfo[i].soc_smooth > 0)         // smooth enabled
         {
             if(CHARGING(g_cur) &&  g_socInfo[i].soc_smooth>g_socInfo[i].soc){
                 unsortedSOC[i] = g_socInfo[i].soc_smooth;
@@ -923,7 +907,7 @@ static void gropuSOC()
         {
             cal_grp_soc_p=grp_soc_p + GRP_Q_2;
         }else{
-            float grp_soc_q_k = fabs(g_cur)/10;
+            float grp_soc_q_k = fabsf(g_cur)/10;
             if(grp_soc_q_k < 0.5f)
             {
                 grp_soc_q_k = 0.5f;
@@ -1023,7 +1007,7 @@ static void gropuSOC()
         }
 
         static uint32_t smooth_count = 0;
-        uint16_t smooth_soc = g_grpSOC;
+        float smooth_soc = g_grpSOC;
         if(fabsf(grpsoc - g_grpSOC)>=2)
         {        
             if(timebase_get_time_s()-smooth_count > (uint32_t)2)
@@ -1249,10 +1233,7 @@ void soc_save(bool force)
         }
 
         write_saved_soc(soc_write);
-        // if(soc_write[0] > 90  || soc_write[0] < 10)
-        // {
-        //     __BKPT(0);
-        // }
+
         write_saved_soc_group(g_grpSOC);
     }
 
@@ -1277,23 +1258,13 @@ void soc_task(bool full, bool empty)
     static uint32_t callCount = 0;
     callCount++;
 #endif
-//    if(callCount == 6843)
-//    {
-//        printf("fdsa\n");
-//    }
-    
-    // if(callCount == 6200)
-    // {
-    //     printf("fdsa\n");
-
-    // }
     for (size_t i = 0; i < CELL_NUMS; i++)
     {
 
         mysoc(&g_socInfo[i], g_cur, g_celVol[i], g_celTmp[i], g_celSOH[i]);
 
         // output soc
-        if(g_socInfo[i].soc_smooth)
+        if(g_socInfo[i].soc_smooth>0)         // smooth enabled
         {
             if(g_cur>=0 &&  g_socInfo[i].soc_smooth>g_socInfo[i].soc){
                 g_celSOC[i] = g_socInfo[i].soc_smooth;
@@ -1333,7 +1304,7 @@ void soc_task(bool full, bool empty)
             for (size_t i = 0; i < CELL_NUMS; i++)
             {
                 g_socInfo[i].pureAH_lock = false;
-                if(g_socInfo[i].soc_smooth && g_socInfo[i].soc_smooth < g_socInfo[i].soc){
+                if(g_socInfo[i].soc_smooth>0 && g_socInfo[i].soc_smooth < g_socInfo[i].soc){
                     g_socInfo[i].soc = g_socInfo[i].soc_smooth;
                     g_socInfo[i].soc_smooth = 0;
                 }
