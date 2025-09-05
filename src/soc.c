@@ -572,9 +572,10 @@ void mysocEKF(struct SOC_Info *SOCinfo, float cur, uint16_t vol, int16_t tempra,
         estVol = curve[SOC_POINT_NUM-1];
         H = (float)curveK[SOC_POINT_NUM-1]/10;
     }else{
+        float unused_interger_part;
         if(SOCcal < 5)
         {
-            float sock = modff(SOCcal, NULL);
+            float sock = modff(SOCcal, &unused_interger_part);
             estVolPrev = curve[(int)SOCcal];
             estVolNext = curve[(int)SOCcal+1];
             estVol = estVolPrev + sock*(estVolNext-estVolPrev);
@@ -586,7 +587,7 @@ void mysocEKF(struct SOC_Info *SOCinfo, float cur, uint16_t vol, int16_t tempra,
             estVol = estVolPrev + sock*(estVolNext-estVolPrev);
         }    
         else{
-            float sock = modff(SOCcal, NULL);
+            float sock = modff(SOCcal, &unused_interger_part);
             estVolPrev = curve[23+(int)SOCcal-95];
             estVolNext = curve[23+(int)SOCcal-95+1];
             estVol = estVolPrev + sock*(estVolNext-estVolPrev);
@@ -595,7 +596,7 @@ void mysocEKF(struct SOC_Info *SOCinfo, float cur, uint16_t vol, int16_t tempra,
 
         if(SOCcal < 5)
         {
-            float Hk = modff(SOCcal, NULL);
+            float Hk = modff(SOCcal, &unused_interger_part);
             Hprev = (float)curveK[((int)SOCcal)]/10;
             Hnext = (float)curveK[(int)SOCcal+1]/10;
             H = Hprev + Hk*(Hnext-Hprev); 
@@ -607,7 +608,7 @@ void mysocEKF(struct SOC_Info *SOCinfo, float cur, uint16_t vol, int16_t tempra,
             H = Hprev + Hk*(Hnext-Hprev); 
         }    
         else{
-            float Hk = modff(SOCcal, NULL);
+            float Hk = modff(SOCcal, &unused_interger_part);
             Hprev = (float)curveK[23+(int)SOCcal-95]/10;
             Hnext = (float)curveK[23+(int)SOCcal-95+1]/10;
             H = Hprev + Hk*(Hnext-Hprev); 
