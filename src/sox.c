@@ -37,7 +37,8 @@ uint16_t    *g_dsg_stop_vol;                // mv                   pass in by i
 bool         g_empty;            
 bool         g_full;                
 
-
+uint32_t     g_task_runtime;
+uint32_t     g_task_call_tick;
 
 
 int8_t sox_init(struct SOX_Init_Attr *attr)
@@ -66,6 +67,9 @@ static void sox_input(const struct SOX_Input *input)
 
 int8_t sox_task(const struct SOX_Input *input)
 {
+#if SOX_DEBUG
+    uint32_t start_tick = g_task_call_tick = get_cpu_tick();   // get start cpu tick
+#endif
     // input
     sox_input(input);
 
@@ -93,7 +97,11 @@ int8_t sox_task(const struct SOX_Input *input)
 	}else{
 		standby_save = 0;
 	}
-     
+#if SOX_DEBUG
+    uint32_t end_tick = get_cpu_tick();     // get end cpu tick
+    g_task_runtime = end_tick - start_tick; // calculate task runtime
+#endif
+
     return 0;
 }
 
@@ -199,4 +207,15 @@ int8_t get_cell_soh_ary(float *sohAry)                                          
 {
     memcpy(sohAry, g_celSOH, sizeof(g_celSOH));
     return 0;
+}
+
+
+uint32_t get_task_runtime(void)
+{
+    return g_task_runtime;
+}
+
+uint32_t get_task_calltick(void)
+{
+    return g_task_call_tick;
 }

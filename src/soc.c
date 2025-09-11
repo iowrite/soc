@@ -18,7 +18,7 @@
 #include "sox.h"
 #include "port.h"
 #include "common.h"
-
+#include "debug.h"
 
 #define EKF_W(diffAH, cap, cur)                 ((50.0f/(DIFF_T_SEC*1000) + CUR_SAMPLE_ERR_A/cur + CAP_ERR_AH/cap+SOH_ERR_PERCENT/100.0f) *  EKF_Q_K * diffAH)     
 #define EKF_Q(diffAH, cap, cur)                 (EKF_W(diffAH, cap, cur)*EKF_W(diffAH, cap, cur))                 
@@ -256,9 +256,6 @@ static uint32_t trans_chg_acc_time = 0;
 enum GroupState check_current_group_state(float cur)
 {
 
-    // if(trans_chg_acc_time == 132){
-    //     printf("herer\n");
-    // }
     switch (g_group_state)
     {
     case GROUP_STATE_standby:
@@ -374,16 +371,11 @@ void mysoc_smooth(struct SOC_Info *SOCinfo, float cur, uint16_t vol, int16_t tem
 #if SOX_DEBUG
     static int callcount = 0;
     callcount++;
+    UNUSED(callcount);      // avoid warning in debug mode
 #endif 
     UNUSED(tempra);
     UNUSED(soh);
-    // if(callcount == 6018){
-    //     printf("fds\n");
-    // }
-//    if(callcount%16 == 0 && callcount /16 == 6455)
-//    {
-//        printf("fdsa\n");
-//    } 
+
     float newest_vol, oldest_vol;
     if(timebase_get_time_s()-SOCinfo->record_time > CELL_VOL_BUFFER_SAMPLE_TIME_S){
             SOCinfo->record_time = timebase_get_time_s();
@@ -427,9 +419,7 @@ void mysoc_smooth(struct SOC_Info *SOCinfo, float cur, uint16_t vol, int16_t tem
                 int smooth_empty_estimate_s = (int)((vol-*g_dsg_stop_vol)/buff_diff*(CELL_VOL_BUFFER_LEN-1)*CELL_VOL_BUFFER_SAMPLE_TIME_S);
                 float smoothDiff = SOCinfo->soc_smooth/(float)smooth_empty_estimate_s*(float)(2+(int)(20*(vol-*g_dsg_stop_vol)/(SOC_SMOOTH_START_VOL_DSG-*g_dsg_stop_vol)));
                 SOCinfo->soc_smooth -= smoothDiff;
-//                if(callcount%16 == 0){
-//                    printf("callcount %d dsg soc speedup %f,smooth_full_estimate_s: %d, soc_smooth %f\r\n", callcount/16, smoothDiff, smooth_empty_estimate_s, SOCinfo->soc_smooth);
-//                }
+
             }
 
 
@@ -510,21 +500,13 @@ void mysocEKF(struct SOC_Info *SOCinfo, float cur, uint16_t vol, int16_t tempra,
     static int callCount = 0;
     callCount++;
     static float pureAHSUM = 0;
+    UNUSED(callCount);      // avoid warning in debug mode
+    UNUSED(pureAHSUM);      // avoid warning in debug mode
 #endif   
-    // if(callCount == 92)
-    // {
-    //     printf("fds\n");
 
-    // }
-
-    // if(callCount%16 == 2)
-    // {
-    //     printf("fds\n");
-    // }
     const uint16_t *curve = get_curve_v(cur, tempra);
     const int16_t *curveK = get_curve_k(cur, tempra);
     const uint16_t cap = get_cap(cur, tempra);
-    // printf("cap: %d\n", cap);
 
     if(SOCinfo->last_curve != curve)
     {
@@ -536,16 +518,6 @@ void mysocEKF(struct SOC_Info *SOCinfo, float cur, uint16_t vol, int16_t tempra,
         SOCinfo->swith_curve_time--;
     }
 
-
-    // if(callCount %16 == 12 && SOCinfo->swith_curve_time)
-    // {
-    //     printf("callCount: %d, switch count : %d \n", callCount/16, SOCinfo->swith_curve_time);
-    // }
-    // if(callCount %16 == 1 && SOCinfo->swith_curve_time)
-    // {
-    //     printf("callCount: %d\n", callCount/16);
-    // }
-
     const float capf = cap/10.0f*(soh/100);
 
     float diffAH = DIFF_T_SEC/3600.0f*cur/capf*100;
@@ -555,10 +527,8 @@ void mysocEKF(struct SOC_Info *SOCinfo, float cur, uint16_t vol, int16_t tempra,
 #if SOX_DEBUG
     pureAHSUM += diffAH;
 #endif
-    // printf("diffAH : %f, EKF_W : %f pureAH: %f\n", diffAH, EKF_W(diffAH,capf, cur), pureAHSUM);
     float H = 0, Hprev = 0, Hnext = 0;
     float estVol = 0, estVolPrev = 0, estVolNext = 0;
-    // float SOCerCal = sqrt(SOCer2Cal);
     if(SOCcal < 0)
     {
         SOCcal = 0;
@@ -592,7 +562,6 @@ void mysocEKF(struct SOC_Info *SOCinfo, float cur, uint16_t vol, int16_t tempra,
             estVolNext = curve[23+(int)SOCcal-95+1];
             estVol = estVolPrev + sock*(estVolNext-estVolPrev);
         }
-        //printf("callcount %d soccal : %f  estVolPrev :%f  estVol : %f  estVolNext :%f \n", callCount, SOCcal, estVolPrev, estVol, estVolNext);
 
         if(SOCcal < 5)
         {
@@ -613,37 +582,16 @@ void mysocEKF(struct SOC_Info *SOCinfo, float cur, uint16_t vol, int16_t tempra,
             Hnext = (float)curveK[23+(int)SOCcal-95+1]/10;
             H = Hprev + Hk*(Hnext-Hprev); 
         }
-        // printf("callcount %d hprev :%f  H : %f  hnext :%f \n", callCount, Hprev, H, Hnext);
     }
     float K = 0;
-    // if(callCount%16 == 13 && SOCcal >= 92)
-    // {
-    //     printf("fdfsa\n");
-    // }
     uint32_t ekfR = getEKF_R(H, vol, curve, curveK, SOCinfo->swith_curve_time);
 
-
-    // if(SOCer2Cal>Q)
-    // {
-    //     SOCer2Cal = Q;
-    // }
-
     K = SOCer2Cal*H/(H*SOCer2Cal*H+(float)ekfR);
-    // if(callCount%16 == 9){
-    //     printf("soc: %f, R: %d, k: %f, socer2cal %f, H %f, Q %f\n", SOCinfo->soc, ekfR, K, SOCer2Cal, H, Q);
-    // }
     
     float res = SOCcal+K*((float)vol-estVol);
-//    if(callCount%16 == 8 ){
-//        printf("callcount %d  H: %f K :%f  kcal : %f , vol: %d, estvol: %lf soc:%f \n", callCount, H, K, K*((float)vol-estVol), vol, estVol, SOCinfo->soc);
-//    }
     float resEr2 = (1-K*H)*SOCer2Cal;
-    // if(resEr2 > Q)
-    // {
-    //     resEr2 = Q;
-    // }
 #if SOX_DEBUG
-    float SOCerRes = sqrt(resEr2);
+    // float SOCerRes = sqrt(resEr2);
 #endif 
 
     if(res < 0)
@@ -654,26 +602,19 @@ void mysocEKF(struct SOC_Info *SOCinfo, float cur, uint16_t vol, int16_t tempra,
         res = 100;
     }
 
-
-
     if(cur > 0){
         if(res < SOCinfo->soc)
         {
-            //res = SOCinfo->soc;
-            // resEr2 = SOCinfo->socEr2;
-            // printf("soc underflow\n");
             float smooth_k = 10/SOCinfo->soc;
             if(smooth_k > 1){
                 smooth_k = 1;
             }
-            // printf("smooth_k: %f\n", smooth_k);
             res = SOCinfo->soc + smooth_k*diffAH;
         }
     }else if(cur < 0)
     {
         if(res > SOCinfo->soc)
         {
-            //res = SOCinfo->soc;
             float smooth_k = 10/(100-SOCinfo->soc);
             if(smooth_k > 1){
                 smooth_k = 1;
@@ -692,11 +633,6 @@ void mysocEKF(struct SOC_Info *SOCinfo, float cur, uint16_t vol, int16_t tempra,
 
     SOCinfo->soc = res;
     SOCinfo->socEr2 = resEr2;
-    // printf("soc : %f \n", 100-res);
-    // printf("%d \n", callCount);
-    // if(callCount%16 == 0){
-    //    printf("%d soc error2: %f Q:%f R:%d, H:%f, K:%lf kcal : %f , vol: %d, estvol: %lf soc: %f\n",callCount/16, SOCinfo->socEr2, Q, ekfR, H, K, K*((float)vol-estVol), vol, estVol, SOCinfo->soc);
-    // }
     
 }
 
@@ -716,7 +652,7 @@ void mysoc(struct SOC_Info *SOCinfo, float cur, uint16_t vol, int16_t tempra, fl
         {
             mysoc_pureAH(SOCinfo, cur, vol, tempra, soh);
             mysoc_smooth(SOCinfo, cur, vol, tempra, soh);
-//            printf("pureAH lock\n");
+           DEBUG_LOG("pureAH lock\n");
         }else{
             if(g_group_state == GROUP_STATE_transfer){
                 mysoc_pureAH(SOCinfo, cur, vol, tempra, soh);               // Ampere-hour Integration only
@@ -733,11 +669,37 @@ void mysoc(struct SOC_Info *SOCinfo, float cur, uint16_t vol, int16_t tempra, fl
 
 
 
+
+
+
+
+
+
+#define GRP_Q_MAX               25
+#define GRP_Q_Min               1
+#define GRP_Q_1                   0.01f
+#define GRP_Q_2                   0.1f
+#define GRP_Q_3                   0.0002f
+
+#define  E_HIGH_MIN       0.1f
+#define  E_HIGH_MAX       5
+#define  E_LOW_MIN        0.1f
+#define  E_LOW_MAX        5
+
+
+#define  R_HIGH_MIN       (E_HIGH_MIN*E_HIGH_MIN)
+#define  R_HIGH_MAX       (E_HIGH_MAX*E_HIGH_MAX)
+#define  R_LOW_MIN        (E_LOW_MIN*E_LOW_MIN)
+#define  R_LOW_MAX        (E_LOW_MAX*E_LOW_MAX)
+#define  R_AVG_MIN        (E_AEG_MIN*E_AEG_MIN)
+#define  R_AVG_MAX        (E_AEG_MIN*E_AEG_MIN)
+
 static void gropuSOC()
 {
 #if SOX_DEBUG
     static int callCount = 0;
     callCount++;
+    UNUSED(callCount);      // avoid warning in debug mode
 #endif 
     float unsortedSOC[CELL_NUMS];
     bool pureAH_lock = false;
@@ -773,44 +735,7 @@ static void gropuSOC()
     }
     avgSOC = avgSOC/CELL_NUMS;
 
-    // if(callCount == 3560){
-    //     printf("change\n");
-    // }
-
-
-    // uint16_t hSOC = maxSOC*(maxSOC/100.0)+minSOC*(1-maxSOC/100.0);
-    // uint16_t lSOC= minSOC*(1-minSOC/100.0)+maxSOC*(minSOC/100.0);
-
-    
-    // uint16_t h = hSOC>lSOC?hSOC:lSOC;
-    // uint16_t l = lSOC<hSOC?lSOC:hSOC;
     float grpsoc;
-    // uint16_t grpsoc = round((*g_grpSOC)/100.0*hSOC+(100-*g_grpSOC)/100.0*lSOC);
-
-#define GRP_Q_MAX               25
-#define GRP_Q_Min               1
-#define GRP_Q_1                   0.01f
-#define GRP_Q_2                   0.1f
-#define GRP_Q_3                   0.0002f
-
-#define  E_HIGH_MIN       0.1f
-#define  E_HIGH_MAX       5
-#define  E_LOW_MIN        0.1f
-#define  E_LOW_MAX        5
-
-
-#define  R_HIGH_MIN       (E_HIGH_MIN*E_HIGH_MIN)
-#define  R_HIGH_MAX       (E_HIGH_MAX*E_HIGH_MAX)
-#define  R_LOW_MIN        (E_LOW_MIN*E_LOW_MIN)
-#define  R_LOW_MAX        (E_LOW_MAX*E_LOW_MAX)
-#define  R_AVG_MIN        (E_AEG_MIN*E_AEG_MIN)
-#define  R_AVG_MAX        (E_AEG_MIN*E_AEG_MIN)
-
-
-
-
-
-
 
 
     if(fabsf(g_cur)>CUR_WINDOW_A){
@@ -890,7 +815,6 @@ static void gropuSOC()
             }
         }
 
-        // printf("last_avg_soc %f, maxSOC_R: %f, minSOC_R: %f, maxsoc %f, minsoc %f ", avgSOC, maxSOC_R, minSOC_R, maxSOC, minSOC);
         static float cal_grp_soc;
         static bool grp_soc_init = false;
         if(!grp_soc_init){
@@ -915,9 +839,7 @@ static void gropuSOC()
             }
             cal_grp_soc_p=grp_soc_p + GRP_Q_3*grp_soc_q_k;
         }
-        
 
-        //printf("kf soc: %f, p: %f \n", cal_grp_soc, grp_soc_p);
 
         float H[2][1] = {
             {1}, 
@@ -974,20 +896,12 @@ static void gropuSOC()
         matrix_multiply((float *)K, (float *)Z_H, &x_k, 1, 2, 1);
 
         cal_grp_soc = cal_grp_soc + x_k;
-        // printf("cal_grp_soc: %f, x_k: %f\n", cal_grp_soc, x_k);
 
         float K_H = 0;
         matrix_multiply((float *)K, (float *)H, &K_H, 1, 2, 1);
         grp_soc_p = (1-K_H)*cal_grp_soc_p;
 
-
-        // grpsoc = round(cal_grp_soc);
         grpsoc = cal_grp_soc;
-
-
-
-
-
 
 
         if(grpsoc > 99)
@@ -1032,7 +946,6 @@ static void gropuSOC()
         }else{
             g_grpSOC = grpsoc;
         }
-        // printf("call: %d, maxSOC:%f, minSOC:%f, maxSOC_R:%f, minSOC_R %f, grpSoc %d \n",callCount, maxSOC, minSOC,maxSOC_R, minSOC_R , *g_grpSOC);
     }
 }
 
@@ -1088,10 +1001,7 @@ void soc_init()
     // read saved soc(last soc before shutdown)
 	bool force_save = false;
     int8_t ret = read_saved_soc(soc_saved);
-    // if(soc_saved[0] > 90 || soc_saved[0] < 10)
-    // {
-    //     __BKPT(0);
-    // }
+
     // todo ocv calibration,set init soc and soc_er2
     vol2soc_batch(g_celVol, g_celTmp, soc_lookuptable);
     if(ret == 0){
@@ -1203,7 +1113,7 @@ void soc_save(bool force)
         }
 
         uint32_t now = timebase_get_time_s();
-        // printf("now:%d, last:%d\n", now, last_save);
+
         if(now- last_save > SOC_SAVE_INTERVAFL)
         {
             last_save = now;
@@ -1212,12 +1122,9 @@ void soc_save(bool force)
                 {
                     lastsoc[i] = g_celSOC[i];
                 }
-                // printf("soc save\n");
+                DEBUG_LOG("soc save\n");
                 write_saved_soc(lastsoc);
-                // if(lastsoc[0] > 90  || lastsoc[0] < 10)
-                // {
-                //     __BKPT(0);
-                // }
+
                 save = false;
             }
             if(grp_save){
@@ -1258,6 +1165,7 @@ void soc_task(bool full, bool empty)
 #if SOX_DEBUG
     static uint32_t callCount = 0;
     callCount++;
+    UNUSED(callCount);      // avoid warning in debug mode
 #endif
     for (size_t i = 0; i < CELL_NUMS; i++)
     {
@@ -1269,10 +1177,10 @@ void soc_task(bool full, bool empty)
         {
             if(g_cur>=0 &&  g_socInfo[i].soc_smooth>g_socInfo[i].soc){
                 g_celSOC[i] = g_socInfo[i].soc_smooth;
-//               printf("use smooth soc\n");
+              DEBUG_LOG("use smooth soc\n");
             }else if(g_cur<=0 &&  g_socInfo[i].soc_smooth<g_socInfo[i].soc){
                 g_celSOC[i] = g_socInfo[i].soc_smooth;
-//               printf("use smooth soc\n");
+              DEBUG_LOG("use smooth soc\n");
             }else{
                 g_celSOC[i] = g_socInfo[i].soc;
             }
@@ -1280,21 +1188,10 @@ void soc_task(bool full, bool empty)
         else{
             g_celSOC[i] = g_socInfo[i].soc;
         }
-        
-
-        
-
-        // if(i == 0)
-        // {
-            // printf("soc error2: %f \n", g_socInfo[0].socEr2);
-        // }
+    
     }
-    // printf("call: %d, cur: %f, state: %d\n",callCount, *g_cur, g_group_state);
-//    if(g_celSOC[0] > 90 || g_celSOC[0] < 10)
-//    {
-//        g_celSOC[0]++;
-//        g_celSOC[0]--;
-//    }
+
+
     
     if(state == GROUP_STATE_standby)
     {
@@ -1364,8 +1261,6 @@ void soc_task(bool full, bool empty)
         }
     }
 	// XXX grp soc maybe need a mux unlock when in rtos
-	
-    //printf("call: %d, grpsoc: %d\n", callCount, *g_grpSOC);
 
 }
 

@@ -70,6 +70,14 @@ __attribute__((weak)) int8_t write_saved_soe(float totalChgWh, float totalDsgWh,
     return 0;
 }
 
+__attribute__((weak)) uint32_t get_cpu_tick()
+{
+
+    return 0;
+}
+
+
+
 
 
 

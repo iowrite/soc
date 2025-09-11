@@ -1,3 +1,4 @@
+#include <stdint.h>
 #include "sox_config.h"
 
 
@@ -10,3 +11,10 @@
         while(1);
     }
 #endif
+
+
+
+
+
+
+

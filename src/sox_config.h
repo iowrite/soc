@@ -4,7 +4,7 @@
 /***********************
  *  SOX Configuration
  **********************/
-#define CELL_NUMS                       16
+#define CELL_NUMS                       6
 #define CUR_WINDOW_A                    4.0f             //A
 #define SOX_DEBUG                       0
 
@@ -18,8 +18,8 @@
 
 #if PORT_TYPE == PORT_TYPE_LINUX
     #define FULL_STD_CLIB       1
-    #define PORT_SIM_PROJECT_STACK      1
-    #define PORT_SIM_PROJECT_JIGUANG    0
+    #define PORT_SIM_PROJECT_STACK      0
+    #define PORT_SIM_PROJECT_JIGUANG    1
 #endif
 
 #if PORT_TYPE == PORT_TYPE_MICROCONTROLLER

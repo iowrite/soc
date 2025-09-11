@@ -68,8 +68,10 @@ float  get_acc_dsg_ah(void);
 
 
 /******************************************************************************
- * other functions
+ * debug functions
  ******************************************************************************/
+uint32_t get_task_runtime(void);
+uint32_t get_task_calltick(void);
 
 #endif
 

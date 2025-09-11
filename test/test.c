@@ -206,6 +206,10 @@ int main(int argc, char *argv[])
 #endif
         // caculate
         sox_task(&input);
+#if SOX_DEBUG
+        printf("time consumption: %u us   <--->  ", get_task_runtime());
+        printf("call tick: %u\n", get_task_calltick());
+#endif
         // output
         get_cell_soc_ary(cell_soc_output[i+1].soc);
         group_soc_output[i+1].grpSOC = get_group_soc();

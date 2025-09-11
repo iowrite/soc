@@ -28,7 +28,8 @@ extern uint16_t    *g_chg_stop_vol;               // mv                   pass i
 extern uint16_t    *g_dsg_stop_vol;               // mv                   pass in by init func, use pointer to sync parameter changed by user(user operation)   
 extern bool         g_empty;            
 extern bool         g_full;      
-
+extern uint32_t     g_task_runtime;
+extern uint32_t     g_task_call_tick;
 
 /*******************************************************************************
  * global macro definition(sox module internal use only)
