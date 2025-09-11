@@ -40,6 +40,9 @@ bool         g_full;
 uint32_t     g_task_runtime;
 uint32_t     g_task_call_tick;
 
+uint8_t      g_soh_calibrate_tigger;          // soh calibration tigger, 0:not trigged, 1:trigged by charging, 2:trigged by discharging
+float        g_group_soc_before_jump;
+
 
 int8_t sox_init(struct SOX_Init_Attr *attr)
 {

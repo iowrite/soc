@@ -9,6 +9,7 @@
 #include "port.h"
 #include "sox_config.h"
 #include "soh.h"
+#include "common.h"
 
 
 static float s_lastSOC[CELL_NUMS];
@@ -84,6 +85,90 @@ int8_t  soh_init()
 
 
 
+enum Battery_State{
+    Battery_State_standby,
+    Battery_State_charging,
+    Battery_State_discharging,
+};
+
+struct Battery_State_Record{
+    enum Battery_State type;            // process of charging or discharging
+    float group_SOC;
+    int16_t min_cell_temp;
+    uint32_t tick;
+}; 
+
+static struct Battery_State_Record s_recored_start;
+static struct Battery_State_Record s_recored_end;
+
+void battey_state_record(void)
+{
+    static enum Battery_State state = Battery_State_standby;
+    int16_t sorted_cell_temp[CELL_NUMS];
+    bubbleSort_ascend_int16(g_celTmp, sorted_cell_temp, ARRAY_SIZE(g_celTmp));
+    int16_t min_cell_temp = sorted_cell_temp[0]; 
+    switch (state) {
+        case Battery_State_standby:
+            s_recored_end.type = Battery_State_standby;
+            s_recored_end.group_SOC = g_grpSOC;
+            s_recored_end.tick = timebase_get_time_s();
+            s_recored_end.min_cell_temp = min_cell_temp;
+            if(g_cur > CUR_WINDOW_A){
+                state = Battery_State_charging;
+                s_recored_start.type = Battery_State_charging;
+                s_recored_start.group_SOC = g_grpSOC;
+                s_recored_start.tick = timebase_get_time_s();
+                s_recored_start.min_cell_temp = min_cell_temp;
+            }else if(g_cur < -CUR_WINDOW_A){
+                state = Battery_State_discharging;
+                s_recored_start.type = Battery_State_discharging;
+                s_recored_start.group_SOC = g_grpSOC;
+                s_recored_start.tick = timebase_get_time_s();
+                s_recored_start.min_cell_temp = min_cell_temp;
+            }
+            break;
+        case Battery_State_charging:
+            s_recored_end.type = Battery_State_charging;
+            s_recored_end.group_SOC = g_grpSOC;
+            s_recored_end.tick = timebase_get_time_s();
+            s_recored_end.min_cell_temp = min_cell_temp;
+            if(fabsf(g_cur) < CUR_WINDOW_A){
+                state = Battery_State_standby;
+                s_recored_start.type = Battery_State_standby;
+                s_recored_start.group_SOC = g_grpSOC;
+                s_recored_start.tick = timebase_get_time_s();
+                s_recored_start.min_cell_temp = min_cell_temp;
+            }else if(g_cur < -CUR_WINDOW_A){
+                state = Battery_State_discharging;
+                s_recored_start.type = Battery_State_discharging;
+                s_recored_start.group_SOC = g_grpSOC;
+                s_recored_start.tick = timebase_get_time_s();
+                s_recored_start.min_cell_temp = min_cell_temp;
+            }
+            break;
+        case Battery_State_discharging:
+            s_recored_end.type = Battery_State_discharging;
+            s_recored_end.group_SOC = g_grpSOC;
+            s_recored_end.tick = timebase_get_time_s();
+            s_recored_end.min_cell_temp = min_cell_temp;
+            if(fabsf(g_cur) < CUR_WINDOW_A){
+                state = Battery_State_standby;
+                s_recored_start.type = Battery_State_standby;
+                s_recored_start.group_SOC = g_grpSOC;
+                s_recored_start.tick = timebase_get_time_s();
+                s_recored_start.min_cell_temp = min_cell_temp;
+            }else if(g_cur > CUR_WINDOW_A){
+                state = Battery_State_charging;
+                s_recored_start.type = Battery_State_charging;
+                s_recored_start.group_SOC = g_grpSOC;
+                s_recored_start.tick = timebase_get_time_s();
+                s_recored_start.min_cell_temp = min_cell_temp;
+            }
+            break;
+        default:
+            break;
+    }
+}
 
 
 int8_t soh_task()
@@ -123,7 +208,47 @@ int8_t soh_task()
         sumSOH += g_celSOH[i];
     }
     
-    g_grpSOH = sumSOH/CELL_NUMS;
+    battey_state_record();
+
+    float soh_calibrate = 0;
+    if(g_soh_calibrate_tigger == SOH_CALIBRATION_TIGGERED_BY_CHARGING)
+    {   
+        if(s_recored_start.type == Battery_State_charging 
+            && s_recored_start.group_SOC < SOH_PASSIVE_GRP_SOC_CHG_START
+            && s_recored_start.min_cell_temp > SOH_PASSIVE_CALIBRATE_TEMP_LIMIT
+            && s_recored_end.min_cell_temp > SOH_PASSIVE_CALIBRATE_TEMP_LIMIT)
+        {
+            float jump_diff = 100-g_group_soc_before_jump;
+            soh_calibrate = jump_diff/10;
+            if(soh_calibrate > 1){
+                soh_calibrate = 1;
+            }
+        }
+
+    }else if(g_soh_calibrate_tigger == SOH_CALIBRATION_TIGGERED_BY_DISCHARGING)
+    {
+        if(s_recored_start.type == Battery_State_discharging 
+            && s_recored_start.group_SOC > SOH_PASSIVE_GRP_SOC_DSG_START
+            && s_recored_start.min_cell_temp > SOH_PASSIVE_CALIBRATE_TEMP_LIMIT
+            && s_recored_end.min_cell_temp > SOH_PASSIVE_CALIBRATE_TEMP_LIMIT)
+        {
+            float jump_diff = g_group_soc_before_jump;
+            soh_calibrate = jump_diff/5;
+            if(soh_calibrate > 1){
+                soh_calibrate = 1;
+            }
+        }
+    }
+
+    if(soh_calibrate != 0)
+    {
+        for(int i = 0; i < CELL_NUMS; i++)
+        {
+            g_celSOH[i] -= soh_calibrate;
+        }
+    }
+
+    g_grpSOH = sumSOH/CELL_NUMS-soh_calibrate;
 
     return 0;
 }

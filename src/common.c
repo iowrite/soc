@@ -52,7 +52,7 @@ int inverse_matrix_2x2(float A[2][2], float inv_A[2][2])
 
 
 /* bubble sort : ascending */
-void bubbleSort_ascend(uint16_t *inputArr, uint16_t *outputArr, uint16_t size)
+void bubbleSort_ascend_uint16(uint16_t *inputArr, uint16_t *outputArr, size_t size)
 {
     memcpy(outputArr, inputArr, size*sizeof(uint16_t));
     for (size_t i = 0; i < size-1; i++)
@@ -68,7 +68,24 @@ void bubbleSort_ascend(uint16_t *inputArr, uint16_t *outputArr, uint16_t size)
         }
     }
 }
-void bubbleSort_ascend_float(float *inputArr, float *outputArr, uint16_t size)
+
+void bubbleSort_ascend_int16(int16_t *inputArr, int16_t *outputArr, size_t size)
+{
+    memcpy(outputArr, inputArr, size*sizeof(int16_t));
+    for (size_t i = 0; i < size-1; i++)
+    {
+        for (size_t j = 0; j < size-i-1; j++)
+        {
+            if(outputArr[j] > outputArr[j+1])
+            {
+                int16_t tmp = outputArr[j];
+                outputArr[j] = outputArr[j+1];
+                outputArr[j+1] = tmp;
+            }
+        }
+    }
+}
+void bubbleSort_ascend_float(float *inputArr, float *outputArr, size_t size)
 {
     memcpy(outputArr, inputArr, size*sizeof(float));
     for (size_t i = 0; i < size-1; i++)
@@ -85,7 +102,7 @@ void bubbleSort_ascend_float(float *inputArr, float *outputArr, uint16_t size)
     }
 }
 
-void bubbleSort_ascend_duble(float *inputArr, float *outputArr, uint16_t size)
+void bubbleSort_ascend_duble(float *inputArr, float *outputArr, size_t size)
 {
     memcpy(outputArr, inputArr, size*sizeof(float));
     for (size_t i = 0; i < size-1; i++)

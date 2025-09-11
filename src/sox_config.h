@@ -76,13 +76,20 @@
 
 
 #define SOX_GROUP_FULL_CAL_CELL         1                                       // set all cell to 100% when group is full(one cell is full)
-#define SOX_GROUP_EMPTY_CAL_CELL        1                                       // set all cell to 0% when group is empty(one cell is empty)       
+#define SOX_GROUP_EMPTY_CAL_CELL        1                                       // set all cell to 0% when group is empty(one cell is empty)     
+
+
+#define SOC_FAKE_SMOOTH_ENABLE         0                                       // fake smooth function
 
 /***********************
  *  SOH Configuration
  **********************/
 #define MAX_CYCLE_TIME                  10000
 #define REFERENCE_CYCLE_TIME            5000
+
+#define SOH_PASSIVE_CALIBRATE_TEMP_LIMIT      200               // 20 dregrees, one digits(interger)
+#define SOH_PASSIVE_GRP_SOC_CHG_START              15
+#define SOH_PASSIVE_GRP_SOC_DSG_START              90
 
 
 
