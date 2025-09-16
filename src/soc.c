@@ -689,7 +689,7 @@ void mysoc(struct SOC_Info *SOCinfo, float cur, uint16_t vol, int16_t tempra, fl
 #define  R_AVG_MIN        (E_AEG_MIN*E_AEG_MIN)
 #define  R_AVG_MAX        (E_AEG_MIN*E_AEG_MIN)
 
-static void gropuSOC()
+static void gropuSOC(void)
 {
 #if SOX_DEBUG
     static int callCount = 0;
@@ -991,7 +991,7 @@ static void vol2soc_batch(uint16_t *vol, int16_t *tempra, float *soc)
 /**
  * @brief  init soc module, read saved soc and group soc( last power offf saved)
  */
-void soc_init()
+void soc_init(void)
 {
     float soc_saved[CELL_NUMS];
     float soc_saved_group;

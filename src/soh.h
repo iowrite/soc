@@ -7,8 +7,8 @@
 #define SOH_CALIBRATION_TIGGERED_BY_DISCHARGING 2
 
 
-int8_t soh_init();
-int8_t soh_task();
+int8_t soh_init(void);
+int8_t soh_task(void);
 void soh_save(bool force);
 
 #endif

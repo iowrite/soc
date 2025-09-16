@@ -20,7 +20,7 @@ struct SOC_Info
 
 extern struct SOC_Info g_socInfo[CELL_NUMS];
 
-void soc_init();
+void soc_init(void);
 void soc_task(bool full, bool empty);
 void soc_save(bool force);
 

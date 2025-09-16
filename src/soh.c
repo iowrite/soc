@@ -14,7 +14,7 @@
 
 static float s_lastSOC[CELL_NUMS];
 static float s_lastGrpSOC;
-int8_t  soh_init()
+int8_t  soh_init(void)
 {
     // read last cycle time(saved before last poweroff)
     uint32_t cycleTime;
@@ -171,7 +171,7 @@ void battey_state_record(void)
 }
 
 
-int8_t soh_task()
+int8_t soh_task(void)
 {
 
     // bug: lost some cycle when charge change to discharge or discharge to charge

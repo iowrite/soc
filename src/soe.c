@@ -8,7 +8,7 @@
 #include "common.h"
 
 
-int8_t soe_init()
+int8_t soe_init(void)
 {
     // read saved soe (last saved soe before poweroff)
 
@@ -52,7 +52,7 @@ int8_t soe_init()
  * @brief soe task, update accChgWH, accDsgWH, sigChgWH, sigDsgWH
  * @todo calculate accChgAH, accDsgAH
  */
-int8_t soe_task()
+int8_t soe_task(void)
 {
 
     if(g_cur > 0){

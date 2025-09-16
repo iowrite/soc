@@ -8,8 +8,8 @@
  * version 
  ******************************************************************************/    
 #define EKF_SOX_VERSION_MAJOR         2
-#define EKF_SOX_VERSION_MINOR         1
-#define EKF_SOX_VERSION_DEBUG         8
+#define EKF_SOX_VERSION_MINOR         2
+#define EKF_SOX_VERSION_DEBUG         0
  
 
 

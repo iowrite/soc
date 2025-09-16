@@ -117,7 +117,7 @@ int8_t read_saved_soe(float *totalChgWh, float *totalDsgWh, float *totalChgAh, f
 int8_t write_saved_soe(float totalChgWh, float totalDsgWh, float totalChgAh, float totalDsgAh);
 
 
-uint32_t get_cpu_tick();
+uint32_t get_cpu_tick(void);
 
 
 #endif
