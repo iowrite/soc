@@ -1,6 +1,7 @@
 # CHANGLOG
 
-
+## v2.2.1
+* 增加 -Wstrict-prototypes 检查
 
 ## v2.2.0
 1. 增加极光35度测试数据
