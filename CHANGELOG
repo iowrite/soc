@@ -1,5 +1,8 @@
 # CHANGLOG
 
+## v2.2.2
+* 将循环次数提取为宏
+
 ## v2.2.1
 * 增加 -Wstrict-prototypes 检查
 
