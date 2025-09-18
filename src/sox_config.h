@@ -88,8 +88,8 @@
 #define REFERENCE_CYCLE_TIME            5000
 #define SOH_HIGH_TEMP             450                             // degree 45
 #define SOH_LOW_TEMP              250                             // degree 25
-#define SOH_HIGH_TEMP_CYCLE                      2000
-#define SOH_LOW_TEMP_CYCLE                       5000
+#define SOH_HIGH_TEMP_CYCLE                      2000             // soh decay to 80%
+#define SOH_LOW_TEMP_CYCLE                       5000             // soh decay to 80%
 
 
 #define SOH_PASSIVE_CALIBRATE_TEMP_LIMIT      200               // 20 dregrees, one digits(interger)
