@@ -193,15 +193,31 @@ int8_t soh_task(void)
             delta = delta*0.01f;
             if(g_celTmp[i] <= SOH_LOW_TEMP)
             {
-                float subk = 20.0f/SOH_LOW_TEMP_CYCLE;
-                g_celSOH[i] -= delta*0.5f*subk;
+                if(g_celSOH[i]>SOH_CYCLE_L1_PERCENT){
+                    float subk = (100-SOH_CYCLE_L1_PERCENT)/SOH_LOW_TEMP_CYCLE_L1;
+                    g_celSOH[i] -= delta*0.5f*subk;
+                }else{  // SOH_CYCLE_L2_PERCENT
+                    float subk = (SOH_CYCLE_L1_PERCENT-SOH_CYCLE_L2_PERCENT)/SOH_LOW_TEMP_CYCLE_L2;
+                    g_celSOH[i] -= delta*0.5f*subk;
+                }
             }else if(g_celTmp[i] < SOH_HIGH_TEMP)
             {
-                float subk = 20.0f/(SOH_LOW_TEMP_CYCLE-((g_celTmp[i] - SOH_LOW_TEMP)/200.0f)*(SOH_LOW_TEMP_CYCLE-SOH_HIGH_TEMP_CYCLE));
-                g_celSOH[i] -= delta*0.5f*subk;
+                if(g_celSOH[i]>SOH_CYCLE_L1_PERCENT){
+                    float subk = (100-SOH_CYCLE_L1_PERCENT)/(SOH_LOW_TEMP_CYCLE_L1-((g_celTmp[i] - SOH_LOW_TEMP)/200.0f)*(SOH_LOW_TEMP_CYCLE_L1-SOH_HIGH_TEMP_CYCLE_L1));
+                    g_celSOH[i] -= delta*0.5f*subk;
+                }else{// SOH_CYCLE_L2_PERCENT
+                    float subk = (SOH_CYCLE_L1_PERCENT-SOH_CYCLE_L2_PERCENT)/(SOH_LOW_TEMP_CYCLE_L1-((g_celTmp[i] - SOH_LOW_TEMP)/200.0f)*(SOH_LOW_TEMP_CYCLE_L2-SOH_HIGH_TEMP_CYCLE_L2));
+                    g_celSOH[i] -= delta*0.5f*subk;
+                }
+                
             }else{
-                float subk = 20.0f/SOH_HIGH_TEMP_CYCLE;
-                g_celSOH[i] -= delta*0.5f*subk;
+                if(g_celSOH[i]>SOH_CYCLE_L1_PERCENT){
+                    float subk = (100-SOH_CYCLE_L1_PERCENT)/SOH_HIGH_TEMP_CYCLE_L1;
+                    g_celSOH[i] -= delta*0.5f*subk;
+                }else{// SOH_CYCLE_L2_PERCENT
+                    float subk = (SOH_CYCLE_L1_PERCENT-SOH_CYCLE_L2_PERCENT)/SOH_HIGH_TEMP_CYCLE_L2;
+                    g_celSOH[i] -= delta*0.5f*subk;
+                }
             }
             s_lastSOC[i] = g_celSOC[i];
         }
