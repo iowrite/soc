@@ -9,7 +9,7 @@
  ******************************************************************************/    
 #define EKF_SOX_VERSION_MAJOR         2
 #define EKF_SOX_VERSION_MINOR         2
-#define EKF_SOX_VERSION_DEBUG         2
+#define EKF_SOX_VERSION_DEBUG         3
  
 
 
