@@ -191,16 +191,16 @@ int8_t soh_task(void)
         {
             float delta = fabsf(g_celSOC[i] - s_lastSOC[i]);
             delta = delta*0.01f;
-            if(g_celTmp[i] <= 250)
+            if(g_celTmp[i] <= SOH_LOW_TEMP)
             {
-                float subk = 20.0f/5000;
+                float subk = 20.0f/SOH_LOW_TEMP_CYCLE;
                 g_celSOH[i] -= delta*0.5f*subk;
-            }else if(g_celTmp[i] < 450)
+            }else if(g_celTmp[i] < SOH_HIGH_TEMP)
             {
-                float subk = 20.0f/(5000-((g_celTmp[i] - 250)/200.0f)*3000);
+                float subk = 20.0f/(SOH_LOW_TEMP_CYCLE-((g_celTmp[i] - SOH_LOW_TEMP)/200.0f)*(SOH_LOW_TEMP_CYCLE-SOH_HIGH_TEMP_CYCLE));
                 g_celSOH[i] -= delta*0.5f*subk;
             }else{
-                float subk = 20.0f/2000;
+                float subk = 20.0f/SOH_HIGH_TEMP_CYCLE;
                 g_celSOH[i] -= delta*0.5f*subk;
             }
             s_lastSOC[i] = g_celSOC[i];
