@@ -78,6 +78,102 @@ __attribute__((weak)) uint32_t get_cpu_tick(void)
 
 
 
+__attribute__((weak)) int get_time_of_day_from_use(void)
+{
+    return 0;
+}
+
+__attribute__((weak)) uint64_t get_time_min(void)
+{
+    return 0;
+}
+
+
+__attribute__((weak)) int8_t read_remain_power_capability(int *value)
+{
+    UNUSED(value);
+    return 0;
+}
+__attribute__((weak)) int8_t read_remain_energy_conv_eff(int *value)
+{
+    UNUSED(value);
+    return 0;
+}
+__attribute__((weak)) int8_t read_evolu_of_selfdsg(int *value)
+{
+    UNUSED(value);
+    return 0;
+}
+__attribute__((weak)) int8_t read_num_of_deep_dsg(int *value)
+{
+    UNUSED(value);
+    return 0;
+}
+__attribute__((weak)) int8_t read_num_of_deep_chg(int *value)
+{
+    UNUSED(value);
+    return 0;
+}
+__attribute__((weak)) int8_t read_time_of_extreme_temp(uint32_t *value)
+{
+    UNUSED(value);
+    return 0;
+}
+__attribute__((weak)) int8_t read_time_of_extreme_chg(uint32_t *value)
+{
+    UNUSED(value);
+    return 0;
+}
+
+__attribute__((weak)) int8_t write_remain_power_capability(int value)
+{
+    UNUSED(value);
+    return 0;
+}
+__attribute__((weak)) int8_t write_remain_energy_conv_eff(int value)
+{
+    UNUSED(value);
+    return 0;
+}
+__attribute__((weak)) int8_t write_evolu_of_selfdsg(int value)
+{
+    UNUSED(value);
+    return 0;
+}
+__attribute__((weak)) int8_t write_num_of_deep_dsg(int value)
+{
+    UNUSED(value);
+    return 0;
+}
+__attribute__((weak)) int8_t write_num_of_deep_chg(int value)
+{
+    UNUSED(value);
+    return 0;
+}
+__attribute__((weak)) int8_t write_time_of_extreme_temp(uint32_t value)
+{
+    UNUSED(value);
+    return 0;
+}
+__attribute__((weak)) int8_t write_time_of_extreme_chg(uint32_t value)
+{
+    UNUSED(value);
+    return 0;
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

@@ -43,6 +43,15 @@ uint32_t     g_task_call_tick;
 uint8_t      g_soh_calibrate_tigger;          // soh calibration tigger, 0:not trigged, 1:trigged by charging, 2:trigged by discharging
 float        g_group_soc_before_jump;
 
+int          g_remain_power_capability;
+int          g_remain_energy_conv_eff;
+int          g_evolu_of_selfdsg;
+int          g_deep_chg_cnt; 
+int          g_deep_dsg_cnt; 
+uint32_t     g_extreme_chg_time_cnt;
+uint32_t     g_extreme_time_cnt;
+
+
 
 int8_t sox_init(struct SOX_Init_Attr *attr)
 {
@@ -222,3 +231,49 @@ uint32_t get_task_calltick(void)
 {
     return g_task_call_tick;
 }
+
+
+// battery law
+int get_num_of_deep_chg(void)
+{
+
+    return g_deep_chg_cnt;
+
+}
+
+uint32_t get_time_of_extreme_chg(void)
+{
+    return g_extreme_chg_time_cnt;
+}
+
+int get_num_of_deep_dsg(void)
+{
+    return g_deep_dsg_cnt;
+}
+
+int get_evolu_of_selfdsg(void)
+{
+    return g_evolu_of_selfdsg;
+}
+int get_remain_power_capability(void)
+{
+    return g_remain_power_capability;
+}
+int get_remain_energy_conv_eff(void)
+{
+#if SOX_CFG_H_REMAIN_ENERGY_CONV_EFF_M_N == 1
+    return get_remain_energy_conv_eff_m1();
+#elif SOX_CFG_H_REMAIN_ENERGY_CONV_EFF_M_N == 2
+    return get_remain_energy_conv_eff_m2();
+#endif
+}
+
+uint32_t get_time_of_extreme_temp(void)
+{
+    return g_extreme_time_cnt;
+}
+
+
+
+
+

@@ -65,8 +65,6 @@ int8_t soe_task(void)
     
     switch(state){
         case 0:                                         // standby
-            g_sigChgWH = 0;
-            g_sigDsgWH = 0;
             lastState = state;
             if(g_cur > CUR_WINDOW_A)
             {
@@ -82,6 +80,7 @@ int8_t soe_task(void)
             lastState = state;
             if(g_cur> CUR_WINDOW_A)
             {
+                g_sigDsgWH = 0;
                 g_sigChgWH += g_cur * g_grpVol /3600;
             }else if(g_cur < -CUR_WINDOW_A)
             {
@@ -91,14 +90,13 @@ int8_t soe_task(void)
             }
             break;
         case 2:                                         // charge to discharge
-            g_sigChgWH = 0;
-            g_sigDsgWH = 0;
             lastState = state;
             state = 3;
             break;
         case 3:                                         // discharge        
             lastState = state;
             if(g_cur < -CUR_WINDOW_A){
+                g_sigChgWH = 0;
                 g_sigDsgWH += fabsf(g_cur * g_grpVol /3600);
             }else if(g_cur > CUR_WINDOW_A)
             {
@@ -108,8 +106,6 @@ int8_t soe_task(void)
             }
             break;
         case 4:                                         // discharge to charge
-            g_sigChgWH = 0;
-            g_sigDsgWH = 0;
             lastState = state;
             state = 1;
             break;
@@ -117,9 +113,7 @@ int8_t soe_task(void)
             break;
     
     }
-    
 
-    // printf("sigChg:%f,  sigDsg:%f, accChgWH:%f, accDsgWH:%f\n",*g_sigChgWH, *g_sigDsgWH, *g_accChgWH, *g_accDsgWH);
     return 0;
 
 }

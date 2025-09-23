@@ -84,16 +84,13 @@
 /***********************
  *  SOH Configuration
  **********************/
-#define MAX_CYCLE_TIME                  10000
-#define REFERENCE_CYCLE_TIME            5000
-#define SOH_HIGH_TEMP             450                             // degree 45
-#define SOH_LOW_TEMP              250                             // degree 25
+#define MAX_CYCLE_TIME                  10000                      // for soh init(limitation of cycle count)
+#define REFERENCE_CYCLE_TIME            5000                       //
+#define SOH_HIGH_TEMP             450                              // degree 45
+#define SOH_LOW_TEMP              250                              // degree 25
 #define SOH_CYCLE_L1_PERCENT                       80.0f
-#define SOH_CYCLE_L2_PERCENT                       60.0f
 #define SOH_HIGH_TEMP_CYCLE_L1                      2000             // soh 100% decay to SOH_CYCLE_L1_PERCENT%
 #define SOH_LOW_TEMP_CYCLE_L1                       5000             // soh 100% decay to SOH_CYCLE_L1_PERCENT%
-#define SOH_HIGH_TEMP_CYCLE_L2                      1000             // soh SOH_CYCLE_L1_PERCENT% decay to SOH_CYCLE_L2_PERCENT%
-#define SOH_LOW_TEMP_CYCLE_L2                        500             // soh SOH_CYCLE_L1_PERCENT% decay to SOH_CYCLE_L2_PERCENT%
 
 
 #define SOH_PASSIVE_CALIBRATE_TEMP_LIMIT      200               // 20 dregrees, one digits(interger)
@@ -101,11 +98,15 @@
 #define SOH_PASSIVE_GRP_SOC_DSG_START              90
 
 
+#define SOX_CFG_H_BAT_LAW                       0                     // function of batttery law enable/disable
+#define SOX_CFG_H_REMAIN_ENERGY_CONV_EFF_M_N    2                  // remain_energy_conv_eff calculate method n  (1 or 2)   
+
+
 
 /***********************
  *  SOE Configuration
  **********************/
-#define SOE_SAVE_INTERVAL_S         100     
+#define SOE_SAVE_INTERVAL_S         100         
 #define SOE_SAVE_DIFF_WH            5
 
 

@@ -120,4 +120,31 @@ int8_t write_saved_soe(float totalChgWh, float totalDsgWh, float totalChgAh, flo
 uint32_t get_cpu_tick(void);
 
 
+int get_time_of_day_from_use(void);
+
+uint64_t get_time_min(void);
+
+// battery law
+int8_t read_remain_power_capability(int *value);
+int8_t read_remain_energy_conv_eff(int *value);
+int8_t read_evolu_of_selfdsg(int *value);
+int8_t read_num_of_deep_dsg(int *value);
+int8_t read_num_of_deep_chg(int *value);
+int8_t read_time_of_extreme_temp(uint32_t *value);
+int8_t read_time_of_extreme_chg(uint32_t *value);
+
+int8_t write_remain_power_capability(int value);
+int8_t write_remain_energy_conv_eff(int value);
+int8_t write_evolu_of_selfdsg(int value);
+int8_t write_num_of_deep_dsg(int value);
+int8_t write_num_of_deep_chg(int value);
+int8_t write_time_of_extreme_temp(uint32_t value);
+int8_t write_time_of_extreme_chg(uint32_t value);
+
+
+
+
+
+
+
 #endif

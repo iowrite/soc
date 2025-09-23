@@ -11,4 +11,7 @@ int8_t soh_init(void);
 int8_t soh_task(void);
 void soh_save(bool force);
 
+int get_remain_energy_conv_eff_m1(void);
+int get_remain_energy_conv_eff_m2(void);
+
 #endif
