@@ -1124,7 +1124,9 @@ void soc_save(bool force)
                 {
                     lastsoc[i] = g_celSOC[i];
                 }
+#if SOX_DEBUG_SOC_SAVE
                 DEBUG_LOG("soc save\n");
+#endif
                 write_saved_soc(lastsoc);
 
                 save = false;
@@ -1141,7 +1143,9 @@ void soc_save(bool force)
         {
             soc_write[i] = g_celSOC[i];
         }
+#if SOX_DEBUG_SOC_SAVE
         DEBUG_LOG("soc save\n");
+#endif
         write_saved_soc(soc_write);
         write_saved_soc_group(g_grpSOC);
     }

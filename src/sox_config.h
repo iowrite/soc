@@ -7,6 +7,11 @@
 #define CELL_NUMS                       6
 #define CUR_WINDOW_A                    4.0f             //A
 #define SOX_DEBUG                       0
+#define SOX_DEBUG_TIME                  0
+#define SOX_DEBUG_SOC_SAVE              0
+#define SOX_DEBUG_SOH_SAVE              0   
+#define SOX_DEBUG_SOE_SAVE              0
+
 
 /***********************
  *  PORT Configuration
@@ -84,6 +89,7 @@
 /***********************
  *  SOH Configuration
  **********************/
+ #define SOX_CFG_H_SAVE_CHECK_TIME   (uint32_t)(60*60*24)    
 #define MAX_CYCLE_TIME                  10000                      // for soh init(limitation of cycle count)
 #define REFERENCE_CYCLE_TIME            5000                       //
 #define SOH_HIGH_TEMP             450                              // degree 45
@@ -106,7 +112,7 @@
 /***********************
  *  SOE Configuration
  **********************/
-#define SOE_SAVE_INTERVAL_S         100         
+#define SOE_SAVE_INTERVAL_S         (uint32_t)100         
 #define SOE_SAVE_DIFF_WH            5
 
 

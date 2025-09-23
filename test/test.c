@@ -186,8 +186,9 @@ int main(int argc, char *argv[])
 
 
     
-    for(int i = 0; i < s_excel_row; i++)
+    for(int i = 0; i < s_excel_row-1; i++)
     {
+
         // prepare input data
         struct SOX_Input input = {
             .cur = sox_excel_input[i].cur,
@@ -195,8 +196,24 @@ int main(int argc, char *argv[])
             .full = false,
             .empty = false,
         };
+        int min_vol = sox_excel_input[i].vol[0];
+        int max_vol = sox_excel_input[i].vol[0];
         for (int j = 0; j < CELL_NUMS; j++) {
             input.vol[j] = sox_excel_input[i].vol[j];
+            if(sox_excel_input[i].vol[j] < min_vol){
+                min_vol = sox_excel_input[i].vol[j];
+            }
+            if(sox_excel_input[i].vol[j] > max_vol){
+                max_vol = sox_excel_input[i].vol[j];
+            }
+        }
+        if(max_vol > s_chg_stop_vol)
+        {
+            input.full = true;
+        }
+        if(min_vol < s_dsg_stop_vol)
+        {
+            input.empty = true;
         }
         // asign temp input(map input)
 #if PORT_SIM_PROJECT_STACK
@@ -206,7 +223,7 @@ int main(int argc, char *argv[])
 #endif
         // caculate
         sox_task(&input);
-#if SOX_DEBUG
+#if SOX_DEBUG && SOX_DEBUG_TIME
         printf("time consumption: %u us   <--->  ", get_task_runtime());
         printf("call tick: %u\n", get_task_calltick());
 #endif
@@ -330,7 +347,7 @@ static void project_jiguang_cell_tempature_map(int16_t *input, float *output)
     input[2] = roundf(output[2]*10);
     input[3] = roundf(output[2]*10);
     input[4] = roundf(output[3]*10);
-    input[4] = roundf(output[4]*10);
+    input[5] = roundf(output[4]*10);
 }
 #endif
 
