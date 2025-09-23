@@ -6,6 +6,7 @@
 #include "sox_config.h"
 #include "soe.h"
 #include "common.h"
+#include "debug.h"
 
 
 int8_t soe_init(void)
@@ -131,7 +132,6 @@ void soe_save(bool force)
         static float last_accDsgWH = 0;
         static float last_accChgWH = 0;
         static bool save_flag = false;
-        UNUSED(save_flag);
         static uint32_t last_time = 0;
         if(g_accChgWH - last_accChgWH > SOE_SAVE_DIFF_WH || g_accDsgWH - last_accDsgWH > SOE_SAVE_DIFF_WH)
         {
@@ -139,10 +139,16 @@ void soe_save(bool force)
         }
         if(timebase_get_time_s() - last_time > SOE_SAVE_INTERVAL_S)
         {
-            save_flag = false;
-            write_saved_soe(g_accChgWH, g_accDsgWH, g_accChgAH, g_accDsgAH);
+            if(save_flag)
+            {
+                save_flag = false;
+                DEBUG_LOG("soe save\n");
+                write_saved_soe(g_accChgWH, g_accDsgWH, g_accChgAH, g_accDsgAH);
+            }
+            last_time = timebase_get_time_s();
         } 
     }else{
+        DEBUG_LOG("soe save\n");
         write_saved_soe(g_accChgWH, g_accDsgWH, g_accChgAH, g_accDsgAH);
     }
 }

@@ -12,6 +12,7 @@
 #include "soh.h"
 #include "common.h"
 #include "curve.h"
+#include "debug.h"
 
 
 static float s_lastSOC[CELL_NUMS];
@@ -636,12 +637,14 @@ void soh_save(bool force)
         if(timebase_get_time_s() - save_time > 60*60*24*7)
         {
             if(save_flag){
+                DEBUG_LOG("soh save\n");
                 write_saved_cycle((uint32_t)g_cycleCount);
                 write_saved_soh(g_celSOH);
             }
             save_time = timebase_get_time_s();
         }
     }else{
+            DEBUG_LOG("soh save\n");
             write_saved_cycle((uint32_t)g_cycleCount);
             write_saved_soh(g_celSOH);
     }
