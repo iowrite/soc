@@ -670,3 +670,17 @@ void soh_save(bool force)
 }
 
 
+int8_t sox_manual_set_soh(float soh, uint32_t cycleCount)
+{
+    for(int i = 0; i < CELL_NUMS; i++)
+    {
+        g_celSOH[i] = soh;
+    }
+    g_grpSOH = soh;
+    g_cycleCount = (float)cycleCount;
+
+    soh_save(true);
+    return 0;
+}
+
+

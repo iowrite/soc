@@ -121,7 +121,7 @@ static uint16_t get_cap(float cur, int16_t tempra)
 
 
 
-static const uint16_t * get_v(const uint16_t *chg_curve[TEMP_POINT_NUM][CUR_POINT_NUM], const uint16_t *dsg_curve[TEMP_POINT_NUM][CUR_POINT_NUM], float cur, int16_t tempra)
+static const uint16_t * get_v(const uint16_t * const chg_curve[TEMP_POINT_NUM][CUR_POINT_NUM], const uint16_t * const dsg_curve[TEMP_POINT_NUM][CUR_POINT_NUM], float cur, int16_t tempra)
 {
 
     int tidx = 0;
@@ -171,7 +171,7 @@ static const uint16_t * get_v(const uint16_t *chg_curve[TEMP_POINT_NUM][CUR_POIN
 }
 
 
-static const int16_t * get_k(const int16_t *chg_curve[TEMP_POINT_NUM][CUR_POINT_NUM], const int16_t *dsg_curve[TEMP_POINT_NUM][CUR_POINT_NUM], float cur, int16_t tempra)
+static const int16_t * get_k(const int16_t *const chg_curve[TEMP_POINT_NUM][CUR_POINT_NUM], const int16_t * const dsg_curve[TEMP_POINT_NUM][CUR_POINT_NUM], float cur, int16_t tempra)
 {
     int tidx = 0;
     tidx = (tempra+200)/100;
@@ -669,6 +669,8 @@ void mysoc(struct SOC_Info *SOCinfo, float cur, uint16_t vol, int16_t tempra, fl
 }
 
 
+static bool s_grp_soc_init = false;
+
 
 #define GRP_Q_MAX               25
 #define GRP_Q_Min               1
@@ -696,258 +698,264 @@ static void gropuSOC(void)
     callCount++;
     UNUSED(callCount);      // avoid warning in debug mode
 #endif 
-    float unsortedSOC[CELL_NUMS];
-    bool pureAH_lock = false;
-    for(int i = 0; i < CELL_NUMS; i++)
+    if(g_cur != 0)
     {
-        if(g_socInfo[i].soc_smooth > 0)         // smooth enabled
+        float unsortedSOC[CELL_NUMS];
+        bool pureAH_lock = false;
+        for(int i = 0; i < CELL_NUMS; i++)
         {
-            if(CHARGING(g_cur) &&  g_socInfo[i].soc_smooth>g_socInfo[i].soc){
-                unsortedSOC[i] = g_socInfo[i].soc_smooth;
+            if(g_socInfo[i].soc_smooth > 0)         // smooth enabled
+            {
+                if(CHARGING(g_cur) &&  g_socInfo[i].soc_smooth>g_socInfo[i].soc){
+                    unsortedSOC[i] = g_socInfo[i].soc_smooth;
 
-            }else if(DISCHARGING(g_cur) &&  g_socInfo[i].soc_smooth<g_socInfo[i].soc){
-                unsortedSOC[i] = g_socInfo[i].soc_smooth;
+                }else if(DISCHARGING(g_cur) &&  g_socInfo[i].soc_smooth<g_socInfo[i].soc){
+                    unsortedSOC[i] = g_socInfo[i].soc_smooth;
+                }else{
+                    unsortedSOC[i] = g_socInfo[i].soc;
+                }
             }else{
                 unsortedSOC[i] = g_socInfo[i].soc;
             }
-        }else{
-            unsortedSOC[i] = g_socInfo[i].soc;
+            if(g_socInfo[i].pureAH_lock)
+            {
+                pureAH_lock = true;
+            }
+            
         }
-        if(g_socInfo[i].pureAH_lock)
+        float sortedSOC[CELL_NUMS];
+        bubbleSort_ascend_float(unsortedSOC, sortedSOC, CELL_NUMS);
+        float maxSOC = sortedSOC[CELL_NUMS-1];
+        float minSOC = sortedSOC[0];
+        float avgSOC = 0;
+        for(int i=0; i<CELL_NUMS; i++)
         {
-            pureAH_lock = true;
+            avgSOC += sortedSOC[i];
         }
-        
-    }
-    float sortedSOC[CELL_NUMS];
-    bubbleSort_ascend_float(unsortedSOC, sortedSOC, CELL_NUMS);
-    float maxSOC = sortedSOC[CELL_NUMS-1];
-    float minSOC = sortedSOC[0];
-    float avgSOC = 0;
-    for(int i=0; i<CELL_NUMS; i++)
-    {
-        avgSOC += sortedSOC[i];
-    }
-    avgSOC = avgSOC/CELL_NUMS;
+        avgSOC = avgSOC/CELL_NUMS;
 
 
 
-    float max_soc_change_R_offset = fabsf(maxSOC - avgSOC);
-    float min_soc_change_R_offset = fabsf(minSOC - avgSOC);
-    float max_soc_change_R_offset2 = max_soc_change_R_offset*max_soc_change_R_offset;
-    float min_soc_change_R_offset2 = min_soc_change_R_offset*min_soc_change_R_offset;
+        float max_soc_change_R_offset = fabsf(maxSOC - avgSOC);
+        float min_soc_change_R_offset = fabsf(minSOC - avgSOC);
+        float max_soc_change_R_offset2 = max_soc_change_R_offset*max_soc_change_R_offset;
+        float min_soc_change_R_offset2 = min_soc_change_R_offset*min_soc_change_R_offset;
 
 
-    if(max_soc_change_R_offset2 > 9)
-    {
-        max_soc_change_R_offset2 = 9; 
-        if(maxSOC > 97)
+        if(max_soc_change_R_offset2 > 9)
         {
-            max_soc_change_R_offset2 = 9*(100-maxSOC)/3; 
+            max_soc_change_R_offset2 = 9; 
+            if(maxSOC > 97)
+            {
+                max_soc_change_R_offset2 = 9*(100-maxSOC)/3; 
+            }
         }
-    }
-    if(min_soc_change_R_offset2 > 9)
-    {
-        min_soc_change_R_offset = 9; 
-        if(minSOC < 5)
+        if(min_soc_change_R_offset2 > 9)
         {
-            min_soc_change_R_offset2 = 9*minSOC/5;
+            min_soc_change_R_offset = 9; 
+            if(minSOC < 5)
+            {
+                min_soc_change_R_offset2 = 9*minSOC/5;
+            }
         }
-    }
-    if(pureAH_lock)
-    {
-        max_soc_change_R_offset2 = 0;
-        min_soc_change_R_offset2 = 0;
-    }
+        if(pureAH_lock)
+        {
+            max_soc_change_R_offset2 = 0;
+            min_soc_change_R_offset2 = 0;
+        }
 
-    float maxSOC_R = R_HIGH_MIN + (1-g_grpSOC/100) * (R_HIGH_MAX- R_HIGH_MIN) + max_soc_change_R_offset2;
-    float minSOC_R = R_LOW_MIN + g_grpSOC/100 * (R_LOW_MAX- R_LOW_MIN) + min_soc_change_R_offset2;
+        float maxSOC_R = R_HIGH_MIN + (1-g_grpSOC/100) * (R_HIGH_MAX- R_HIGH_MIN) + max_soc_change_R_offset2;
+        float minSOC_R = R_LOW_MIN + g_grpSOC/100 * (R_LOW_MAX- R_LOW_MIN) + min_soc_change_R_offset2;
 
 
-    if(g_grpSOC > 50)
-    {
-        if(minSOC_R > 25)
+        if(g_grpSOC > 50)
         {
-            minSOC_R = 25;
-        }
-        if(maxSOC_R > minSOC_R){
-            maxSOC_R = minSOC_R -1;
-        }
-    }else if(g_grpSOC < 50)
-    {
-        if(maxSOC_R > 25)
-        {
-            maxSOC_R = 25;
-        }
-        if(minSOC_R > maxSOC_R)
-        {
-            minSOC_R = maxSOC_R -1;
-        }
-    }else{
-        if(minSOC_R > 25)
-        { 
-            minSOC_R = 25;
-        }
-        if(maxSOC_R > 25)
-        {
-            maxSOC_R = 25;
-        }
-        if(g_cur > 0)
-        {
+            if(minSOC_R > 25)
+            {
+                minSOC_R = 25;
+            }
             if(maxSOC_R > minSOC_R){
                 maxSOC_R = minSOC_R -1;
             }
-        }
-        if(g_cur < 0)
+        }else if(g_grpSOC < 50)
         {
+            if(maxSOC_R > 25)
+            {
+                maxSOC_R = 25;
+            }
             if(minSOC_R > maxSOC_R)
             {
                 minSOC_R = maxSOC_R -1;
             }
+        }else{
+            if(minSOC_R > 25)
+            { 
+                minSOC_R = 25;
+            }
+            if(maxSOC_R > 25)
+            {
+                maxSOC_R = 25;
+            }
+            if(g_cur > 0)
+            {
+                if(maxSOC_R > minSOC_R){
+                    maxSOC_R = minSOC_R -1;
+                }
+            }
+            if(g_cur < 0)
+            {
+                if(minSOC_R > maxSOC_R)
+                {
+                    minSOC_R = maxSOC_R -1;
+                }
+            }
         }
-    }
 
-    static float cal_grp_soc;
-    static bool grp_soc_init = false;
-    if(!grp_soc_init){
-        grp_soc_init = true;
-        cal_grp_soc = g_grpSOC;
+        static float cal_grp_soc;
+
+        if(!s_grp_soc_init){
+            s_grp_soc_init = true;
+            cal_grp_soc = g_grpSOC;
+        }
+        
+
+        static float grp_soc_p = 0.1f;
+        float cal_grp_soc_p;
+        if(CHARGING(g_cur) && g_grpSOC > 95)
+        {
+            cal_grp_soc_p=grp_soc_p + GRP_Q_1;
+        }else if(DISCHARGING(g_cur) && g_grpSOC < 10)
+        {
+            cal_grp_soc_p=grp_soc_p + GRP_Q_2;
+        }else{
+            float grp_soc_q_k = fabsf(g_cur)/10;
+            if(grp_soc_q_k < 0.5f)
+            {
+                grp_soc_q_k = 0.5f;
+            }
+            cal_grp_soc_p=grp_soc_p + GRP_Q_3*grp_soc_q_k;
+        }
+
+
+        float H[2][1] = {
+            {1}, 
+            {1}
+        };
+        float H_t[1][2] = {
+            {1, 1}
+        };
+        float Z[2][1] = {
+            {minSOC}, 
+            {maxSOC}
+        };
+        float R[2][2] = {    
+            {minSOC_R, 0        },
+            {0       , maxSOC_R },
+        };
+        float S[2][2] = {0};
+        float H_P[2][1] = {
+            {cal_grp_soc_p}, 
+            {cal_grp_soc_p}
+        };
+        matrix_multiply((float *)H_P, (float *)H_t, (float *)S, 2, 1, 2);
+        for(int i=0; i<2; i++)
+        {
+            for(int j=0; j<2; j++)
+            {
+                S[i][j] = S[i][j] + R[i][j];
+            }
+
+        }
+
+        float S_i[2][2] = {0};
+        inverse_matrix_2x2(S, S_i);
+
+        float P_H_t[1][2] = {
+            {cal_grp_soc_p, cal_grp_soc_p}
+        };
+
+        float K[1][2] = {0};
+        matrix_multiply((float *)P_H_t, (float *)S_i, (float *)K, 1, 2, 2);
+
+
+        float Z_H[2][1] = {0};
+        float H_x[2][1] = {
+            {cal_grp_soc}, 
+            {cal_grp_soc}
+        };
+        for(int i=0; i<2; i++)
+        {
+            Z_H[i][0] = Z[i][0] - H_x[i][0];
+        }
+
+        float x_k = 0;
+        matrix_multiply((float *)K, (float *)Z_H, &x_k, 1, 2, 1);
+
+        cal_grp_soc = cal_grp_soc + x_k;
+
+        float K_H = 0;
+        matrix_multiply((float *)K, (float *)H, &K_H, 1, 2, 1);
+        grp_soc_p = (1-K_H)*cal_grp_soc_p;
+
+
+        // when soc increasing, soc upper limit 99%, when soc decreasing, soc lower limit 1%
+        if(cal_grp_soc > g_grpSOC)
+        {
+            if(cal_grp_soc > 99)
+            {
+                cal_grp_soc = 99;
+            }
+        }else if (cal_grp_soc < g_grpSOC)
+        {
+            if(cal_grp_soc < 1){
+                cal_grp_soc = 1;
+            }
+        }
+
+        // avoid soc abnormal reverse jump
+        if(CHARGING(g_cur) && cal_grp_soc < g_grpSOC)
+        {
+            return;
+        }
+        if(DISCHARGING(g_cur) && cal_grp_soc > g_grpSOC)
+        {
+            return; 
+        }
+
+            
+#if SOC_FAKE_SMOOTH_ENABLE
+        static uint32_t smooth_count = 0;
+        float smooth_soc = g_grpSOC;
+        if(fabsf(cal_grp_soc - g_grpSOC)>=2)
+        {        
+            if(timebase_get_time_s()-smooth_count > (uint32_t)2)
+            {
+                smooth_count = timebase_get_time_s();
+                if(cal_grp_soc > g_grpSOC)
+                {
+                    smooth_soc++;
+                }else{
+                    smooth_soc--;
+                }
+                if(smooth_soc > 99)
+                {
+                    smooth_soc = 99;
+                }else if(smooth_soc < 1){
+                    smooth_soc = 1;
+                }
+                g_grpSOC = smooth_soc;
+
+            }
+        }else{
+            g_grpSOC = cal_grp_soc;
+        }
+#else
+        g_grpSOC = cal_grp_soc;
+#endif
+
+
     }
     
-
-    static float grp_soc_p = 0.1f;
-    float cal_grp_soc_p;
-    if(CHARGING(g_cur) && g_grpSOC > 95)
-    {
-        cal_grp_soc_p=grp_soc_p + GRP_Q_1;
-    }else if(CHARGING(g_cur) && g_grpSOC < 10)
-    {
-        cal_grp_soc_p=grp_soc_p + GRP_Q_2;
-    }else{
-        float grp_soc_q_k = fabsf(g_cur)/10;
-        if(grp_soc_q_k < 0.5f)
-        {
-            grp_soc_q_k = 0.5f;
-        }
-        cal_grp_soc_p=grp_soc_p + GRP_Q_3*grp_soc_q_k;
-    }
-
-
-    float H[2][1] = {
-        {1}, 
-        {1}
-    };
-    float H_t[1][2] = {
-        {1, 1}
-    };
-    float Z[2][1] = {
-        {minSOC}, 
-        {maxSOC}
-    };
-    float R[2][2] = {    
-        {minSOC_R, 0        },
-        {0       , maxSOC_R },
-    };
-    float S[2][2] = {0};
-    float H_P[2][1] = {
-        {cal_grp_soc_p}, 
-        {cal_grp_soc_p}
-    };
-    matrix_multiply((float *)H_P, (float *)H_t, (float *)S, 2, 1, 2);
-    for(int i=0; i<2; i++)
-    {
-        for(int j=0; j<2; j++)
-        {
-            S[i][j] = S[i][j] + R[i][j];
-        }
-
-    }
-
-    float S_i[2][2] = {0};
-    inverse_matrix_2x2(S, S_i);
-
-    float P_H_t[1][2] = {
-        {cal_grp_soc_p, cal_grp_soc_p}
-    };
-
-    float K[1][2] = {0};
-    matrix_multiply((float *)P_H_t, (float *)S_i, (float *)K, 1, 2, 2);
-
-
-    float Z_H[2][1] = {0};
-    float H_x[2][1] = {
-        {cal_grp_soc}, 
-        {cal_grp_soc}
-    };
-    for(int i=0; i<2; i++)
-    {
-        Z_H[i][0] = Z[i][0] - H_x[i][0];
-    }
-
-    float x_k = 0;
-    matrix_multiply((float *)K, (float *)Z_H, &x_k, 1, 2, 1);
-
-    cal_grp_soc = cal_grp_soc + x_k;
-
-    float K_H = 0;
-    matrix_multiply((float *)K, (float *)H, &K_H, 1, 2, 1);
-    grp_soc_p = (1-K_H)*cal_grp_soc_p;
-
-
-    // when soc increasing, soc upper limit 99%, when soc decreasing, soc lower limit 1%
-    if(cal_grp_soc > g_grpSOC)
-    {
-        if(cal_grp_soc > 99)
-        {
-            cal_grp_soc = 99;
-        }
-    }else if (cal_grp_soc < g_grpSOC)
-    {
-        if(cal_grp_soc < 1){
-            cal_grp_soc = 1;
-        }
-    }
-
-    // avoid soc abnormal reverse jump
-    if(CHARGING(g_cur) && cal_grp_soc < g_grpSOC)
-    {
-        return;
-    }
-    if(DISCHARGING(g_cur) && cal_grp_soc > g_grpSOC)
-    {
-        return; 
-    }
-
-        
-#if SOC_FAKE_SMOOTH_ENABLE
-    static uint32_t smooth_count = 0;
-    float smooth_soc = g_grpSOC;
-    if(fabsf(cal_grp_soc - g_grpSOC)>=2)
-    {        
-        if(timebase_get_time_s()-smooth_count > (uint32_t)2)
-        {
-            smooth_count = timebase_get_time_s();
-            if(cal_grp_soc > g_grpSOC)
-            {
-                smooth_soc++;
-            }else{
-                smooth_soc--;
-            }
-            if(smooth_soc > 99)
-            {
-                smooth_soc = 99;
-            }else if(smooth_soc < 1){
-                smooth_soc = 1;
-            }
-            g_grpSOC = smooth_soc;
-
-        }
-    }else{
-        g_grpSOC = cal_grp_soc;
-    }
-#else
-    g_grpSOC = cal_grp_soc;
-#endif
 
 }
 
@@ -1280,4 +1288,21 @@ void soc_task(bool full, bool empty)
 }
 
 
+
+
+int8_t sox_manual_set_soc(float soc)
+{
+    for(int i = 0; i < CELL_NUMS; i++){
+        g_socInfo[i].soc = soc;
+        g_celSOC[i] = soc;
+		if(g_socInfo[i].soc_smooth > 0)
+		{
+			g_socInfo[i].soc_smooth = soc;
+		}
+    }
+    g_grpSOC = (uint16_t)soc;
+    s_grp_soc_init = true;
+    soc_save(true);
+    return 0;
+}
 
