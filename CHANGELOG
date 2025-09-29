@@ -1,5 +1,11 @@
 # CHANGLOG
 
+## v2.3.3
+* s_chg_curve s_chg_curve_k s_dsg_curve s_dsg_curve_k 增加指针不可改指
+* 组端soc, 无电流时不改变, 修复强制校准时,不能立即改变的问题
+* 修复组端soc放电未端快速降低至最小soc
+* 改变xx_manual_set系列函数位置(放在各自的文件中, 方便使用本文件内部的全局变量)
+
 
 ## v2.3.2
 * 细化打印使能控制宏
