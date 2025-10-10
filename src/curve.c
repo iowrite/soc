@@ -519,7 +519,7 @@ const int16_t k_45d5c_dsg[SOC_POINT_NUM] = {
 /**********************************************************************************************************************
  *                                                charge curve table 
  **********************************************************************************************************************/
-const uint16_t* s_chg_curve[TEMP_POINT_NUM][CUR_POINT_NUM]= 
+const uint16_t* const s_chg_curve[TEMP_POINT_NUM][CUR_POINT_NUM]= 
 {
     /*  0.1C                    0.2 C                        0.3 C                         0.4 C                            0.5C                           */
     [0][0] = v_5d1c_chg,        [0][1] = v_5d1c_chg,        [0][2] = v_5d1c_chg,        [0][3] = v_5d1c_chg,        [0][4] = v_5d1c_chg,                    // -15
@@ -532,7 +532,7 @@ const uint16_t* s_chg_curve[TEMP_POINT_NUM][CUR_POINT_NUM]=
     [7][0] = v_45d1c_chg,       [7][1] = v_45d2c_chg,       [7][2] = v_45d3c_chg,       [7][3] = v_45d4c_chg,       [7][4] = v_45d5c_chg,                   // 55
 };
 
-const int16_t* s_chg_curve_k[TEMP_POINT_NUM][CUR_POINT_NUM] = 
+const int16_t* const s_chg_curve_k[TEMP_POINT_NUM][CUR_POINT_NUM] = 
 {
         /*  0.1C                0.2 C                       0.3 C                       0.4 C                        0.5 C                                   */
     [0][0] = k_5d1c_chg,        [0][1] = k_5d1c_chg,        [0][2] = k_5d1c_chg,        [0][3] = k_5d1c_chg,        [0][4] = k_5d1c_chg,                    // -15
@@ -549,7 +549,7 @@ const int16_t* s_chg_curve_k[TEMP_POINT_NUM][CUR_POINT_NUM] =
 /**********************************************************************************************************************
  *                   discharge curve table 
  **********************************************************************************************************************/
-const uint16_t* s_dsg_curve[TEMP_POINT_NUM][CUR_POINT_NUM] = 
+const uint16_t* const s_dsg_curve[TEMP_POINT_NUM][CUR_POINT_NUM] = 
 {
    /*  0.1C                     0.2 C                       0.3 C                      0.4 C                             0.5C                              */
     [0][0] = v_5d1c_dsg,        [0][1] = v_5d2c_dsg,        [0][2] = v_5d2c_dsg,        [0][3] = v_5d2c_dsg,        [0][4] = v_5d2c_dsg,                    // -15
@@ -562,7 +562,7 @@ const uint16_t* s_dsg_curve[TEMP_POINT_NUM][CUR_POINT_NUM] =
     [7][0] = v_45d1c_dsg,       [7][1] = v_45d2c_dsg,       [7][2] = v_45d3c_dsg,       [7][3] = v_45d4c_dsg,       [7][4] = v_45d5c_dsg,                   // 55
 };
 
-const int16_t* s_dsg_curve_k[TEMP_POINT_NUM][CUR_POINT_NUM] = 
+const int16_t* const s_dsg_curve_k[TEMP_POINT_NUM][CUR_POINT_NUM] = 
 {
     /*  0.1C                    0.2 C                           0.3 C                     0.4 C                            0.5C                               */
     [0][0] = k_5d1c_dsg,        [0][1] = k_5d2c_dsg,        [0][2] = k_5d2c_dsg,        [0][3] = k_5d2c_dsg,        [0][4] = k_5d2c_dsg,                    // -15

@@ -75,6 +75,12 @@ int8_t  soh_init(void)
         }
     }
 
+    float sumSOH = 0;
+    for (size_t i = 0; i < CELL_NUMS; i++)
+    {
+        sumSOH += g_celSOH[i];
+    }
+    g_grpSOH = sumSOH / CELL_NUMS;
 
 
 
@@ -578,25 +584,28 @@ int8_t soh_task(void)
     float soh_calibrate = 0;
     if(g_soh_calibrate_tigger == SOH_CALIBRATION_TIGGERED_BY_CHARGING)
     {   
+        g_soh_calibrate_tigger = 0;
         if(s_recored_start.type == Battery_State_charging 
             && s_recored_start.group_SOC < SOH_PASSIVE_GRP_SOC_CHG_START
             && s_recored_start.min_cell_temp > SOH_PASSIVE_CALIBRATE_TEMP_LIMIT
             && s_recored_end.min_cell_temp > SOH_PASSIVE_CALIBRATE_TEMP_LIMIT)
         {
+            DEBUG_LOG("charge soh_calibratem , jump from %f to 100 \n", g_group_soc_before_jump);
             float jump_diff = 100-g_group_soc_before_jump;
             soh_calibrate = jump_diff/10;
             if(soh_calibrate > 1){
                 soh_calibrate = 1;
             }
         }
-
     }else if(g_soh_calibrate_tigger == SOH_CALIBRATION_TIGGERED_BY_DISCHARGING)
     {
+        g_soh_calibrate_tigger = 0;
         if(s_recored_start.type == Battery_State_discharging 
             && s_recored_start.group_SOC > SOH_PASSIVE_GRP_SOC_DSG_START
             && s_recored_start.min_cell_temp > SOH_PASSIVE_CALIBRATE_TEMP_LIMIT
             && s_recored_end.min_cell_temp > SOH_PASSIVE_CALIBRATE_TEMP_LIMIT)
         {
+            DEBUG_LOG("discharge soh_calibratem , jump from %f to 0 \n", g_group_soc_before_jump);
             float jump_diff = g_group_soc_before_jump;
             soh_calibrate = jump_diff/5;
             if(soh_calibrate > 1){
@@ -626,29 +635,52 @@ int8_t soh_task(void)
 void soh_save(bool force)
 {
     if(!force){
-        static float  last_cycleCount = 0;
+        static float  last_cycleCount = 0, last_soh = 100;
         bool save_flag = false;
         static uint32_t save_time = 0;
-        if(last_cycleCount - g_cycleCount > 1)
+        if(g_cycleCount - last_cycleCount > 1)
         {
             save_flag = true;
             last_cycleCount = g_cycleCount;
         }
-        if(timebase_get_time_s() - save_time > 60*60*24*7)
+        if(last_soh - g_grpSOH >= 1)
+        {
+            save_flag = true;
+            last_soh = g_grpSOH;
+        }
+        if(timebase_get_time_s() - save_time > SOX_CFG_H_SAVE_CHECK_TIME)
         {
             if(save_flag){
-                DEBUG_LOG("soh save\n");
+#if SOX_DEBUG_SOH_SAVE
+                DEBUG_LOG("soh save, group soh is %f\n", g_grpSOH);
+#endif
                 write_saved_cycle((uint32_t)g_cycleCount);
                 write_saved_soh(g_celSOH);
             }
             save_time = timebase_get_time_s();
         }
     }else{
-            DEBUG_LOG("soh save\n");
+#if SOX_DEBUG_SOH_SAVE
+            DEBUG_LOG("soh save, group soh is %f\n", g_grpSOH);
+#endif
             write_saved_cycle((uint32_t)g_cycleCount);
             write_saved_soh(g_celSOH);
     }
 
+}
+
+
+int8_t sox_manual_set_soh(float soh, uint32_t cycleCount)
+{
+    for(int i = 0; i < CELL_NUMS; i++)
+    {
+        g_celSOH[i] = soh;
+    }
+    g_grpSOH = soh;
+    g_cycleCount = (float)cycleCount;
+
+    soh_save(true);
+    return 0;
 }
 
 

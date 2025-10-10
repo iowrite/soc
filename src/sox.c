@@ -118,45 +118,13 @@ int8_t sox_task(const struct SOX_Input *input)
 }
 
 
-int8_t sox_manual_set_soc(float soc)
-{
-    for(int i = 0; i < CELL_NUMS; i++){
-        g_socInfo[i].soc = soc;
-        g_celSOC[i] = soc;
-		if(g_socInfo[i].soc_smooth > 0)
-		{
-			g_socInfo[i].soc_smooth = soc;
-		}
-    }
-    g_grpSOC = (uint16_t)soc;
-
-    soc_save(true);
-    return 0;
-}
-
-int8_t sox_manual_set_soh(float soh, uint32_t cycleCount)
-{
-    for(int i = 0; i < CELL_NUMS; i++)
-    {
-        g_celSOH[i] = soh;
-    }
-    g_grpSOH = soh;
-    g_cycleCount = (float)cycleCount;
-
-    soh_save(true);
-    return 0;
-}
 
 
 
-int8_t sox_manual_set_acc_chg_dsg(float accChgWH, float accDsgWH)
-{
-    g_accChgWH = accChgWH;
-    g_accDsgWH = accDsgWH;
 
-    soe_save(true);
-    return 0;
-}
+
+
+
 
 
 

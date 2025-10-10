@@ -142,13 +142,28 @@ void soe_save(bool force)
             if(save_flag)
             {
                 save_flag = false;
+#if SOX_DEBUG_SOE_SAVE
                 DEBUG_LOG("soe save\n");
+#endif
                 write_saved_soe(g_accChgWH, g_accDsgWH, g_accChgAH, g_accDsgAH);
             }
             last_time = timebase_get_time_s();
         } 
     }else{
+#if SOX_DEBUG_SOE_SAVE
         DEBUG_LOG("soe save\n");
+#endif
         write_saved_soe(g_accChgWH, g_accDsgWH, g_accChgAH, g_accDsgAH);
     }
+}
+
+
+
+int8_t sox_manual_set_acc_chg_dsg(float accChgWH, float accDsgWH)
+{
+    g_accChgWH = accChgWH;
+    g_accDsgWH = accDsgWH;
+
+    soe_save(true);
+    return 0;
 }
