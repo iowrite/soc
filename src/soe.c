@@ -6,9 +6,10 @@
 #include "sox_config.h"
 #include "soe.h"
 #include "common.h"
+#include "debug.h"
 
 
-int8_t soe_init()
+int8_t soe_init(void)
 {
     // read saved soe (last saved soe before poweroff)
 
@@ -52,7 +53,7 @@ int8_t soe_init()
  * @brief soe task, update accChgWH, accDsgWH, sigChgWH, sigDsgWH
  * @todo calculate accChgAH, accDsgAH
  */
-int8_t soe_task()
+int8_t soe_task(void)
 {
 
     if(g_cur > 0){
@@ -65,8 +66,6 @@ int8_t soe_task()
     
     switch(state){
         case 0:                                         // standby
-            g_sigChgWH = 0;
-            g_sigDsgWH = 0;
             lastState = state;
             if(g_cur > CUR_WINDOW_A)
             {
@@ -82,6 +81,7 @@ int8_t soe_task()
             lastState = state;
             if(g_cur> CUR_WINDOW_A)
             {
+                g_sigDsgWH = 0;
                 g_sigChgWH += g_cur * g_grpVol /3600;
             }else if(g_cur < -CUR_WINDOW_A)
             {
@@ -91,14 +91,13 @@ int8_t soe_task()
             }
             break;
         case 2:                                         // charge to discharge
-            g_sigChgWH = 0;
-            g_sigDsgWH = 0;
             lastState = state;
             state = 3;
             break;
         case 3:                                         // discharge        
             lastState = state;
             if(g_cur < -CUR_WINDOW_A){
+                g_sigChgWH = 0;
                 g_sigDsgWH += fabsf(g_cur * g_grpVol /3600);
             }else if(g_cur > CUR_WINDOW_A)
             {
@@ -108,8 +107,6 @@ int8_t soe_task()
             }
             break;
         case 4:                                         // discharge to charge
-            g_sigChgWH = 0;
-            g_sigDsgWH = 0;
             lastState = state;
             state = 1;
             break;
@@ -117,9 +114,7 @@ int8_t soe_task()
             break;
     
     }
-    
 
-    // printf("sigChg:%f,  sigDsg:%f, accChgWH:%f, accDsgWH:%f\n",*g_sigChgWH, *g_sigDsgWH, *g_accChgWH, *g_accDsgWH);
     return 0;
 
 }
@@ -137,7 +132,6 @@ void soe_save(bool force)
         static float last_accDsgWH = 0;
         static float last_accChgWH = 0;
         static bool save_flag = false;
-        UNUSED(save_flag);
         static uint32_t last_time = 0;
         if(g_accChgWH - last_accChgWH > SOE_SAVE_DIFF_WH || g_accDsgWH - last_accDsgWH > SOE_SAVE_DIFF_WH)
         {
@@ -145,10 +139,31 @@ void soe_save(bool force)
         }
         if(timebase_get_time_s() - last_time > SOE_SAVE_INTERVAL_S)
         {
-            save_flag = false;
-            write_saved_soe(g_accChgWH, g_accDsgWH, g_accChgAH, g_accDsgAH);
+            if(save_flag)
+            {
+                save_flag = false;
+#if SOX_DEBUG_SOE_SAVE
+                DEBUG_LOG("soe save\n");
+#endif
+                write_saved_soe(g_accChgWH, g_accDsgWH, g_accChgAH, g_accDsgAH);
+            }
+            last_time = timebase_get_time_s();
         } 
     }else{
+#if SOX_DEBUG_SOE_SAVE
+        DEBUG_LOG("soe save\n");
+#endif
         write_saved_soe(g_accChgWH, g_accDsgWH, g_accChgAH, g_accDsgAH);
     }
+}
+
+
+
+int8_t sox_manual_set_acc_chg_dsg(float accChgWH, float accDsgWH)
+{
+    g_accChgWH = accChgWH;
+    g_accDsgWH = accDsgWH;
+
+    soe_save(true);
+    return 0;
 }

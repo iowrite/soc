@@ -19,6 +19,7 @@
 #include "port.h"
 #include "common.h"
 #include "debug.h"
+#include "soh.h"
 
 #define EKF_W(diffAH, cap, cur)                 ((50.0f/(DIFF_T_SEC*1000) + CUR_SAMPLE_ERR_A/cur + CAP_ERR_AH/cap+SOH_ERR_PERCENT/100.0f) *  EKF_Q_K * diffAH)     
 #define EKF_Q(diffAH, cap, cur)                 (EKF_W(diffAH, cap, cur)*EKF_W(diffAH, cap, cur))                 
@@ -120,7 +121,7 @@ static uint16_t get_cap(float cur, int16_t tempra)
 
 
 
-static const uint16_t * get_v(const uint16_t *chg_curve[TEMP_POINT_NUM][CUR_POINT_NUM], const uint16_t *dsg_curve[TEMP_POINT_NUM][CUR_POINT_NUM], float cur, int16_t tempra)
+static const uint16_t * get_v(const uint16_t * const chg_curve[TEMP_POINT_NUM][CUR_POINT_NUM], const uint16_t * const dsg_curve[TEMP_POINT_NUM][CUR_POINT_NUM], float cur, int16_t tempra)
 {
 
     int tidx = 0;
@@ -170,7 +171,7 @@ static const uint16_t * get_v(const uint16_t *chg_curve[TEMP_POINT_NUM][CUR_POIN
 }
 
 
-static const int16_t * get_k(const int16_t *chg_curve[TEMP_POINT_NUM][CUR_POINT_NUM], const int16_t *dsg_curve[TEMP_POINT_NUM][CUR_POINT_NUM], float cur, int16_t tempra)
+static const int16_t * get_k(const int16_t *const chg_curve[TEMP_POINT_NUM][CUR_POINT_NUM], const int16_t * const dsg_curve[TEMP_POINT_NUM][CUR_POINT_NUM], float cur, int16_t tempra)
 {
     int tidx = 0;
     tidx = (tempra+200)/100;
@@ -660,19 +661,15 @@ void mysoc(struct SOC_Info *SOCinfo, float cur, uint16_t vol, int16_t tempra, fl
                 mysocEKF(SOCinfo, cur, vol, tempra, soh);                   // Ampere-hour Integration + EKF
             }
         }
+    }else if (cur != 0){
+        mysoc_pureAH(SOCinfo, cur, vol, tempra, soh);
     }
-
-
 
 
 }
 
 
-
-
-
-
-
+static bool s_grp_soc_init = false;
 
 
 #define GRP_Q_MAX               25
@@ -694,51 +691,50 @@ void mysoc(struct SOC_Info *SOCinfo, float cur, uint16_t vol, int16_t tempra, fl
 #define  R_AVG_MIN        (E_AEG_MIN*E_AEG_MIN)
 #define  R_AVG_MAX        (E_AEG_MIN*E_AEG_MIN)
 
-static void gropuSOC()
+static void gropuSOC(void)
 {
 #if SOX_DEBUG
     static int callCount = 0;
     callCount++;
     UNUSED(callCount);      // avoid warning in debug mode
 #endif 
-    float unsortedSOC[CELL_NUMS];
-    bool pureAH_lock = false;
-    for(int i = 0; i < CELL_NUMS; i++)
+    if(g_cur != 0)
     {
-        if(g_socInfo[i].soc_smooth > 0)         // smooth enabled
+        float unsortedSOC[CELL_NUMS];
+        bool pureAH_lock = false;
+        for(int i = 0; i < CELL_NUMS; i++)
         {
-            if(CHARGING(g_cur) &&  g_socInfo[i].soc_smooth>g_socInfo[i].soc){
-                unsortedSOC[i] = g_socInfo[i].soc_smooth;
+            if(g_socInfo[i].soc_smooth > 0)         // smooth enabled
+            {
+                if(CHARGING(g_cur) &&  g_socInfo[i].soc_smooth>g_socInfo[i].soc){
+                    unsortedSOC[i] = g_socInfo[i].soc_smooth;
 
-            }else if(DISCHARGING(g_cur) &&  g_socInfo[i].soc_smooth<g_socInfo[i].soc){
-                unsortedSOC[i] = g_socInfo[i].soc_smooth;
+                }else if(DISCHARGING(g_cur) &&  g_socInfo[i].soc_smooth<g_socInfo[i].soc){
+                    unsortedSOC[i] = g_socInfo[i].soc_smooth;
+                }else{
+                    unsortedSOC[i] = g_socInfo[i].soc;
+                }
             }else{
                 unsortedSOC[i] = g_socInfo[i].soc;
             }
-        }else{
-            unsortedSOC[i] = g_socInfo[i].soc;
+            if(g_socInfo[i].pureAH_lock)
+            {
+                pureAH_lock = true;
+            }
+            
         }
-        if(g_socInfo[i].pureAH_lock)
+        float sortedSOC[CELL_NUMS];
+        bubbleSort_ascend_float(unsortedSOC, sortedSOC, CELL_NUMS);
+        float maxSOC = sortedSOC[CELL_NUMS-1];
+        float minSOC = sortedSOC[0];
+        float avgSOC = 0;
+        for(int i=0; i<CELL_NUMS; i++)
         {
-            pureAH_lock = true;
+            avgSOC += sortedSOC[i];
         }
-        
-    }
-    float sortedSOC[CELL_NUMS];
-    bubbleSort_ascend_float(unsortedSOC, sortedSOC, CELL_NUMS);
-    float maxSOC = sortedSOC[CELL_NUMS-1];
-    float minSOC = sortedSOC[0];
-    float avgSOC = 0;
-    for(int i=0; i<CELL_NUMS; i++)
-    {
-        avgSOC += sortedSOC[i];
-    }
-    avgSOC = avgSOC/CELL_NUMS;
-
-    float grpsoc;
+        avgSOC = avgSOC/CELL_NUMS;
 
 
-    if(fabsf(g_cur)>CUR_WINDOW_A){
 
         float max_soc_change_R_offset = fabsf(maxSOC - avgSOC);
         float min_soc_change_R_offset = fabsf(minSOC - avgSOC);
@@ -816,9 +812,9 @@ static void gropuSOC()
         }
 
         static float cal_grp_soc;
-        static bool grp_soc_init = false;
-        if(!grp_soc_init){
-            grp_soc_init = true;
+
+        if(!s_grp_soc_init){
+            s_grp_soc_init = true;
             cal_grp_soc = g_grpSOC;
         }
         
@@ -828,7 +824,7 @@ static void gropuSOC()
         if(CHARGING(g_cur) && g_grpSOC > 95)
         {
             cal_grp_soc_p=grp_soc_p + GRP_Q_1;
-        }else if(CHARGING(g_cur) && g_grpSOC < 10)
+        }else if(DISCHARGING(g_cur) && g_grpSOC < 10)
         {
             cal_grp_soc_p=grp_soc_p + GRP_Q_2;
         }else{
@@ -901,34 +897,41 @@ static void gropuSOC()
         matrix_multiply((float *)K, (float *)H, &K_H, 1, 2, 1);
         grp_soc_p = (1-K_H)*cal_grp_soc_p;
 
-        grpsoc = cal_grp_soc;
 
-
-        if(grpsoc > 99)
+        // when soc increasing, soc upper limit 99%, when soc decreasing, soc lower limit 1%
+        if(cal_grp_soc > g_grpSOC)
         {
-            grpsoc = 99;
-        }else if(grpsoc < 1){
-            grpsoc = 1;
+            if(cal_grp_soc > 99)
+            {
+                cal_grp_soc = 99;
+            }
+        }else if (cal_grp_soc < g_grpSOC)
+        {
+            if(cal_grp_soc < 1){
+                cal_grp_soc = 1;
+            }
         }
 
-        // 避免soc 反向抖动
-        if(CHARGING(g_cur) && grpsoc < g_grpSOC)
+        // avoid soc abnormal reverse jump
+        if(CHARGING(g_cur) && cal_grp_soc < g_grpSOC)
         {
             return;
         }
-        if(DISCHARGING(g_cur) && grpsoc > g_grpSOC)
+        if(DISCHARGING(g_cur) && cal_grp_soc > g_grpSOC)
         {
             return; 
         }
 
+            
+#if SOC_FAKE_SMOOTH_ENABLE
         static uint32_t smooth_count = 0;
         float smooth_soc = g_grpSOC;
-        if(fabsf(grpsoc - g_grpSOC)>=2)
+        if(fabsf(cal_grp_soc - g_grpSOC)>=2)
         {        
             if(timebase_get_time_s()-smooth_count > (uint32_t)2)
             {
                 smooth_count = timebase_get_time_s();
-                if(grpsoc > g_grpSOC)
+                if(cal_grp_soc > g_grpSOC)
                 {
                     smooth_soc++;
                 }else{
@@ -944,9 +947,16 @@ static void gropuSOC()
 
             }
         }else{
-            g_grpSOC = grpsoc;
+            g_grpSOC = cal_grp_soc;
         }
+#else
+        g_grpSOC = cal_grp_soc;
+#endif
+
+
     }
+    
+
 }
 
 /**
@@ -989,7 +999,7 @@ static void vol2soc_batch(uint16_t *vol, int16_t *tempra, float *soc)
 /**
  * @brief  init soc module, read saved soc and group soc( last power offf saved)
  */
-void soc_init()
+void soc_init(void)
 {
     float soc_saved[CELL_NUMS];
     float soc_saved_group;
@@ -1122,7 +1132,9 @@ void soc_save(bool force)
                 {
                     lastsoc[i] = g_celSOC[i];
                 }
+#if SOX_DEBUG_SOC_SAVE
                 DEBUG_LOG("soc save\n");
+#endif
                 write_saved_soc(lastsoc);
 
                 save = false;
@@ -1139,9 +1151,10 @@ void soc_save(bool force)
         {
             soc_write[i] = g_celSOC[i];
         }
-
+#if SOX_DEBUG_SOC_SAVE
+        DEBUG_LOG("soc save\n");
+#endif
         write_saved_soc(soc_write);
-
         write_saved_soc_group(g_grpSOC);
     }
 
@@ -1227,6 +1240,11 @@ void soc_task(bool full, bool empty)
            g_celSOC[i] = 100;
        }
 #endif 
+       if(g_grpSOC < 98)
+       {
+            g_soh_calibrate_tigger = SOH_CALIBRATION_TIGGERED_BY_CHARGING;
+            g_group_soc_before_jump = g_grpSOC;
+       }
         g_grpSOC = 100;
         // reset some state
         for (size_t i = 0; i < CELL_NUMS; i++)
@@ -1248,6 +1266,11 @@ void soc_task(bool full, bool empty)
            g_celSOC[i] = 0;
        }
 #endif
+       if(g_grpSOC > 2)
+       {
+            g_soh_calibrate_tigger = SOH_CALIBRATION_TIGGERED_BY_DISCHARGING;
+            g_group_soc_before_jump = g_grpSOC;
+       }
         g_grpSOC = 0;
         // reset some state
         for (size_t i = 0; i < CELL_NUMS; i++)
@@ -1265,4 +1288,21 @@ void soc_task(bool full, bool empty)
 }
 
 
+
+
+int8_t sox_manual_set_soc(float soc)
+{
+    for(int i = 0; i < CELL_NUMS; i++){
+        g_socInfo[i].soc = soc;
+        g_celSOC[i] = soc;
+		if(g_socInfo[i].soc_smooth > 0)
+		{
+			g_socInfo[i].soc_smooth = soc;
+		}
+    }
+    g_grpSOC = (uint16_t)soc;
+    s_grp_soc_init = true;
+    soc_save(true);
+    return 0;
+}
 

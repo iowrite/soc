@@ -1,3 +1,5 @@
+#include "sox_config.h"
+
 #include <stdint.h>
 
 #ifndef _SOX_CURVE_H
@@ -21,12 +23,25 @@ extern const uint16_t v_25d3c_chg[SOC_POINT_NUM];
 extern const int16_t k_25d3c_chg[SOC_POINT_NUM];
 
 
-extern const uint16_t* s_chg_curve[TEMP_POINT_NUM][CUR_POINT_NUM];
-extern const int16_t* s_chg_curve_k[TEMP_POINT_NUM][CUR_POINT_NUM];
-extern const uint16_t* s_dsg_curve[TEMP_POINT_NUM][CUR_POINT_NUM];
-extern const int16_t* s_dsg_curve_k[TEMP_POINT_NUM][CUR_POINT_NUM];
+extern const uint16_t* const s_chg_curve[TEMP_POINT_NUM][CUR_POINT_NUM];
+extern const int16_t* const s_chg_curve_k[TEMP_POINT_NUM][CUR_POINT_NUM];
+extern const uint16_t* const s_dsg_curve[TEMP_POINT_NUM][CUR_POINT_NUM];
+extern const int16_t* const s_dsg_curve_k[TEMP_POINT_NUM][CUR_POINT_NUM];
 
 extern const uint16_t * temp_ocv[TEMP_POINT_NUM];
+
+
+#if SOX_CFG_H_BAT_LAW
+
+// unit kw, interval 100 cycles                                         
+extern const int remain_power_capability_table[6];
+
+// unit %, interval 6 month                                        
+extern const int remain_self_dsg_table[6];
+
+extern const int energy_convert_efficiency_table[6];
+
+#endif
 
 
 #endif 

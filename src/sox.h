@@ -8,8 +8,8 @@
  * version 
  ******************************************************************************/    
 #define EKF_SOX_VERSION_MAJOR         2
-#define EKF_SOX_VERSION_MINOR         1
-#define EKF_SOX_VERSION_DEBUG         8
+#define EKF_SOX_VERSION_MINOR         3
+#define EKF_SOX_VERSION_DEBUG         3
  
 
 
@@ -63,6 +63,14 @@ float  get_acc_chg_wh(void);
 float  get_acc_dsg_wh(void);
 float  get_acc_chg_ah(void);
 float  get_acc_dsg_ah(void);
+// battery law
+int       get_remain_power_capability(void);
+int       get_remain_energy_conv_eff(void);
+int       get_evolu_of_selfdsg(void);
+int       get_num_of_deep_dsg(void);
+int       get_num_of_deep_chg(void);
+uint32_t  get_time_of_extreme_temp(void);
+uint32_t  get_time_of_extreme_chg(void);
 
 
 

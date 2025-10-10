@@ -30,12 +30,25 @@ extern bool         g_empty;
 extern bool         g_full;      
 extern uint32_t     g_task_runtime;
 extern uint32_t     g_task_call_tick;
+extern uint8_t      g_soh_calibrate_tigger;       // soh calibration tigger, 0:not trigged, 1:trigged by charging, 2:trigged by discharging  
+extern float        g_group_soc_before_jump;
+
+extern int          g_remain_power_capability;
+extern int          g_remain_energy_conv_eff;
+extern int          g_evolu_of_selfdsg;
+extern int          g_deep_chg_cnt; 
+extern int          g_deep_dsg_cnt; 
+extern uint32_t     g_extreme_chg_time_cnt;
+extern uint32_t     g_extreme_time_cnt;
 
 /*******************************************************************************
  * global macro definition(sox module internal use only)
  *******************************************************************************/
 #define FORCE_SAVE  1
 #define AUTO_SAVE   0
+
+
+
 
 
 #endif

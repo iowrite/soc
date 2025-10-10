@@ -11,7 +11,9 @@
             // "args": ["-i /home/hm/Desktop/mysoc/data/self_test/100_dsg4.xlsx", "-s 100"],
             // "args": ["-i /home/hm/Desktop/mysoc/data/test/zl_test_1/data/15d/dsg.xlsx", "-s 100"],
             // "args": ["-i /home/hm/Desktop/mysoc/data/25d4c/chg.xlsx", "-s 0"],
-            "args": ["-i /home/hm/Desktop/mysoc/data/project/jg/jg-test-25d-2.xlsx", "-s 0", "-c"],
+            // "args": ["-i /home/hm/Desktop/mysoc/data/project/jg/jg-test-25d-2.xlsx", "-s 0", "-c"],
+            // "args": ["-i /home/hm/Desktop/mysoc/data/project/jg/jg-test-35d.xlsx", "-s 0", "-c"],
+            "args": ["-i /home/hm/Desktop/mysoc/data/juaji/juaji_jump.xlsx", "-s 0", "-c"],
             
             "cwd": "${workspaceFolder}/test"
         },
