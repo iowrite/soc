@@ -70,6 +70,8 @@ def main():
     df4 = data_dict[sheet4]
     vol4 = df4.iloc[:, 7-1]
 
+    plt.figure()
+    plt.get_current_fig_manager().set_window_title(file_path)
 
     fig1 = plt.subplot(2,2,1)
 
