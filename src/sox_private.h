@@ -48,7 +48,7 @@ extern uint32_t     g_extreme_time_cnt;
 #define AUTO_SAVE   0
 
 
-
+#define MAX_SOH_LIMIT_PERCENTAGE   100
 
 
 #endif

@@ -15,6 +15,9 @@
 #include "debug.h"
 
 
+
+
+
 static float s_lastSOC[CELL_NUMS];
 static float s_lastGrpSOC;
 int8_t  soh_init(void)
@@ -51,7 +54,7 @@ int8_t  soh_init(void)
         }else{
             for (size_t i = 0; i < CELL_NUMS; i++)
             {
-                if(soh_saved[i] > 100 || soh_saved[i] < 0){
+                if(soh_saved[i] > MAX_SOH_LIMIT_PERCENTAGE || soh_saved[i] < 0){
                     soh_abnormal_flag[i] = true;
                 }
             }
@@ -65,7 +68,7 @@ int8_t  soh_init(void)
         
     }
 
-    float soh = 100 - 20 * (g_cycleCount/1000.0f/REFERENCE_CYCLE_TIME);
+    float soh = MAX_SOH_LIMIT_PERCENTAGE - 20 * (g_cycleCount/1000.0f/REFERENCE_CYCLE_TIME);
     for(size_t i = 0; i < CELL_NUMS; i++)
     {
         if(soh_abnormal_flag[i] == true){
@@ -564,14 +567,14 @@ int8_t soh_task(void)
             delta = delta*0.01f;
             if(g_celTmp[i] <= SOH_LOW_TEMP)
             {
-                float subk = (100-SOH_CYCLE_L1_PERCENT)/SOH_LOW_TEMP_CYCLE_L1;
+                float subk = (MAX_SOH_LIMIT_PERCENTAGE-SOH_CYCLE_L1_PERCENT)/SOH_LOW_TEMP_CYCLE_L1;
                 g_celSOH[i] -= delta*0.5f*subk;
             }else if(g_celTmp[i] < SOH_HIGH_TEMP)
             {
-                float subk = (100-SOH_CYCLE_L1_PERCENT)/(SOH_LOW_TEMP_CYCLE_L1-((g_celTmp[i] - SOH_LOW_TEMP)/200.0f)*(SOH_LOW_TEMP_CYCLE_L1-SOH_HIGH_TEMP_CYCLE_L1));
+                float subk = (MAX_SOH_LIMIT_PERCENTAGE-SOH_CYCLE_L1_PERCENT)/(SOH_LOW_TEMP_CYCLE_L1-((g_celTmp[i] - SOH_LOW_TEMP)/200.0f)*(SOH_LOW_TEMP_CYCLE_L1-SOH_HIGH_TEMP_CYCLE_L1));
                 g_celSOH[i] -= delta*0.5f*subk;
             }else{
-                float subk = (100-SOH_CYCLE_L1_PERCENT)/SOH_HIGH_TEMP_CYCLE_L1;
+                float subk = (MAX_SOH_LIMIT_PERCENTAGE-SOH_CYCLE_L1_PERCENT)/SOH_HIGH_TEMP_CYCLE_L1;
                 g_celSOH[i] -= delta*0.5f*subk;
             }
             s_lastSOC[i] = g_celSOC[i];
@@ -591,7 +594,7 @@ int8_t soh_task(void)
             && s_recored_end.min_cell_temp > SOH_PASSIVE_CALIBRATE_TEMP_LIMIT)
         {
             DEBUG_LOG("charge soh_calibratem , jump from %f to 100 \n", g_group_soc_before_jump);
-            float jump_diff = 100-g_group_soc_before_jump;
+            float jump_diff = MAX_SOH_LIMIT_PERCENTAGE-g_group_soc_before_jump;
             soh_calibrate = jump_diff/10;
             if(soh_calibrate > 1){
                 soh_calibrate = 1;
@@ -635,7 +638,7 @@ int8_t soh_task(void)
 void soh_save(bool force)
 {
     if(!force){
-        static float  last_cycleCount = 0, last_soh = 100;
+        static float  last_cycleCount = 0, last_soh = MAX_SOH_LIMIT_PERCENTAGE;
         bool save_flag = false;
         static uint32_t save_time = 0;
         if(g_cycleCount - last_cycleCount > 1)

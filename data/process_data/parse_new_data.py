@@ -4,6 +4,14 @@ import matplotlib.pyplot as plt
 import numpy as np
 from numpy.polynomial.polynomial import Polynomial
 import argparse
+import sys
+import os
+# Get the directory of the current script
+current_dir = os.path.dirname(os.path.abspath(__file__))
+# Go up one level to /home/hm/Desktop/mysoc/data
+parent_dir = os.path.dirname(current_dir)
+sys.path.insert(0, parent_dir)
+from curve import fit_quadratic_and_get_slopes
 
 
 def simple_normalize(data, target_points=101):
@@ -56,19 +64,32 @@ def main():
     sheet1 = list(data_dict.keys())[0]
     df1 = data_dict[sheet1]
     vol1 = df1.iloc[:, 7-1]
+    cap1_array = df1.iloc[:, 9-1]
+    cap1 = cap1_array.iloc[-1]
     print("sheet1 row lenth is: ", len(vol1))
 
     sheet2 = list(data_dict.keys())[1]
     df2 = data_dict[sheet2]
     vol2 = df2.iloc[:, 7-1]
+    cap2_array = df2.iloc[:, 9-1]
+    cap2 = cap2_array.iloc[-1]
 
     sheet3 = list(data_dict.keys())[2]
     df3 = data_dict[sheet3]
     vol3 = df3.iloc[:, 7-1]
+    cap3_array = df3.iloc[:, 9-1]
+    cap3 = cap3_array.iloc[-1]
 
     sheet4 = list(data_dict.keys())[3]
     df4 = data_dict[sheet4]
     vol4 = df4.iloc[:, 7-1]
+    cap4_array = df4.iloc[:, 9-1]
+    cap4 = cap4_array.iloc[-1]
+
+
+    print("capacity is: ", cap1, cap2, cap3, cap4)
+    print("avg_capacity is: ", (cap1+cap2+cap3+cap4)/4)
+        
 
     plt.figure()
     plt.get_current_fig_manager().set_window_title(file_path)
@@ -133,14 +154,22 @@ def main():
     # print(volavg_101)
     # print(volavg_101_idx)
     volavg_101_99percent,_ = simple_normalize(average_curve[:volavg_101_idx[-2]+1])
-    print(np.round(volavg_101_99percent*1000))
-
+    volavg_101_99percent = volavg_101_99percent*1000
+    volavg_101_99percent = np.round(volavg_101_99percent)
+    print("电压列表, 101 point ", volavg_101_99percent)
+    voltage_list_21 = volavg_101_99percent[::5]
+    voltage_list_29 = voltage_list_21.copy()
+    voltage_list_29 = np.insert(voltage_list_29, 1, volavg_101_99percent[1:5])
+    voltage_list_29 = np.insert(voltage_list_29, 24, volavg_101_99percent[96:100])
+    print("电压列表, 21 point ", voltage_list_21)
+    print("电压列表, 29 point ", voltage_list_29)
 
 
     fig2.plot(vol1_101*1000, label="cell1 vol", alpha=0.3)
     fig2.plot(vol2_101*1000, label="cell2 vol", alpha=0.3)
     fig2.plot(vol3_101*1000, label="cell3 vol", alpha=0.3)
     fig2.plot(vol4_101*1000, label="cell4 vol", alpha=0.3)
+
     fig2.legend()
 
 
@@ -149,8 +178,35 @@ def main():
 
     fig3 = plt.subplot(2,2,3)
     fig3.plot(volavg_101*1000, label="average vol", alpha=0.3)
-    fig3.plot(volavg_101_99percent*1000, label="average vol 99%", alpha=0.3)
+    fig3.plot(volavg_101_99percent, label="average vol 99%", alpha=0.3)
+    plt.scatter([0,5,10,15,20,25,30,35,40,45,50,55,60,65,70,75,80,85,90,95,100], volavg_101_99percent[::5])
+
     fig3.legend()
+
+
+
+    fig4 = plt.subplot(2,2,4)
+    volavg_101_slope = fit_quadratic_and_get_slopes(np.round(volavg_101_99percent))
+    fig4.plot(volavg_101_slope)
+    volavg_101_slope = np.round([point *10 for point in volavg_101_slope])
+    print("斜率列表: (101 points)\n", volavg_101_slope)
+
+    slope_list_21 = volavg_101_slope[::5]
+    slope_list_29 = slope_list_21.copy()
+    slope_list_29 = np.insert(slope_list_29, 1, volavg_101_slope[1:5])
+    slope_list_29 = np.insert(slope_list_29, 24, volavg_101_slope[96:100])
+    print("斜率列表, 21 point ", slope_list_21)
+    print("斜率列表, 29 point ", slope_list_29)
+
+
+
+
+
+
+
+
+
+
 
     plt.show()
 

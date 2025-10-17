@@ -6,7 +6,7 @@ BUILD_DIR := build_dir
 TARGET := build_dir/libmyekfsoc.a
 
 # Source files and their corresponding object files
-SRCS := port debug soc curve soh soe sop sox common
+SRCS := port debug soc curve curve_314_ruipu soh soe sop sox common
 OBJS := $(addprefix $(BUILD_DIR)/,$(addsuffix .o,$(SRCS)))
 DEPS := $(OBJS:.o=.d)
 

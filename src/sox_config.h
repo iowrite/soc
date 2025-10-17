@@ -4,7 +4,7 @@
 /***********************
  *  SOX Configuration
  **********************/
-#define CELL_NUMS                       6
+#define CELL_NUMS                       4
 #define CUR_WINDOW_A                    4.0f             //A
 #define SOX_DEBUG                       0
 #define SOX_DEBUG_TIME                  0
@@ -16,6 +16,9 @@
 /***********************
  *  PORT Configuration
  **********************/
+#define SOX_CFG_PORT_BAT_TYPE_100_EVE        0
+#define SOX_CFG_PORT_BAT_TYPE_314_RUIPU      1
+
 #define PORT_TYPE_LINUX                     1             
 #define PORT_TYPE_MICROCONTROLLER           2              
 
@@ -24,7 +27,8 @@
 #if PORT_TYPE == PORT_TYPE_LINUX
     #define FULL_STD_CLIB       1
     #define PORT_SIM_PROJECT_STACK      0
-    #define PORT_SIM_PROJECT_JIGUANG    1
+    #define PORT_SIM_PROJECT_JIGUANG    0
+    #define PORT_SIM_PROJECT_314        1
 #endif
 
 #if PORT_TYPE == PORT_TYPE_MICROCONTROLLER
@@ -75,6 +79,7 @@
 
 #define SOC_TEMPRA_WARM_CAP_OFFSET_1      1.0f
 #define SOC_TEMPRA_WARM_CAP_OFFSET_2      0.5f
+#define SOC_TEMPRA_WARM_CAP_OFFSET_3      0
 
 #define SOC_MAX_CALCULATE_VALUE          99
 #define SOC_MIN_CALCULATE_VALUE          1

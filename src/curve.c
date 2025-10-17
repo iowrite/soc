@@ -3,6 +3,9 @@
 #include "curve.h"
 #include "sox_config.h"
 
+
+#if SOX_CFG_PORT_BAT_TYPE_100_EVE
+
 const uint16_t s_cap_list_chg[TEMP_POINT_NUM][CUR_POINT_NUM] = {
     /*  0.1C             0.2 C                0.3 C                0.4 C                0.5C*/
     [0][0] = 574,       [0][1] = 560,       [0][2] = 550,           [0][3] = 540,       [0][4] = 530,                        // -15
@@ -608,3 +611,6 @@ const int energy_convert_efficiency_table[6] = {
     9601            // 500          
 };
 #endif 
+
+
+#endif

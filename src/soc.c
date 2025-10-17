@@ -33,16 +33,36 @@
 #define CHARGING(cur)       ((cur) > 0)
 #define DISCHARGING(cur)    ((cur) < 0)
 
+// for calculate battery capacity at correspond temperature
+#define TEMP_IDX_FACTOR                       100           // every 10 degree a point, 0.1 precision (10*10)
+#define TEMP_IDX_OFFSET                       200           // -20, 0.1 precision (20*10)
+
+#define MAX_SOC_LIMIT_PERCENTAGE                           100
+#define MIN_SOC_LIMIT_PERCENTAGE                           0
+
+#if SOX_CFG_PORT_BAT_TYPE_100_EVE
+    #define RATED_CAP_AH                       100          // for calcultate charge/discharge rate
+#endif
+
+#if SOX_CFG_PORT_BAT_TYPE_314_RUIPU
+    #define RATED_CAP_AH                       314          // for calcultate charge/discharge rate
+#endif
 
 
 
 struct SOC_Info g_socInfo[CELL_NUMS];
 
+
+/**
+ * @brief get cell reference voltage
+ * @param tempra :temperature(-20, 125), degree, multiplied by 10, eg, <15.1 is 151>, <-5.1 is -511>
+ * @param cur   
+ */
 static uint16_t get_cap(float cur, int16_t tempra)
 {
     int t_table[] = {-150, -50, 50, 150, 250, 350, 450, 550};
     int tidx = 0;
-    tidx = (tempra+200)/100;
+    tidx = (tempra+TEMP_IDX_OFFSET)/TEMP_IDX_FACTOR;
     float tk = fabsf((tempra % 50)/50.0f);
     int tidx_low, tidx_high = 0;
     if(tidx < 0){
@@ -61,15 +81,17 @@ static uint16_t get_cap(float cur, int16_t tempra)
 
 
     float mk;
-    if(tempra > 0){
+    if(tempra < 0){
+        mk = SOC_TEMPRA_WARM_CAP_OFFSET_2;
+    }else if (tempra < 15){
         mk = SOC_TEMPRA_WARM_CAP_OFFSET_1;
     }else{
-        mk = SOC_TEMPRA_WARM_CAP_OFFSET_2;
+        mk = SOC_TEMPRA_WARM_CAP_OFFSET_3;
     }
 
     if(cur > 0)
     {
-        float c = cur/100*10;
+        float c = cur/RATED_CAP_AH*10;
         int cidx = (int)roundf(c)-1;
         if(cidx < 0)
         {
@@ -92,7 +114,7 @@ static uint16_t get_cap(float cur, int16_t tempra)
         }
     }else if(cur < 0)
     {
-        float c = cur/100*10;
+        float c = cur/RATED_CAP_AH*10;
         int cidx = -(int)roundf(c)-1;
         if(cidx < 0)
         {
@@ -121,11 +143,18 @@ static uint16_t get_cap(float cur, int16_t tempra)
 
 
 
+
+
+/**
+ * @brief get cell reference voltage
+ * @param tempra :temperature(-20, 125), degree, multiplied by 10, eg, <15.1 is 151>, <-5.1 is -511>
+ * @param cur   
+ */
 static const uint16_t * get_v(const uint16_t * const chg_curve[TEMP_POINT_NUM][CUR_POINT_NUM], const uint16_t * const dsg_curve[TEMP_POINT_NUM][CUR_POINT_NUM], float cur, int16_t tempra)
 {
 
     int tidx = 0;
-    tidx = (tempra+200)/100;
+    tidx = (tempra+TEMP_IDX_OFFSET)/TEMP_IDX_FACTOR;
     if(tidx < 0){
         tidx = 0;
     }else if(tidx >= TEMP_POINT_NUM)
@@ -135,7 +164,7 @@ static const uint16_t * get_v(const uint16_t * const chg_curve[TEMP_POINT_NUM][C
 
     if(cur > 0)
     {
-        float c = cur/100*10;
+        float c = cur/RATED_CAP_AH*10;
         int cidx = (int)roundf(c)-1;
         if(cidx < 0)
         {
@@ -152,7 +181,7 @@ static const uint16_t * get_v(const uint16_t * const chg_curve[TEMP_POINT_NUM][C
 
     }else if(cur < 0)
     {
-        float c = cur/100*10;
+        float c = cur/RATED_CAP_AH*10;
         int cidx = -(int)roundf(c)-1;
         if(cidx < 0)
         {
@@ -171,10 +200,15 @@ static const uint16_t * get_v(const uint16_t * const chg_curve[TEMP_POINT_NUM][C
 }
 
 
+/**
+ * @brief get cell reference voltage
+ * @param tempra :temperature(-20, 125), degree, multiplied by 10, eg, <15.1 is 151>, <-5.1 is -511>
+ * @param cur   
+ */
 static const int16_t * get_k(const int16_t *const chg_curve[TEMP_POINT_NUM][CUR_POINT_NUM], const int16_t * const dsg_curve[TEMP_POINT_NUM][CUR_POINT_NUM], float cur, int16_t tempra)
 {
     int tidx = 0;
-    tidx = (tempra+200)/100;
+    tidx = (tempra+TEMP_IDX_OFFSET)/TEMP_IDX_FACTOR;
     if(tidx < 0){
         tidx = 0;
     }else if(tidx >= TEMP_POINT_NUM)
@@ -184,7 +218,7 @@ static const int16_t * get_k(const int16_t *const chg_curve[TEMP_POINT_NUM][CUR_
 
     if(cur > 0)
     {
-        float c = cur/100*10;
+        float c = cur/RATED_CAP_AH*10;
         int cidx = (int)round(c)-1;
         if(cidx < 0)
         {
@@ -201,7 +235,7 @@ static const int16_t * get_k(const int16_t *const chg_curve[TEMP_POINT_NUM][CUR_
 
     }else if(cur < 0)
     {
-        float c = cur/100*10;
+        float c = cur/RATED_CAP_AH*10;
         int cidx = -(int)round(c)-1;
         if(cidx < 0)
         {
@@ -337,14 +371,16 @@ enum GroupState check_current_group_state(float cur)
 }
 
 
+
+#define SOC_PERCENTATENTAGE_FACTOR   100
 void mysoc_pureAH(struct SOC_Info *SOCinfo, float cur, uint16_t vol, int16_t tempra, float soh)
 {
     UNUSED(vol);
     const uint16_t cap = get_cap(cur, tempra);
 
-    const float capf = cap/10.0f*(soh/100);
+    const float capf = cap/10.0f*(soh/MAX_SOH_LIMIT_PERCENTAGE);
 
-    float diffAH = 100*DIFF_T_SEC/3600.0f*cur/capf;
+    float diffAH = SOC_PERCENTATENTAGE_FACTOR*DIFF_T_SEC/3600.0f*cur/capf;  // get a percentage change
     float SOCcal = SOCinfo->soc + diffAH;
     float SOCer2Cal = SOCinfo->socEr2 + EKF_Q(diffAH,capf, cur);
 
@@ -353,9 +389,9 @@ void mysoc_pureAH(struct SOC_Info *SOCinfo, float cur, uint16_t vol, int16_t tem
     if(SOCcal < 0)
     {
         SOCcal = 0;
-    }else if(SOCcal > 100)
+    }else if(SOCcal > MAX_SOC_LIMIT_PERCENTAGE)
     {
-        SOCcal = 100;
+        SOCcal = MAX_SOC_LIMIT_PERCENTAGE;
     }
 
     SOCinfo->soc = SOCcal;
@@ -430,9 +466,9 @@ void mysoc_smooth(struct SOC_Info *SOCinfo, float cur, uint16_t vol, int16_t tem
     if(SOCinfo->soc_smooth < 0)
     {
         SOCinfo->soc_smooth = 0.1f;             // not equal to 0(zero mean smooth not enable)
-    }else if(SOCinfo->soc_smooth > 100)
+    }else if(SOCinfo->soc_smooth > MAX_SOC_LIMIT_PERCENTAGE)
     {
-        SOCinfo->soc_smooth = 100;
+        SOCinfo->soc_smooth = MAX_SOC_LIMIT_PERCENTAGE;
     }
 
 }
@@ -519,9 +555,9 @@ void mysocEKF(struct SOC_Info *SOCinfo, float cur, uint16_t vol, int16_t tempra,
         SOCinfo->swith_curve_time--;
     }
 
-    const float capf = cap/10.0f*(soh/100);
+    const float capf = cap/10.0f*(soh/MAX_SOH_LIMIT_PERCENTAGE);
 
-    float diffAH = DIFF_T_SEC/3600.0f*cur/capf*100;
+    float diffAH = DIFF_T_SEC/3600.0f*cur/capf*SOC_PERCENTATENTAGE_FACTOR; // get a percentage change
     float SOCcal = SOCinfo->soc + diffAH;
     float Q = EKF_Q(diffAH, capf, cur);
     float SOCer2Cal = SOCinfo->socEr2 + Q;
@@ -536,9 +572,9 @@ void mysocEKF(struct SOC_Info *SOCinfo, float cur, uint16_t vol, int16_t tempra,
 
         estVol = curve[0];
         H = (float)curveK[0]/10;
-    }else if(SOCcal > 100)
+    }else if(SOCcal > MAX_SOC_LIMIT_PERCENTAGE)
     {
-        SOCcal = 100;
+        SOCcal = MAX_SOC_LIMIT_PERCENTAGE;
 
         estVol = curve[SOC_POINT_NUM-1];
         H = (float)curveK[SOC_POINT_NUM-1]/10;
@@ -598,9 +634,9 @@ void mysocEKF(struct SOC_Info *SOCinfo, float cur, uint16_t vol, int16_t tempra,
     if(res < 0)
     {
         res = 0;
-    }else if(res > 100)
+    }else if(res > MAX_SOC_LIMIT_PERCENTAGE)
     {
-        res = 100;
+        res = MAX_SOC_LIMIT_PERCENTAGE;
     }
 
     if(cur > 0){
@@ -616,7 +652,7 @@ void mysocEKF(struct SOC_Info *SOCinfo, float cur, uint16_t vol, int16_t tempra,
     {
         if(res > SOCinfo->soc)
         {
-            float smooth_k = 10/(100-SOCinfo->soc);
+            float smooth_k = 10/(MAX_SOC_LIMIT_PERCENTAGE-SOCinfo->soc);
             if(smooth_k > 1){
                 smooth_k = 1;
             }
@@ -627,9 +663,9 @@ void mysocEKF(struct SOC_Info *SOCinfo, float cur, uint16_t vol, int16_t tempra,
     if(res < 0)
     {
         res = 0;
-    }else if(res > 100)
+    }else if(res > MAX_SOC_LIMIT_PERCENTAGE)
     {
-        res = 100;
+        res = MAX_SOC_LIMIT_PERCENTAGE;
     }
 
     SOCinfo->soc = res;
@@ -747,7 +783,7 @@ static void gropuSOC(void)
             max_soc_change_R_offset2 = 9; 
             if(maxSOC > 97)
             {
-                max_soc_change_R_offset2 = 9*(100-maxSOC)/3; 
+                max_soc_change_R_offset2 = 9*(MAX_SOC_LIMIT_PERCENTAGE-maxSOC)/3; 
             }
         }
         if(min_soc_change_R_offset2 > 9)
@@ -764,8 +800,8 @@ static void gropuSOC(void)
             min_soc_change_R_offset2 = 0;
         }
 
-        float maxSOC_R = R_HIGH_MIN + (1-g_grpSOC/100) * (R_HIGH_MAX- R_HIGH_MIN) + max_soc_change_R_offset2;
-        float minSOC_R = R_LOW_MIN + g_grpSOC/100 * (R_LOW_MAX- R_LOW_MIN) + min_soc_change_R_offset2;
+        float maxSOC_R = R_HIGH_MIN + (1-g_grpSOC/MAX_SOC_LIMIT_PERCENTAGE) * (R_HIGH_MAX- R_HIGH_MIN) + max_soc_change_R_offset2;
+        float minSOC_R = R_LOW_MIN + g_grpSOC/MAX_SOC_LIMIT_PERCENTAGE * (R_LOW_MAX- R_LOW_MIN) + min_soc_change_R_offset2;
 
 
         if(g_grpSOC > 50)
@@ -821,10 +857,10 @@ static void gropuSOC(void)
 
         static float grp_soc_p = 0.1f;
         float cal_grp_soc_p;
-        if(CHARGING(g_cur) && g_grpSOC > 95)
+        if(CHARGING(g_cur) && maxSOC >= 95)
         {
             cal_grp_soc_p=grp_soc_p + GRP_Q_1;
-        }else if(DISCHARGING(g_cur) && g_grpSOC < 10)
+        }else if(DISCHARGING(g_cur) && minSOC <= 10)
         {
             cal_grp_soc_p=grp_soc_p + GRP_Q_2;
         }else{
@@ -976,9 +1012,9 @@ static float vol2soc(uint16_t vol, int16_t tempra)
         }
         
     }
-    if(soc > 100)
+    if(soc > MAX_SOC_LIMIT_PERCENTAGE)
     {
-        soc = 100;
+        soc = MAX_SOC_LIMIT_PERCENTAGE;
     }else if(soc < 0)
     {
         soc = 0;
@@ -1024,7 +1060,7 @@ void soc_init(void)
         }else{
             for(int i = 0; i < CELL_NUMS; i++)
             {
-                if(soc_saved[i] < 0 || soc_saved[i] > 100){
+                if(soc_saved[i] < 0 || soc_saved[i] > MAX_SOC_LIMIT_PERCENTAGE){
                     soc_abnormal_flag[i] = true;
                 }
 #if SOC_INIT_OCV_CAL_ENABLE
@@ -1236,8 +1272,8 @@ void soc_task(bool full, bool empty)
 #if SOX_GROUP_FULL_CAL_CELL
        for (size_t i = 0; i < CELL_NUMS; i++)
        {
-           g_socInfo[i].soc = 100;
-           g_celSOC[i] = 100;
+           g_socInfo[i].soc = MAX_SOC_LIMIT_PERCENTAGE;
+           g_celSOC[i] = MAX_SOC_LIMIT_PERCENTAGE;
        }
 #endif 
        if(g_grpSOC < 98)
@@ -1245,7 +1281,7 @@ void soc_task(bool full, bool empty)
             g_soh_calibrate_tigger = SOH_CALIBRATION_TIGGERED_BY_CHARGING;
             g_group_soc_before_jump = g_grpSOC;
        }
-        g_grpSOC = 100;
+        g_grpSOC = MAX_SOC_LIMIT_PERCENTAGE;
         // reset some state
         for (size_t i = 0; i < CELL_NUMS; i++)
         {
