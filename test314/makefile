@@ -8,6 +8,13 @@ clean:
 	rm -rf build_dir
 	rm -rf ../src/build_dir 
 
+
+
+USER_CONFIG='"/home/hm/Desktop/mysoc/test314/sox_user_config.h"'
+
+export USER_CONFIG
+
+
 mysoc: 	build_dir/test.o \
 		build_dir/port_linux.o \
 		../src/build_dir/libmyekfsoc.a
@@ -24,19 +31,19 @@ CFLAGS 		= -xc -std=gnu99 -Wall -Wextra -ffunction-sections -fdata-sections -O0 
 INCLUDE     = ../src
 
 build_dir/test.o: test.c build_dir/test.d
-	clang $(CFLAGS) -I $(INCLUDE) -c  $<  -o $@
+	clang -DSOX_USER_CONFIG_FILE=$(USER_CONFIG) $(CFLAGS) -I $(INCLUDE) -c  $<  -o $@
 	
 build_dir/port_linux.o: ./port/port_linux.c build_dir/port_linux.d
-	clang $(CFLAGS) -I $(INCLUDE) -c  $<  -o $@
+	clang -DSOX_USER_CONFIG_FILE=$(USER_CONFIG) $(CFLAGS) -I $(INCLUDE) -c  $<  -o $@
 
 
 build_dir/test.d: test.c | build_dir
-	clang -I $(INCLUDE) -M $< -MF $@ -MT build_dir/test.o
+	clang -DSOX_USER_CONFIG_FILE=$(USER_CONFIG)  -I $(INCLUDE) -M $< -MF $@ -MT build_dir/test.o
 build_dir/port_linux.d: ./port/port_linux.c | build_dir
-	clang -I $(INCLUDE) -M $< -MF $@ -MT build_dir/port_linux.o
+	clang -DSOX_USER_CONFIG_FILE=$(USER_CONFIG) -I $(INCLUDE) -M $< -MF $@ -MT build_dir/port_linux.o
 
 ../src/build_dir/libmyekfsoc.a:
-	make -C ../src
+	make -C ../src 
 
 
 -include build_dir/test.d

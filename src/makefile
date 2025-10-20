@@ -13,6 +13,9 @@ DEPS := $(OBJS:.o=.d)
 # Compiler flags
 CLIBFLAGS := -xc -std=c99 -Wall -Wextra -Wconversion -Wstrict-prototypes -ffunction-sections -fdata-sections -O0 -g -fPIC
 
+
+
+
 # Default target
 all: $(TARGET)
 
@@ -26,11 +29,11 @@ $(TARGET): $(OBJS)
 
 # Pattern rule for object files
 $(BUILD_DIR)/%.o: $(SRC_DIR)/%.c | $(BUILD_DIR)
-	clang $(CLIBFLAGS) -c $< -o $@
+	clang -DSOX_USER_CONFIG_FILE=$(USER_CONFIG) $(CLIBFLAGS) -c $< -o $@
 
 # Pattern rule for dependency files
 $(BUILD_DIR)/%.d: $(SRC_DIR)/%.c | $(BUILD_DIR)
-	clang -M $< -MF $@ -MT $(@:.d=.o)
+	clang -DSOX_USER_CONFIG_FILE=$(USER_CONFIG) -M $< -MF $@ -MT $(@:.d=.o)
 
 # Include dependencies
 -include $(DEPS)

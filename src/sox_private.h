@@ -5,10 +5,35 @@
 #ifndef _SOX_PRIVATE_H
 #define _SOX_PRIVATE_H
 
+/******************************************************************************
+ * config check
+ ******************************************************************************/
 
-/*******************************************************************************
+#if CFG_SOX_CELL_TYPE == 0
+    #error "Please select one battery type"
+#endif
+
+#if PORT_TYPE == 0
+    #error "Please select one port type"
+#endif
+
+#if PORT_TYPE == 2 && FULL_STD_CLIB == 1
+    #error "microcontroller port type can not use FULL_STD_CLIB"
+#endif
+
+#if PORT_TYPE == 1 && PORT_ARM_AC_6 == 1
+    #error "linux port type can not use ARM Compiler 6"
+#endif
+
+#if CFG_SOX_PORT_SIM_PROJECT == 0
+    #error "Please select one simulate project in linux port type"  
+#endif
+
+
+
+/******************************************************************************
  * global varible declaration(sox module internal use only)
- *******************************************************************************/
+ ******************************************************************************/
 extern float        g_cur;                         // A          
 extern float        g_grpVol;                      // v      
 extern uint16_t     g_celVol[CELL_NUMS];;          // mv                   pointer may be better(small size but can't promise origin data be changed by other module)

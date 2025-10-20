@@ -40,11 +40,9 @@
 #define MAX_SOC_LIMIT_PERCENTAGE                           100
 #define MIN_SOC_LIMIT_PERCENTAGE                           0
 
-#if SOX_CFG_PORT_BAT_TYPE_100_EVE
+#if CFG_SOX_CELL_TYPE == 1
     #define RATED_CAP_AH                       100          // for calcultate charge/discharge rate
-#endif
-
-#if SOX_CFG_PORT_BAT_TYPE_314_RUIPU
+#elif CFG_SOX_CELL_TYPE == 2
     #define RATED_CAP_AH                       314          // for calcultate charge/discharge rate
 #endif
 
