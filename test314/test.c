@@ -241,7 +241,33 @@ int main(int argc, char *argv[])
         .dsg_stop_vol = &s_dsg_stop_vol,
     };
 
-    sox_init(&attr);
+     struct SOX_Input input0 = {
+        .cur = sox_excel_input[0].cur,
+        .grpVol = sox_excel_input[0].grpVol,
+        .full = false,
+        .empty = false,
+    };
+    int min_vol = sox_excel_input[0].vol[0];
+    int max_vol = sox_excel_input[0].vol[0];
+    for (int j = 0; j < CELL_NUMS; j++) {
+        input0.vol[j] = sox_excel_input[0].vol[j];
+        if(sox_excel_input[0].vol[j] < min_vol){
+            min_vol = sox_excel_input[0].vol[j];
+        }
+        if(sox_excel_input[0].vol[j] > max_vol){
+            max_vol = sox_excel_input[0].vol[j];
+        }
+    }
+    if(max_vol > s_chg_stop_vol)
+    {
+        input0.full = true;
+    }
+    if(min_vol < s_dsg_stop_vol)
+    {
+        input0.empty = true;
+    }
+
+    sox_init(&attr, &input0);
     // get init output data
     get_cell_soc_ary(cell_soc_output[0].soc);
     group_soc_output[0].grpSOC = get_group_soc();

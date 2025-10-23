@@ -179,8 +179,7 @@ int main(int argc, char *argv[])
         .dsg_stop_vol = &s_dsg_stop_vol,
     };
 
-
-    struct SOX_Input input0 = {
+     struct SOX_Input input0 = {
         .cur = sox_excel_input[0].cur,
         .grpVol = sox_excel_input[0].grpVol,
         .full = false,

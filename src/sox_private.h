@@ -9,6 +9,10 @@
  * config check
  ******************************************************************************/
 
+#if CELL_NUMS == 0
+    #error "please set proper cell number"
+#endif
+
 #if CFG_SOX_CELL_TYPE == 0
     #error "Please select one battery type"
 #endif

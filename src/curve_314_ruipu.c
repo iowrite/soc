@@ -4,7 +4,7 @@
 #include "sox_config.h"
 
 
-#if SOX_CFG_PORT_BAT_TYPE_314_RUIPU
+#if CFG_SOX_CELL_TYPE == 2
 
 
 const uint16_t s_cap_list_chg[TEMP_POINT_NUM][CUR_POINT_NUM] = {

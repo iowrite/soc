@@ -21,13 +21,6 @@ struct SOX_Init_Attr{
     uint16_t     *dsg_stop_vol;               // mv                   pass in by init func, use pointer to sync parameter changed by user(user operation)   
 };
 
-int8_t sox_init(struct SOX_Init_Attr *attr);
-
-
-
-/******************************************************************************
- * main loop function
- ******************************************************************************/
 struct SOX_Input{
     float       cur;                       
     uint16_t    vol[CELL_NUMS];
@@ -36,6 +29,15 @@ struct SOX_Input{
     bool        full;
     bool        empty;
 };
+
+int8_t sox_init(struct SOX_Init_Attr *attr, const struct SOX_Input *input);
+
+
+
+/******************************************************************************
+ * main loop function
+ ******************************************************************************/
+
 int8_t sox_task(const struct SOX_Input *input);
 
 

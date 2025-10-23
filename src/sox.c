@@ -52,20 +52,6 @@ uint32_t     g_extreme_chg_time_cnt;
 uint32_t     g_extreme_time_cnt;
 
 
-
-int8_t sox_init(struct SOX_Init_Attr *attr)
-{
-    g_chg_stop_vol  = attr->chg_stop_vol;
-    g_dsg_stop_vol  = attr->dsg_stop_vol;
-    soc_init();
-    soh_init();
-    soe_init();
-
-    return 0;
-} 
-
-
-
 static void sox_input(const struct SOX_Input *input)
 {
     g_cur = input->cur;
@@ -76,6 +62,20 @@ static void sox_input(const struct SOX_Input *input)
     g_full   = input->full;
 
 }
+int8_t sox_init(struct SOX_Init_Attr *attr, const struct SOX_Input *input)
+{
+    // input
+    sox_input(input);
+    
+    g_chg_stop_vol  = attr->chg_stop_vol;
+    g_dsg_stop_vol  = attr->dsg_stop_vol;
+    soc_init();
+    soh_init();
+    soe_init();
+
+    return 0;
+} 
+
 
 int8_t sox_task(const struct SOX_Input *input)
 {

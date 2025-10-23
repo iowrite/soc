@@ -4,7 +4,7 @@
 #include "sox_config.h"
 
 
-#if SOX_CFG_PORT_BAT_TYPE_100_EVE
+#if CFG_SOX_CELL_TYPE == 1
 
 const uint16_t s_cap_list_chg[TEMP_POINT_NUM][CUR_POINT_NUM] = {
     /*  0.1C             0.2 C                0.3 C                0.4 C                0.5C*/
