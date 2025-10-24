@@ -14,13 +14,6 @@
 extern const uint16_t s_cap_list_chg[TEMP_POINT_NUM][CUR_POINT_NUM];
 extern const uint16_t s_cap_list_dsg[TEMP_POINT_NUM][CUR_POINT_NUM];
 
-extern const uint16_t v_25d5c_chg[SOC_POINT_NUM];
-extern const int16_t k_25d5c_chg[SOC_POINT_NUM];
-extern const uint16_t v_25d5c_dsg[SOC_POINT_NUM];
-extern const int16_t k_25d5c_dsg[SOC_POINT_NUM];
-
-extern const uint16_t v_25d3c_chg[SOC_POINT_NUM];
-extern const int16_t k_25d3c_chg[SOC_POINT_NUM];
 
 
 extern const uint16_t* const s_chg_curve[TEMP_POINT_NUM][CUR_POINT_NUM];

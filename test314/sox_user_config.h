@@ -14,7 +14,7 @@
  ******************************************************************************/
 
 
-    #define CFG_SOX_CELL_TYPE      1
+    #define CFG_SOX_CELL_TYPE      2
 
     #define PORT_TYPE                     1             
  

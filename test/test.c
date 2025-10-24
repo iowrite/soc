@@ -27,11 +27,14 @@ uint16_t s_dsg_stop_vol = 2900;
 static bool compare_pure_AH_SOC = false;
 
 
-#if PORT_SIM_PROJECT_JIGUANG
+#if CFG_SOX_PORT_SIM_PROJECT == 1
 static void project_jiguang_cell_tempature_map(int16_t *input, float *output);
-#elif PORT_SIM_PROJECT_STACK
+#elif CFG_SOX_PORT_SIM_PROJECT == 2
 static void project_stack_cell_tempature_map(int16_t *input, float *output);
+#elif CFG_SOX_PORT_SIM_PROJECT == 3
+static void cell314_tempature_map(int16_t *input, float *output);
 #endif
+
 
 
 int main(int argc, char *argv[]) 
@@ -206,6 +209,15 @@ int main(int argc, char *argv[])
         input0.empty = true;
     }
 
+                // asign temp input(map input)
+#if CFG_SOX_PORT_SIM_PROJECT == 1
+    project_stack_cell_tempature_map(input0.tmp, sox_excel_input[0].tmp);
+#elif CFG_SOX_PORT_SIM_PROJECT == 2
+    project_jiguang_cell_tempature_map(input0.tmp, sox_excel_input[0].tmp);
+#elif CFG_SOX_PORT_SIM_PROJECT == 3
+    cell314_tempature_map(input0.tmp, sox_excel_input[0].tmp);
+#endif
+
     sox_init(&attr, &input0);
     // get init output data
     get_cell_soc_ary(cell_soc_output[0].soc);
@@ -243,10 +255,12 @@ int main(int argc, char *argv[])
             input.empty = true;
         }
         // asign temp input(map input)
-#if PORT_SIM_PROJECT_STACK
+#if CFG_SOX_PORT_SIM_PROJECT == 1
         project_stack_cell_tempature_map(input.tmp, sox_excel_input[i].tmp);
-#elif PORT_SIM_PROJECT_JIGUANG
+#elif CFG_SOX_PORT_SIM_PROJECT == 2
         project_jiguang_cell_tempature_map(input.tmp, sox_excel_input[i].tmp);
+#elif CFG_SOX_PORT_SIM_PROJECT == 3
+        cell314_tempature_map(input.tmp, sox_excel_input[i].tmp);
 #endif
         // caculate
         sox_task(&input);
@@ -366,7 +380,7 @@ int main(int argc, char *argv[])
 
 
 
-#if PORT_SIM_PROJECT_JIGUANG
+#if CFG_SOX_PORT_SIM_PROJECT == 1
 static void project_jiguang_cell_tempature_map(int16_t *input, float *output)
 {
     input[0] = roundf(output[0]*10);
@@ -378,7 +392,7 @@ static void project_jiguang_cell_tempature_map(int16_t *input, float *output)
 }
 #endif
 
-#if PORT_SIM_PROJECT_STACK
+#if CFG_SOX_PORT_SIM_PROJECT == 2
 static void project_stack_cell_tempature_map(int16_t *input, float *output)
 {
 
@@ -391,4 +405,15 @@ static void project_stack_cell_tempature_map(int16_t *input, float *output)
     input[15] = roundf(output[8]*10);
 }
 
+#endif
+
+
+#if CFG_SOX_PORT_SIM_PROJECT == 3
+static void cell314_tempature_map(int16_t *input, float *output)
+{
+    input[0] = roundf(output[0]*10);
+    input[1] = roundf(output[1]*10);
+    input[2] = roundf(output[2]*10);
+    input[3] = roundf(output[3]*10);
+}
 #endif
