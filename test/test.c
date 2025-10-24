@@ -28,9 +28,9 @@ static bool compare_pure_AH_SOC = false;
 
 
 #if CFG_SOX_PORT_SIM_PROJECT == 1
-static void project_jiguang_cell_tempature_map(int16_t *input, float *output);
-#elif CFG_SOX_PORT_SIM_PROJECT == 2
 static void project_stack_cell_tempature_map(int16_t *input, float *output);
+#elif CFG_SOX_PORT_SIM_PROJECT == 2
+static void project_jiguang_cell_tempature_map(int16_t *input, float *output);
 #elif CFG_SOX_PORT_SIM_PROJECT == 3
 static void cell314_tempature_map(int16_t *input, float *output);
 #endif
@@ -381,18 +381,6 @@ int main(int argc, char *argv[])
 
 
 #if CFG_SOX_PORT_SIM_PROJECT == 1
-static void project_jiguang_cell_tempature_map(int16_t *input, float *output)
-{
-    input[0] = roundf(output[0]*10);
-    input[1] = roundf(output[1]*10);
-    input[2] = roundf(output[2]*10);
-    input[3] = roundf(output[2]*10);
-    input[4] = roundf(output[3]*10);
-    input[5] = roundf(output[4]*10);
-}
-#endif
-
-#if CFG_SOX_PORT_SIM_PROJECT == 2
 static void project_stack_cell_tempature_map(int16_t *input, float *output)
 {
 
@@ -404,7 +392,18 @@ static void project_stack_cell_tempature_map(int16_t *input, float *output)
     }
     input[15] = roundf(output[8]*10);
 }
+#endif
 
+#if CFG_SOX_PORT_SIM_PROJECT == 2
+static void project_jiguang_cell_tempature_map(int16_t *input, float *output)
+{
+    input[0] = roundf(output[0]*10);
+    input[1] = roundf(output[1]*10);
+    input[2] = roundf(output[2]*10);
+    input[3] = roundf(output[2]*10);
+    input[4] = roundf(output[3]*10);
+    input[5] = roundf(output[4]*10);
+}
 #endif
 
 

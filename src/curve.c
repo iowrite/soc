@@ -72,12 +72,12 @@ static const int16_t k_5d1c_dsg[SOC_POINT_NUM] = {
    *                 0.2 c
    ****************************************************************************/
 //5dregree 0.2c charge
-static const uint16_t v_5d2c_chg[SOC_POINT_NUM] = {        
+// static const uint16_t v_5d2c_chg[SOC_POINT_NUM] = {        
 
-};
-static const int16_t k_5d2c_chg[SOC_POINT_NUM] = {
+// };
+// static const int16_t k_5d2c_chg[SOC_POINT_NUM] = {
 
-};
+// };
 //5dregree 0.2c discharge
 static const uint16_t v_5d2c_dsg[SOC_POINT_NUM] = {  
     2963, 2998, 3026, 3048, 3065, 3078, 3119, 3144, 3161, 3173, 3182, 3190, 3196, 3201, 3206, 3211, 3215, 3220, 3224, 3225, 3226, 3227, 3228, 3229, 3230, 3231, 3232, 3233, 3318
@@ -131,12 +131,12 @@ static const int16_t k_15d2c_dsg[SOC_POINT_NUM] = {
   *                 0.3 c
   *****************************************************************************/
 //15dregree 0.3c charge
-static const uint16_t v_15d3c_chg[SOC_POINT_NUM] = {        
+// static const uint16_t v_15d3c_chg[SOC_POINT_NUM] = {        
 
-};
-static const int16_t k_15d3c_chg[SOC_POINT_NUM] = {
+// };
+// static const int16_t k_15d3c_chg[SOC_POINT_NUM] = {
 
-};
+// };
 //15dregree 0.3c discharge
 static const uint16_t v_15d3c_dsg[SOC_POINT_NUM] = {        
     2936, 2994, 3035, 3065, 3086, 3099, 3132, 3155, 3175, 3189, 3199, 3207, 3214, 3219, 3224, 3228, 3232, 3236, 3239, 3244, 3247, 3249, 3250, 3251, 3252, 3253, 3254, 3255, 3291
@@ -149,12 +149,12 @@ static const int16_t k_15d3c_dsg[SOC_POINT_NUM] = {
  *                 0.4 c
  ******************************************************************************/
 //15dregree 0.4c charge
-static const uint16_t v_15d4c_chg[SOC_POINT_NUM] = {        
+// static const uint16_t v_15d4c_chg[SOC_POINT_NUM] = {        
 
-};
-static const int16_t k_15d4c_chg[SOC_POINT_NUM] = {
+// };
+// static const int16_t k_15d4c_chg[SOC_POINT_NUM] = {
 
-};
+// };
 //15dregree 0.4c discharge
 static const uint16_t v_15d4c_dsg[SOC_POINT_NUM] = {        
     2958, 3004, 3036, 3060, 3076, 3088, 3121, 3144, 3162, 3175, 3185, 3193, 3199, 3204, 3209, 3214, 3217, 3221, 3225, 3228, 3230, 3232, 3233, 3234, 3235, 3236, 3237, 3238, 3276
@@ -167,12 +167,12 @@ static const int16_t k_15d4c_dsg[SOC_POINT_NUM] = {
    *                 0.5 c
    ****************************************************************************/
 //15dregree 0.5c charge
-static const uint16_t v_15d5c_chg[SOC_POINT_NUM] = {        
+// static const uint16_t v_15d5c_chg[SOC_POINT_NUM] = {        
 
-};
-static const int16_t k_15d5c_chg[SOC_POINT_NUM] = {
+// };
+// static const int16_t k_15d5c_chg[SOC_POINT_NUM] = {
 
-};
+// };
 //15dregree 0.5c discharge
 static const uint16_t v_15d5c_dsg[SOC_POINT_NUM] = {        
     2961, 3005, 3036, 3058, 3074, 3086, 3118, 3141, 3158, 3171, 3180, 3188, 3194, 3200, 3204, 3208, 3212, 3216, 3219, 3222, 3223, 3224, 3225, 3226, 3227, 3228, 3229, 3230, 3265

@@ -10,7 +10,7 @@ clean:
 
 
 
-USER_CONFIG='"/home/hm/Desktop/mysoc/test/sox_user_config.h"'
+USER_CONFIG='"/home/hm/Desktop/mysoc/test_jiguang/sox_user_config.h"'
 
 export USER_CONFIG
 
