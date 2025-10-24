@@ -38,7 +38,7 @@
 #define TEMP_IDX_OFFSET                       200           // -20, 0.1 precision (20*10)
 
 #define MAX_SOC_LIMIT_PERCENTAGE                           100
-#define MIN_SOC_LIMIT_PERCENTAGE                           0
+#define MIN_SOC_LIMIT_PERCENTAGE                           1            // soc minimun value(consider for BMS soc alarm, 0% may impact system power output) 
 
 #if CFG_SOX_CELL_TYPE == 1
     #define RATED_CAP_AH                       100          // for calcultate charge/discharge rate
@@ -629,26 +629,26 @@ void mysocEKF(struct SOC_Info *SOCinfo, float cur, uint16_t vol, int16_t tempra,
     // float SOCerRes = sqrt(resEr2);
 #endif 
 
-    if(res < 0)
+    if(res < MIN_SOC_LIMIT_PERCENTAGE)                                       // soc minimun value(consider for BMS soc alarm, 0% may impact system power output)
     {
-        res = 0;
+        res = MIN_SOC_LIMIT_PERCENTAGE;
     }else if(res > MAX_SOC_LIMIT_PERCENTAGE)
     {
         res = MAX_SOC_LIMIT_PERCENTAGE;
     }
 
-    if(cur > 0){
+    if(CHARGING(cur)){                              // soc can't decrease when charging
         if(res < SOCinfo->soc)
         {
-            float smooth_k = 10/SOCinfo->soc;
+            float smooth_k = 10/SOCinfo->soc;       // increase slowly
             if(smooth_k > 1){
                 smooth_k = 1;
             }
             res = SOCinfo->soc + smooth_k*diffAH;
         }
-    }else if(cur < 0)
+    }else if(DISCHARGING(cur))                  // soc can't increase when discharging
     {
-        if(res > SOCinfo->soc)
+        if(res > SOCinfo->soc)                  // decrease slowly
         {
             float smooth_k = 10/(MAX_SOC_LIMIT_PERCENTAGE-SOCinfo->soc);
             if(smooth_k > 1){
@@ -658,9 +658,9 @@ void mysocEKF(struct SOC_Info *SOCinfo, float cur, uint16_t vol, int16_t tempra,
         }
     }
 
-    if(res < 0)
+    if(res < MIN_SOC_LIMIT_PERCENTAGE)                      // soc minimun value(consider for BMS soc alarm, 0% may impact system power output)    
     {
-        res = 0;
+        res = MIN_SOC_LIMIT_PERCENTAGE;
     }else if(res > MAX_SOC_LIMIT_PERCENTAGE)
     {
         res = MAX_SOC_LIMIT_PERCENTAGE;
@@ -1335,7 +1335,7 @@ int8_t sox_manual_set_soc(float soc)
 		}
     }
     g_grpSOC = (uint16_t)soc;
-    s_grp_soc_init = true;
+    s_grp_soc_init = false;
     soc_save(true);
     return 0;
 }
