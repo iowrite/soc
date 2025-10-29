@@ -11,7 +11,7 @@ OBJS := $(addprefix $(BUILD_DIR)/,$(addsuffix .o,$(SRCS)))
 DEPS := $(OBJS:.o=.d)
 
 # Compiler flags
-CLIBFLAGS := -xc -std=c99 -Wall -Wextra -Wconversion -Wstrict-prototypes -ffunction-sections -fdata-sections -O0 -g -fPIC
+CLIBFLAGS := -xc -std=c99 -Wall -Wextra -Wconversion -Wstrict-prototypes -Wnewline-eof -ffunction-sections -fdata-sections -O0 -g -fPIC
 
 
 
