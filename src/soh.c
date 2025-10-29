@@ -4,7 +4,6 @@
 #include <string.h>
 #include <stdlib.h>
 #include <math.h>
-#include <sys/types.h>
 #include "sox.h"
 #include "sox_config.h"
 #include "sox_private.h"
