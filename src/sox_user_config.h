@@ -30,7 +30,7 @@
 
     #define FULL_STD_CLIB       0
 
-    #define CFG_SOX_PORT_SIM_PROJECT      0                     // 1:stack 2:jiguang 3:314 cell curve
+    #define CFG_SOX_PORT_SIM_PROJECT      0                     // 1:stack 2:jiguang 3:314 cell curve(ignore if not linux port)
 
     #define PORT_ARM_AC_6       0                       // ARM Compiler 6 or ARM Compiler 5, 
 

@@ -29,7 +29,7 @@
     #error "linux port type can not use ARM Compiler 6"
 #endif
 
-#if CFG_SOX_PORT_SIM_PROJECT == 0
+#if PORT_TYPE==1 &&  CFG_SOX_PORT_SIM_PROJECT == 0
     #error "Please select one simulate project in linux port type"  
 #endif
 
