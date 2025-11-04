@@ -106,9 +106,9 @@ static uint16_t get_cap(float cur, int16_t tempra)
         }
         if(tempra < t_table[tidx])
         {
-            return s_cap_list_chg[tidx][cidx];
+            return s_cap_list_chg[tidx][cidx]-(uint16_t)(RATED_CAP_AH*0.02f);
         }else{
-           return (uint16_t)(s_cap_list_chg[tidx_low][cidx] + (s_cap_list_chg[tidx_high][cidx]-s_cap_list_chg[tidx_low][cidx])*tk*mk); 
+           return (uint16_t)(s_cap_list_chg[tidx_low][cidx] + (s_cap_list_chg[tidx_high][cidx]-s_cap_list_chg[tidx_low][cidx])*tk*mk)-(uint16_t)(RATED_CAP_AH*0.02f); 
         }
     }else if(cur < 0)
     {
@@ -129,9 +129,9 @@ static uint16_t get_cap(float cur, int16_t tempra)
         }
         if(tempra < t_table[tidx])
         {
-            return s_cap_list_dsg[tidx][cidx];
+            return s_cap_list_dsg[tidx][cidx]-(uint16_t)(RATED_CAP_AH*0.02f);
         }else{
-            return (uint16_t)(s_cap_list_dsg[tidx_low][cidx] + (s_cap_list_dsg[tidx_high][cidx]-s_cap_list_dsg[tidx_low][cidx])*tk*mk);
+            return (uint16_t)(s_cap_list_dsg[tidx_low][cidx] + (s_cap_list_dsg[tidx_high][cidx]-s_cap_list_dsg[tidx_low][cidx])*tk*mk)-(uint16_t)(RATED_CAP_AH*0.02f);
         }
     }
 
@@ -711,6 +711,7 @@ static bool s_grp_soc_init = false;
 #define GRP_Q_1                   0.01f
 #define GRP_Q_2                   0.1f
 #define GRP_Q_3                   0.0002f
+#define GRP_Q_4                   0.15f
 
 #define  E_HIGH_MIN       0.1f
 #define  E_HIGH_MAX       5
@@ -761,6 +762,13 @@ static void gropuSOC(void)
         bubbleSort_ascend_float(unsortedSOC, sortedSOC, CELL_NUMS);
         float maxSOC = sortedSOC[CELL_NUMS-1];
         float minSOC = sortedSOC[0];
+        float diffSOC = maxSOC - minSOC;
+        static bool abnormalPackSOC = false;
+        if(diffSOC > 20)
+        {
+            abnormalPackSOC = true;
+        }
+        
         float avgSOC = 0;
         for(int i=0; i<CELL_NUMS; i++)
         {
@@ -793,6 +801,11 @@ static void gropuSOC(void)
             }
         }
         if(pureAH_lock)
+        {
+            max_soc_change_R_offset2 = 0;
+            min_soc_change_R_offset2 = 0;
+        }
+        if(abnormalPackSOC)                         // for accelerate soc change to min/max soc when pack soc abnormal
         {
             max_soc_change_R_offset2 = 0;
             min_soc_change_R_offset2 = 0;
@@ -855,20 +868,26 @@ static void gropuSOC(void)
 
         static float grp_soc_p = 0.1f;
         float cal_grp_soc_p;
+        float GRP_Q;
         if(CHARGING(g_cur) && maxSOC >= 95)
         {
-            cal_grp_soc_p=grp_soc_p + GRP_Q_1;
+            GRP_Q = GRP_Q_1;
         }else if(DISCHARGING(g_cur) && minSOC <= 10)
         {
-            cal_grp_soc_p=grp_soc_p + GRP_Q_2;
+            GRP_Q = GRP_Q_2;
         }else{
             float grp_soc_q_k = fabsf(g_cur)/10;
             if(grp_soc_q_k < 0.5f)
             {
                 grp_soc_q_k = 0.5f;
             }
-            cal_grp_soc_p=grp_soc_p + GRP_Q_3*grp_soc_q_k;
+            GRP_Q = GRP_Q_3*grp_soc_q_k;
         }
+        if(abnormalPackSOC)
+        {
+            GRP_Q = GRP_Q_4;
+        }
+        cal_grp_soc_p=grp_soc_p + GRP_Q;
 
 
         float H[2][1] = {
@@ -987,7 +1006,10 @@ static void gropuSOC(void)
         g_grpSOC = cal_grp_soc;
 #endif
 
-
+        if(maxSOC-g_grpSOC < 5 || g_grpSOC-minSOC < 5)
+        {
+            abnormalPackSOC = false;
+        }
     }
     
 

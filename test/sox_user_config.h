@@ -14,15 +14,15 @@
  ******************************************************************************/
 
 
-    #define CFG_SOX_CELL_TYPE      1
+    #define CFG_SOX_CELL_TYPE      1                  // 1: 100AH EVE, 2: 314AH RUIPU
 
-    #define PORT_TYPE                     1             
+    #define PORT_TYPE                     1               // 1 linux, 2 microcontroller         
  
 
 
-    #define FULL_STD_CLIB       1
+    #define FULL_STD_CLIB       1                       
 
-    #define CFG_SOX_PORT_SIM_PROJECT      1
+    #define CFG_SOX_PORT_SIM_PROJECT      1                     // 1:stack 2:jiguang 3:314 cell curve
 
 
 
