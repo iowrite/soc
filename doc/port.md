@@ -30,9 +30,11 @@ src
 将本仓库的 `src` 文件下的源文件加入你的工程
 
 ## 2. 配置
-在你的项目中定义宏 SOX_USER_CONFIG_FILE 指向你的配置文件, 文件内容可以参考 `sox_user_config.h`
-
+在你的项目中定义宏 SOX_USER_CONFIG_FILE 指向你的配置文件, 文件内容可以参考 `sox_user_config.h`,
+如: 把`sox_user_config.h`复制一份到应用层, 在keil的工程设制中定义宏 `SOX_USER_CONFIG_FILE` 指向你的配置文件, 
+![](./keil_setting.png)
 或者 你可以直接使用`sox_user_config.h`(不推荐)
+
 
 
 关键配置
