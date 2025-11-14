@@ -5,7 +5,7 @@
             "request": "launch",
             "name": "Launch",
             // "program": "${workspaceFolder}/test/mysoc",
-            "program": "${workspaceFolder}/test314/mysoc",
+            "program": "${workspaceFolder}/test_yitiji/mysoc",
             // "args": ["-i ./test.xlsx", "-s 100"],
             // "args": ["-i ../data/25d3c/dsg.xlsx", "-s 100"],
             // "args": ["-i ../data/25d3c/chg.xlsx", "-s 0"],
@@ -15,7 +15,8 @@
             // "args": ["-i /home/hm/Desktop/mysoc/data/project/jg/jg-test-25d-2.xlsx", "-s 0", "-c"],
             // "args": ["-i /home/hm/Desktop/mysoc/data/project/jg/jg-test-35d.xlsx", "-s 0", "-c"],
             // "args": ["-i /home/hm/Desktop/mysoc/data/juaji/juaji_jump.xlsx", "-s 0", "-c"],
-            "args": ["-i /home/hm/Desktop/mysoc/data/process_data/d+15/chg/3c/4-cell-curves.xlsx", "-s 0", "-c"],
+            // "args": ["-i /home/hm/Desktop/mysoc/data/process_data/d+15/chg/3c/4-cell-curves.xlsx", "-s 0", "-c"],
+            "args": ["-i /home/hm/Desktop/mysoc/data/yitiji/first.xlsx", "-s 0", "-c"],
             
             "cwd": "${workspaceFolder}/test"
         },

@@ -1,0 +1,46 @@
+[
+  {
+    "arguments": [
+      "/usr/bin/clang",
+      "-xc",
+      "-std=gnu99",
+      "-Wall",
+      "-Wextra",
+      "-ffunction-sections",
+      "-fdata-sections",
+      "-O0",
+      "-g",
+      "-I",
+      "../src",
+      "-c",
+      "-o",
+      "build_dir/test.o",
+      "test.c"
+    ],
+    "directory": "/home/hm/Desktop/mysoc/test314",
+    "file": "/home/hm/Desktop/mysoc/test314/test.c",
+    "output": "/home/hm/Desktop/mysoc/test314/build_dir/test.o"
+  },
+  {
+    "arguments": [
+      "/usr/bin/clang",
+      "-xc",
+      "-std=gnu99",
+      "-Wall",
+      "-Wextra",
+      "-ffunction-sections",
+      "-fdata-sections",
+      "-O0",
+      "-g",
+      "-I",
+      "../src",
+      "-c",
+      "-o",
+      "build_dir/port_linux.o",
+      "port/port_linux.c"
+    ],
+    "directory": "/home/hm/Desktop/mysoc/test314",
+    "file": "/home/hm/Desktop/mysoc/test314/port/port_linux.c",
+    "output": "/home/hm/Desktop/mysoc/test314/build_dir/port_linux.o"
+  }
+]
