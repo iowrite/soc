@@ -61,7 +61,7 @@
 #endif
 
 #ifndef CFG_SOX_PORT_SIM_PROJECT
-    #define CFG_SOX_PORT_SIM_PROJECT      0                     // 1:stack 2:jiguang 3:314 cell curve 4:yitiji (ignore if linux port)
+    #define CFG_SOX_PORT_SIM_PROJECT      0                     // 1:stack 2:jiguang 3:314 cell curve 4:yitiji (ignore if mcu port)
 #endif
 
 #ifndef PORT_ARM_AC_6
