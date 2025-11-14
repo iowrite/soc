@@ -37,8 +37,13 @@
 #define TEMP_IDX_FACTOR                       100           // every 10 degree a point, 0.1 precision (10*10)
 #define TEMP_IDX_OFFSET                       200           // -20, 0.1 precision (20*10)
 
-#define MAX_SOC_LIMIT_PERCENTAGE                           100
-#define MIN_SOC_LIMIT_PERCENTAGE                           1            // soc minimun value(consider for BMS soc alarm, 0% may impact system power output) 
+// max/min calculate soc
+#define MAX_CAL_SOC_LIMIT_PERCENTAGE                           99
+#define MIN_CAL_SOC_LIMIT_PERCENTAGE                           1            // soc minimun value(consider for BMS soc alarm, 0% may impact system power output) 
+#define MAX_SHOW_SOC_PERCENTAGE               100
+#define MIN_SHOW_SOC_PERCENTAGE                 0
+
+
 
 #if CFG_SOX_CELL_TYPE == 1
     #define RATED_CAP_AH                       100          // for calcultate charge/discharge rate
@@ -384,12 +389,12 @@ void mysoc_pureAH(struct SOC_Info *SOCinfo, float cur, uint16_t vol, int16_t tem
 
 
 
-    if(SOCcal < 0)
+    if(SOCcal < MIN_CAL_SOC_LIMIT_PERCENTAGE)
     {
-        SOCcal = 0;
-    }else if(SOCcal > MAX_SOC_LIMIT_PERCENTAGE)
+        SOCcal = MIN_CAL_SOC_LIMIT_PERCENTAGE;
+    }else if(SOCcal > MAX_CAL_SOC_LIMIT_PERCENTAGE)
     {
-        SOCcal = MAX_SOC_LIMIT_PERCENTAGE;
+        SOCcal = MAX_CAL_SOC_LIMIT_PERCENTAGE;
     }
 
     SOCinfo->soc = SOCcal;
@@ -461,12 +466,12 @@ void mysoc_smooth(struct SOC_Info *SOCinfo, float cur, uint16_t vol, int16_t tem
         }
     }
 
-    if(SOCinfo->soc_smooth < 0)
+    if(SOCinfo->soc_smooth < MIN_CAL_SOC_LIMIT_PERCENTAGE)
     {
-        SOCinfo->soc_smooth = 0.1f;             // not equal to 0(zero mean smooth not enable)
-    }else if(SOCinfo->soc_smooth > MAX_SOC_LIMIT_PERCENTAGE)
+        SOCinfo->soc_smooth = MIN_CAL_SOC_LIMIT_PERCENTAGE;             // not equal to 0(zero mean smooth not enable)
+    }else if(SOCinfo->soc_smooth > MAX_CAL_SOC_LIMIT_PERCENTAGE)
     {
-        SOCinfo->soc_smooth = MAX_SOC_LIMIT_PERCENTAGE;
+        SOCinfo->soc_smooth = MAX_CAL_SOC_LIMIT_PERCENTAGE;
     }
 
 }
@@ -564,15 +569,15 @@ void mysocEKF(struct SOC_Info *SOCinfo, float cur, uint16_t vol, int16_t tempra,
 #endif
     float H = 0, Hprev = 0, Hnext = 0;
     float estVol = 0, estVolPrev = 0, estVolNext = 0;
-    if(SOCcal < 0)
+    if(SOCcal < MIN_SHOW_SOC_PERCENTAGE)
     {
-        SOCcal = 0;
+        SOCcal = MIN_SHOW_SOC_PERCENTAGE;
 
         estVol = curve[0];
         H = (float)curveK[0]/10;
-    }else if(SOCcal > MAX_SOC_LIMIT_PERCENTAGE)
+    }else if(SOCcal > MAX_SHOW_SOC_PERCENTAGE)
     {
-        SOCcal = MAX_SOC_LIMIT_PERCENTAGE;
+        SOCcal = MAX_SHOW_SOC_PERCENTAGE;
 
         estVol = curve[SOC_POINT_NUM-1];
         H = (float)curveK[SOC_POINT_NUM-1]/10;
@@ -629,12 +634,12 @@ void mysocEKF(struct SOC_Info *SOCinfo, float cur, uint16_t vol, int16_t tempra,
     // float SOCerRes = sqrt(resEr2);
 #endif 
 
-    if(res < MIN_SOC_LIMIT_PERCENTAGE)                                       // soc minimun value(consider for BMS soc alarm, 0% may impact system power output)
+    if(res < MIN_CAL_SOC_LIMIT_PERCENTAGE)                                       // soc minimun value(consider for BMS soc alarm, 0% may impact system power output)
     {
-        res = MIN_SOC_LIMIT_PERCENTAGE;
-    }else if(res > MAX_SOC_LIMIT_PERCENTAGE)
+        res = MIN_CAL_SOC_LIMIT_PERCENTAGE;
+    }else if(res > MAX_CAL_SOC_LIMIT_PERCENTAGE)
     {
-        res = MAX_SOC_LIMIT_PERCENTAGE;
+        res = MAX_CAL_SOC_LIMIT_PERCENTAGE;
     }
 
     if(CHARGING(cur)){                              // soc can't decrease when charging
@@ -650,7 +655,7 @@ void mysocEKF(struct SOC_Info *SOCinfo, float cur, uint16_t vol, int16_t tempra,
     {
         if(res > SOCinfo->soc)                  // decrease slowly
         {
-            float smooth_k = 10/(MAX_SOC_LIMIT_PERCENTAGE-SOCinfo->soc);
+            float smooth_k = 10/(MAX_SHOW_SOC_PERCENTAGE-SOCinfo->soc);
             if(smooth_k > 1){
                 smooth_k = 1;
             }
@@ -658,12 +663,12 @@ void mysocEKF(struct SOC_Info *SOCinfo, float cur, uint16_t vol, int16_t tempra,
         }
     }
 
-    if(res < MIN_SOC_LIMIT_PERCENTAGE)                      // soc minimun value(consider for BMS soc alarm, 0% may impact system power output)    
+    if(res < MIN_CAL_SOC_LIMIT_PERCENTAGE)                      // soc minimun value(consider for BMS soc alarm, 0% may impact system power output)    
     {
-        res = MIN_SOC_LIMIT_PERCENTAGE;
-    }else if(res > MAX_SOC_LIMIT_PERCENTAGE)
+        res = MIN_CAL_SOC_LIMIT_PERCENTAGE;
+    }else if(res > MAX_CAL_SOC_LIMIT_PERCENTAGE)
     {
-        res = MAX_SOC_LIMIT_PERCENTAGE;
+        res = MAX_CAL_SOC_LIMIT_PERCENTAGE;
     }
 
     SOCinfo->soc = res;
@@ -789,7 +794,7 @@ static void gropuSOC(void)
             max_soc_change_R_offset2 = 9; 
             if(maxSOC > 97)
             {
-                max_soc_change_R_offset2 = 9*(MAX_SOC_LIMIT_PERCENTAGE-maxSOC)/3; 
+                max_soc_change_R_offset2 = 9*(MAX_SHOW_SOC_PERCENTAGE-maxSOC)/3; 
             }
         }
         if(min_soc_change_R_offset2 > 9)
@@ -811,8 +816,8 @@ static void gropuSOC(void)
             min_soc_change_R_offset2 = 0;
         }
 
-        float maxSOC_R = R_HIGH_MIN + (1-g_grpSOC/MAX_SOC_LIMIT_PERCENTAGE) * (R_HIGH_MAX- R_HIGH_MIN) + max_soc_change_R_offset2;
-        float minSOC_R = R_LOW_MIN + g_grpSOC/MAX_SOC_LIMIT_PERCENTAGE * (R_LOW_MAX- R_LOW_MIN) + min_soc_change_R_offset2;
+        float maxSOC_R = R_HIGH_MIN + (1-g_grpSOC/MAX_SHOW_SOC_PERCENTAGE) * (R_HIGH_MAX- R_HIGH_MIN) + max_soc_change_R_offset2;
+        float minSOC_R = R_LOW_MIN + g_grpSOC/MAX_SHOW_SOC_PERCENTAGE * (R_LOW_MAX- R_LOW_MIN) + min_soc_change_R_offset2;
 
 
         if(g_grpSOC > 50)
@@ -1032,9 +1037,9 @@ static float vol2soc(uint16_t vol, int16_t tempra)
         }
         
     }
-    if(soc > MAX_SOC_LIMIT_PERCENTAGE)
+    if(soc > MAX_CAL_SOC_LIMIT_PERCENTAGE)
     {
-        soc = MAX_SOC_LIMIT_PERCENTAGE;
+        soc = MAX_CAL_SOC_LIMIT_PERCENTAGE;
     }else if(soc < 0)
     {
         soc = 0;
@@ -1080,7 +1085,7 @@ void soc_init(void)
         }else{
             for(int i = 0; i < CELL_NUMS; i++)
             {
-                if(soc_saved[i] < 0 || soc_saved[i] > MAX_SOC_LIMIT_PERCENTAGE){
+                if(soc_saved[i] < MIN_SHOW_SOC_PERCENTAGE || soc_saved[i] > MAX_SHOW_SOC_PERCENTAGE){
                     soc_abnormal_flag[i] = true;
                 }
 #if SOC_INIT_OCV_CAL_ENABLE
@@ -1292,8 +1297,8 @@ void soc_task(bool full, bool empty)
 #if SOX_GROUP_FULL_CAL_CELL
        for (size_t i = 0; i < CELL_NUMS; i++)
        {
-           g_socInfo[i].soc = MAX_SOC_LIMIT_PERCENTAGE;
-           g_celSOC[i] = MAX_SOC_LIMIT_PERCENTAGE;
+           g_socInfo[i].soc = MAX_SHOW_SOC_PERCENTAGE;
+           g_celSOC[i] = MAX_SHOW_SOC_PERCENTAGE;
        }
 #endif 
        if(g_grpSOC < 98)
@@ -1301,7 +1306,7 @@ void soc_task(bool full, bool empty)
             g_soh_calibrate_tigger = SOH_CALIBRATION_TIGGERED_BY_CHARGING;
             g_group_soc_before_jump = g_grpSOC;
        }
-        g_grpSOC = MAX_SOC_LIMIT_PERCENTAGE;
+        g_grpSOC = MAX_SHOW_SOC_PERCENTAGE;
         // reset some state
         for (size_t i = 0; i < CELL_NUMS; i++)
         {
@@ -1318,8 +1323,8 @@ void soc_task(bool full, bool empty)
 #if SOX_GROUP_EMPTY_CAL_CELL
        for (size_t i = 0; i < CELL_NUMS; i++)
        {
-           g_socInfo[i].soc = 0;
-           g_celSOC[i] = 0;
+           g_socInfo[i].soc = MIN_SHOW_SOC_PERCENTAGE;
+           g_celSOC[i] = MIN_SHOW_SOC_PERCENTAGE;
        }
 #endif
        if(g_grpSOC > 2)
@@ -1327,7 +1332,7 @@ void soc_task(bool full, bool empty)
             g_soh_calibrate_tigger = SOH_CALIBRATION_TIGGERED_BY_DISCHARGING;
             g_group_soc_before_jump = g_grpSOC;
        }
-        g_grpSOC = 0;
+        g_grpSOC = MIN_SHOW_SOC_PERCENTAGE;
         // reset some state
         for (size_t i = 0; i < CELL_NUMS; i++)
         {
