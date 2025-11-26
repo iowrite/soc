@@ -1,5 +1,9 @@
 # CHANGLOG
 
+## v2.4.7
+* 防止与老的bat law代码冲突, 增加SOX_CFG_H_BAT_LAW宏控制bat law输出接口编译
+
+
 
 ## v2.4.6
 * 修复单体与组端计算soc,最大最小输出soc 1%到99%的问题

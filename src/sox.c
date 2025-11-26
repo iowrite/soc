@@ -201,6 +201,8 @@ uint32_t get_task_calltick(void)
 }
 
 
+#if SOX_CFG_H_BAT_LAW
+
 // battery law
 int get_num_of_deep_chg(void)
 {
@@ -241,6 +243,7 @@ uint32_t get_time_of_extreme_temp(void)
     return g_extreme_time_cnt;
 }
 
+#endif
 
 
 
