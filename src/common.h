@@ -2,7 +2,7 @@
 #include <stdio.h>
 #ifndef     _SOX_COMMON_H
 #define     _SOX_COMMON_H
-
+#undef  UNUSED                                          // avoid multiple define
 #define UNUSED(x) (void)(x)
 #define ARRAY_SIZE(x) (sizeof(x) / sizeof((x)[0]))
 

@@ -464,14 +464,15 @@ void mysoc_smooth(struct SOC_Info *SOCinfo, float cur, uint16_t vol, int16_t tem
 
 
         }
-    }
 
-    if(SOCinfo->soc_smooth < MIN_CAL_SOC_LIMIT_PERCENTAGE)
-    {
-        SOCinfo->soc_smooth = MIN_CAL_SOC_LIMIT_PERCENTAGE;             // not equal to 0(zero mean smooth not enable)
-    }else if(SOCinfo->soc_smooth > MAX_CAL_SOC_LIMIT_PERCENTAGE)
-    {
-        SOCinfo->soc_smooth = MAX_CAL_SOC_LIMIT_PERCENTAGE;
+
+        if(SOCinfo->soc_smooth < MIN_CAL_SOC_LIMIT_PERCENTAGE)
+        {
+            SOCinfo->soc_smooth = MIN_CAL_SOC_LIMIT_PERCENTAGE;             // not equal to 0(zero mean smooth *NOT* enable)
+        }else if(SOCinfo->soc_smooth > MAX_CAL_SOC_LIMIT_PERCENTAGE)
+        {
+            SOCinfo->soc_smooth = MAX_CAL_SOC_LIMIT_PERCENTAGE;
+        }
     }
 
 }
