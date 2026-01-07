@@ -1,5 +1,11 @@
 # CHANGLOG
 
+
+## v2.4.8
+1. 增加极光三测试目录
+2. 修复keil环境多定义unused宏告警
+3. 修复低温强制平滑函数在刚进入时导致的单体soc跳变
+
 ## v2.4.7
 * 防止与老的bat law代码冲突, 增加SOX_CFG_H_BAT_LAW宏控制bat law输出接口编译
 
