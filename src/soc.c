@@ -45,7 +45,7 @@
 
 
 
-#if CFG_SOX_CELL_TYPE == 1
+#if CFG_SOX_CELL_TYPE == 1                                  // TODO: add more cell type support
     #define RATED_CAP_AH                       100          // for calcultate charge/discharge rate
 #elif CFG_SOX_CELL_TYPE == 2
     #define RATED_CAP_AH                       314          // for calcultate charge/discharge rate
@@ -57,8 +57,8 @@ struct SOC_Info g_socInfo[CELL_NUMS];
 
 
 /**
- * @brief get cell reference voltage
- * @param tempra :temperature(-20, 125), degree, multiplied by 10, eg, <15.1 is 151>, <-5.1 is -511>
+ * @brief get cell reference capacity
+ * @param tempra :temperature(-20, 125), degree, multiplied by 10, eg, <15.1 is 151>, <-5.1 is -51>
  * @param cur   
  */
 static uint16_t get_cap(float cur, int16_t tempra)
@@ -86,9 +86,9 @@ static uint16_t get_cap(float cur, int16_t tempra)
     float mk;
     if(tempra < 0){
         mk = SOC_TEMPRA_WARM_CAP_OFFSET_2;
-    }else if (tempra < 15){
+    }else if (tempra < 150){
         mk = SOC_TEMPRA_WARM_CAP_OFFSET_1;
-    }else{
+    }else{  // tempra >= 150
         mk = SOC_TEMPRA_WARM_CAP_OFFSET_3;
     }
 
@@ -714,10 +714,10 @@ static bool s_grp_soc_init = false;
 
 #define GRP_Q_MAX               25
 #define GRP_Q_Min               1
-#define GRP_Q_1                   0.01f
-#define GRP_Q_2                   0.1f
-#define GRP_Q_3                   0.0002f
-#define GRP_Q_4                   0.15f
+#define GRP_Q_1                   0.0005f
+#define GRP_Q_2                   0.0005f
+#define GRP_Q_3                   0.0001f
+#define GRP_Q_4                   0.15f                         // TODO this value need fine tune(not tested yet)
 
 #define  E_HIGH_MIN       0.1f
 #define  E_HIGH_MAX       5
@@ -882,7 +882,7 @@ static void gropuSOC(void)
         {
             GRP_Q = GRP_Q_2;
         }else{
-            float grp_soc_q_k = fabsf(g_cur)/10;
+            float grp_soc_q_k = fabsf(g_cur)/(RATED_CAP_AH/10);                
             if(grp_soc_q_k < 0.5f)
             {
                 grp_soc_q_k = 0.5f;
