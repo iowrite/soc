@@ -1302,7 +1302,7 @@ void soc_task(bool full, bool empty)
            g_celSOC[i] = MAX_SHOW_SOC_PERCENTAGE;
        }
 #endif 
-       if(g_grpSOC < 98)
+       if(g_grpSOC < 98 && g_cycleCount < 100)
        {
             g_soh_calibrate_tigger = SOH_CALIBRATION_TIGGERED_BY_CHARGING;
             g_group_soc_before_jump = g_grpSOC;
@@ -1328,7 +1328,7 @@ void soc_task(bool full, bool empty)
            g_celSOC[i] = MIN_SHOW_SOC_PERCENTAGE;
        }
 #endif
-       if(g_grpSOC > 2)
+       if(g_grpSOC > 2 && g_cycleCount < 100)
        {
             g_soh_calibrate_tigger = SOH_CALIBRATION_TIGGERED_BY_DISCHARGING;
             g_group_soc_before_jump = g_grpSOC;
