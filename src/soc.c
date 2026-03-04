@@ -376,30 +376,33 @@ enum GroupState check_current_group_state(float cur)
 
 
 #define SOC_PERCENTATENTAGE_FACTOR   100
-void mysoc_pureAH(struct SOC_Info *SOCinfo, float cur, uint16_t vol, int16_t tempra, float soh)
+void mysoc_pureAH(struct SOC_Info *SOCinfo, 
+                float cur, uint16_t vol, int16_t tempra, float soh)
 {
     UNUSED(vol);
     const uint16_t cap = get_cap(cur, tempra);
-
+    // calculate capacity with temperature compensation, and consider soh impact
     const float capf = cap/10.0f*(soh/MAX_SOH_LIMIT_PERCENTAGE);
-
-    float diffAH = SOC_PERCENTATENTAGE_FACTOR*DIFF_T_SEC/3600.0f*cur/capf;  // get a percentage change
+    // get a percentage change
+    float diffAH = SOC_PERCENTATENTAGE_FACTOR*DIFF_T_SEC/3600.0f*cur/capf;  
     float SOCcal = SOCinfo->soc + diffAH;
     float SOCer2Cal = SOCinfo->socEr2 + EKF_Q(diffAH,capf, cur);
-
-
-
-    if(SOCcal < MIN_CAL_SOC_LIMIT_PERCENTAGE)
-    {
-        SOCcal = MIN_CAL_SOC_LIMIT_PERCENTAGE;
-    }else if(SOCcal > MAX_CAL_SOC_LIMIT_PERCENTAGE)
-    {
-        SOCcal = MAX_CAL_SOC_LIMIT_PERCENTAGE;
+    // limit
+	if(( g_cur > (RATED_CAP_AH/-30) && g_cur < 0 && g_grpSOC > 99)
+	|| ( g_cur > 0 && g_cur < (RATED_CAP_AH/30 && g_grpSOC < 1))){
+        if(g_grpSOC > MAX_SHOW_SOC_PERCENTAGE)
+			g_grpSOC = MAX_SHOW_SOC_PERCENTAGE;
+		if(g_grpSOC < MIN_SHOW_SOC_PERCENTAGE)
+			g_grpSOC = MIN_SHOW_SOC_PERCENTAGE;
+    }else{
+        if(SOCcal < MIN_CAL_SOC_LIMIT_PERCENTAGE)
+            SOCcal = MIN_CAL_SOC_LIMIT_PERCENTAGE;
+        else if(SOCcal > MAX_CAL_SOC_LIMIT_PERCENTAGE)
+            SOCcal = MAX_CAL_SOC_LIMIT_PERCENTAGE;
     }
-
     SOCinfo->soc = SOCcal;
     SOCinfo->socEr2 = SOCer2Cal;
-
+    return;
 }
 
 
@@ -732,293 +735,291 @@ static bool s_grp_soc_init = false;
 #define  R_AVG_MIN        (E_AEG_MIN*E_AEG_MIN)
 #define  R_AVG_MAX        (E_AEG_MIN*E_AEG_MIN)
 
-static void gropuSOC(void)
+static void gropuSOC(float cur, int16_t tempra)
 {
 #if SOX_DEBUG
     static int callCount = 0;
     callCount++;
     UNUSED(callCount);      // avoid warning in debug mode
 #endif 
-    if(g_cur != 0)
-    {
-        float unsortedSOC[CELL_NUMS];
-        bool pureAH_lock = false;
-        for(int i = 0; i < CELL_NUMS; i++)
-        {
-            if(g_socInfo[i].soc_smooth > 0)         // smooth enabled
-            {
-                if(CHARGING(g_cur) &&  g_socInfo[i].soc_smooth>g_socInfo[i].soc){
-                    unsortedSOC[i] = g_socInfo[i].soc_smooth;
+	if(g_cur == 0)
+		return;
+	float unsortedSOC[CELL_NUMS];
+	bool pureAH_lock = false;
+	for(int i = 0; i < CELL_NUMS; i++)
+	{
+		if(g_socInfo[i].soc_smooth > 0)         // smooth enabled
+		{
+			if(CHARGING(g_cur) &&  g_socInfo[i].soc_smooth>g_socInfo[i].soc){
+				unsortedSOC[i] = g_socInfo[i].soc_smooth;
 
-                }else if(DISCHARGING(g_cur) &&  g_socInfo[i].soc_smooth<g_socInfo[i].soc){
-                    unsortedSOC[i] = g_socInfo[i].soc_smooth;
-                }else{
-                    unsortedSOC[i] = g_socInfo[i].soc;
-                }
-            }else{
-                unsortedSOC[i] = g_socInfo[i].soc;
-            }
-            if(g_socInfo[i].pureAH_lock)
-            {
-                pureAH_lock = true;
-            }
-            
-        }
-        float sortedSOC[CELL_NUMS];
-        bubbleSort_ascend_float(unsortedSOC, sortedSOC, CELL_NUMS);
-        float maxSOC = sortedSOC[CELL_NUMS-1];
-        float minSOC = sortedSOC[0];
-        float diffSOC = maxSOC - minSOC;
-        static bool abnormalPackSOC = false;
-        if(diffSOC > 20)
-        {
-            abnormalPackSOC = true;
-        }
-        
-        float avgSOC = 0;
-        for(int i=0; i<CELL_NUMS; i++)
-        {
-            avgSOC += sortedSOC[i];
-        }
-        avgSOC = avgSOC/CELL_NUMS;
-
-
-
-        float max_soc_change_R_offset = fabsf(maxSOC - avgSOC);
-        float min_soc_change_R_offset = fabsf(minSOC - avgSOC);
-        float max_soc_change_R_offset2 = max_soc_change_R_offset*max_soc_change_R_offset;
-        float min_soc_change_R_offset2 = min_soc_change_R_offset*min_soc_change_R_offset;
+			}else if(DISCHARGING(g_cur) &&  g_socInfo[i].soc_smooth<g_socInfo[i].soc){
+				unsortedSOC[i] = g_socInfo[i].soc_smooth;
+			}else{
+				unsortedSOC[i] = g_socInfo[i].soc;
+			}
+		}else{
+			unsortedSOC[i] = g_socInfo[i].soc;
+		}
+		if(g_socInfo[i].pureAH_lock)
+		{
+			pureAH_lock = true;
+		}
+		
+	}
+	float sortedSOC[CELL_NUMS];
+	bubbleSort_ascend_float(unsortedSOC, sortedSOC, CELL_NUMS);
+	float maxSOC = sortedSOC[CELL_NUMS-1];
+	float minSOC = sortedSOC[0];
+	float diffSOC = maxSOC - minSOC;
+	static bool abnormalPackSOC = false;
+	if(diffSOC > 20)
+	{
+		abnormalPackSOC = true;
+	}
+	
+	float avgSOC = 0;
+	for(int i=0; i<CELL_NUMS; i++)
+	{
+		avgSOC += sortedSOC[i];
+	}
+	avgSOC = avgSOC/CELL_NUMS;
 
 
-        if(max_soc_change_R_offset2 > 9)
-        {
-            max_soc_change_R_offset2 = 9; 
-            if(maxSOC > 97)
-            {
-                max_soc_change_R_offset2 = 9*(MAX_SHOW_SOC_PERCENTAGE-maxSOC)/3; 
-            }
-        }
-        if(min_soc_change_R_offset2 > 9)
-        {
-            min_soc_change_R_offset = 9; 
-            if(minSOC < 5)
-            {
-                min_soc_change_R_offset2 = 9*minSOC/5;
-            }
-        }
-        if(pureAH_lock)
-        {
-            max_soc_change_R_offset2 = 0;
-            min_soc_change_R_offset2 = 0;
-        }
-        if(abnormalPackSOC)                         // for accelerate soc change to min/max soc when pack soc abnormal
-        {
-            max_soc_change_R_offset2 = 0;
-            min_soc_change_R_offset2 = 0;
-        }
 
-        float maxSOC_R = R_HIGH_MIN + (1-g_grpSOC/MAX_SHOW_SOC_PERCENTAGE) * (R_HIGH_MAX- R_HIGH_MIN) + max_soc_change_R_offset2;
-        float minSOC_R = R_LOW_MIN + g_grpSOC/MAX_SHOW_SOC_PERCENTAGE * (R_LOW_MAX- R_LOW_MIN) + min_soc_change_R_offset2;
+	float max_soc_change_R_offset = fabsf(maxSOC - avgSOC);
+	float min_soc_change_R_offset = fabsf(minSOC - avgSOC);
+	float max_soc_change_R_offset2 = max_soc_change_R_offset*max_soc_change_R_offset;
+	float min_soc_change_R_offset2 = min_soc_change_R_offset*min_soc_change_R_offset;
 
 
-        if(g_grpSOC > 50)
-        {
-            if(minSOC_R > 25)
-            {
-                minSOC_R = 25;
-            }
-            if(maxSOC_R > minSOC_R){
-                maxSOC_R = minSOC_R -1;
-            }
-        }else if(g_grpSOC < 50)
-        {
-            if(maxSOC_R > 25)
-            {
-                maxSOC_R = 25;
-            }
-            if(minSOC_R > maxSOC_R)
-            {
-                minSOC_R = maxSOC_R -1;
-            }
-        }else{
-            if(minSOC_R > 25)
-            { 
-                minSOC_R = 25;
-            }
-            if(maxSOC_R > 25)
-            {
-                maxSOC_R = 25;
-            }
-            if(g_cur > 0)
-            {
-                if(maxSOC_R > minSOC_R){
-                    maxSOC_R = minSOC_R -1;
-                }
-            }
-            if(g_cur < 0)
-            {
-                if(minSOC_R > maxSOC_R)
-                {
-                    minSOC_R = maxSOC_R -1;
-                }
-            }
-        }
+	if(max_soc_change_R_offset2 > 9)
+	{
+		max_soc_change_R_offset2 = 9; 
+		if(maxSOC > 97)
+		{
+			max_soc_change_R_offset2 = 9*(MAX_SHOW_SOC_PERCENTAGE-maxSOC)/3; 
+		}
+	}
+	if(min_soc_change_R_offset2 > 9)
+	{
+		min_soc_change_R_offset = 9; 
+		if(minSOC < 5)
+		{
+			min_soc_change_R_offset2 = 9*minSOC/5;
+		}
+	}
+	if(pureAH_lock)
+	{
+		max_soc_change_R_offset2 = 0;
+		min_soc_change_R_offset2 = 0;
+	}
+	if(abnormalPackSOC)                         // for accelerate soc change to min/max soc when pack soc abnormal
+	{
+		max_soc_change_R_offset2 = 0;
+		min_soc_change_R_offset2 = 0;
+	}
 
-        static float cal_grp_soc;
-
-        if(!s_grp_soc_init){
-            s_grp_soc_init = true;
-            cal_grp_soc = g_grpSOC;
-        }
-        
-
-        static float grp_soc_p = 0.1f;
-        float cal_grp_soc_p;
-        float GRP_Q;
-        if(CHARGING(g_cur) && maxSOC >= 95)
-        {
-            GRP_Q = GRP_Q_1;
-        }else if(DISCHARGING(g_cur) && minSOC <= 10)
-        {
-            GRP_Q = GRP_Q_2;
-        }else{
-            float grp_soc_q_k = fabsf(g_cur)/(RATED_CAP_AH/10);                
-            if(grp_soc_q_k < 0.5f)
-            {
-                grp_soc_q_k = 0.5f;
-            }
-            GRP_Q = GRP_Q_3*grp_soc_q_k;
-        }
-        if(abnormalPackSOC)
-        {
-            GRP_Q = GRP_Q_4;
-        }
-        cal_grp_soc_p=grp_soc_p + GRP_Q;
+	float maxSOC_R = R_HIGH_MIN + (1-g_grpSOC/MAX_SHOW_SOC_PERCENTAGE) * (R_HIGH_MAX- R_HIGH_MIN) + max_soc_change_R_offset2;
+	float minSOC_R = R_LOW_MIN + g_grpSOC/MAX_SHOW_SOC_PERCENTAGE * (R_LOW_MAX- R_LOW_MIN) + min_soc_change_R_offset2;
 
 
-        float H[2][1] = {
-            {1}, 
-            {1}
-        };
-        float H_t[1][2] = {
-            {1, 1}
-        };
-        float Z[2][1] = {
-            {minSOC}, 
-            {maxSOC}
-        };
-        float R[2][2] = {    
-            {minSOC_R, 0        },
-            {0       , maxSOC_R },
-        };
-        float S[2][2] = {0};
-        float H_P[2][1] = {
-            {cal_grp_soc_p}, 
-            {cal_grp_soc_p}
-        };
-        matrix_multiply((float *)H_P, (float *)H_t, (float *)S, 2, 1, 2);
-        for(int i=0; i<2; i++)
-        {
-            for(int j=0; j<2; j++)
-            {
-                S[i][j] = S[i][j] + R[i][j];
-            }
+	if(g_grpSOC > 50)
+	{
+		if(minSOC_R > 25)
+		{
+			minSOC_R = 25;
+		}
+		if(maxSOC_R > minSOC_R){
+			maxSOC_R = minSOC_R -1;
+		}
+	}else if(g_grpSOC < 50)
+	{
+		if(maxSOC_R > 25)
+		{
+			maxSOC_R = 25;
+		}
+		if(minSOC_R > maxSOC_R)
+		{
+			minSOC_R = maxSOC_R -1;
+		}
+	}else{
+		if(minSOC_R > 25)
+		{ 
+			minSOC_R = 25;
+		}
+		if(maxSOC_R > 25)
+		{
+			maxSOC_R = 25;
+		}
+		if(g_cur > 0)
+		{
+			if(maxSOC_R > minSOC_R){
+				maxSOC_R = minSOC_R -1;
+			}
+		}
+		if(g_cur < 0)
+		{
+			if(minSOC_R > maxSOC_R)
+			{
+				minSOC_R = maxSOC_R -1;
+			}
+		}
+	}
 
-        }
+	static float cal_grp_soc;
 
-        float S_i[2][2] = {0};
-        inverse_matrix_2x2(S, S_i);
+	if(!s_grp_soc_init){
+		s_grp_soc_init = true;
+		cal_grp_soc = g_grpSOC;
+	}
+	
 
-        float P_H_t[1][2] = {
-            {cal_grp_soc_p, cal_grp_soc_p}
-        };
-
-        float K[1][2] = {0};
-        matrix_multiply((float *)P_H_t, (float *)S_i, (float *)K, 1, 2, 2);
-
-
-        float Z_H[2][1] = {0};
-        float H_x[2][1] = {
-            {cal_grp_soc}, 
-            {cal_grp_soc}
-        };
-        for(int i=0; i<2; i++)
-        {
-            Z_H[i][0] = Z[i][0] - H_x[i][0];
-        }
-
-        float x_k = 0;
-        matrix_multiply((float *)K, (float *)Z_H, &x_k, 1, 2, 1);
-
-        cal_grp_soc = cal_grp_soc + x_k;
-
-        float K_H = 0;
-        matrix_multiply((float *)K, (float *)H, &K_H, 1, 2, 1);
-        grp_soc_p = (1-K_H)*cal_grp_soc_p;
+	static float grp_soc_p = 0.1f;
+	float cal_grp_soc_p;
+	float GRP_Q;
+	if(CHARGING(g_cur) && maxSOC >= 95)
+	{
+		GRP_Q = GRP_Q_1;
+	}else if(DISCHARGING(g_cur) && minSOC <= 10)
+	{
+		GRP_Q = GRP_Q_2;
+	}else{
+		float grp_soc_q_k = fabsf(g_cur)/(RATED_CAP_AH/10);                
+		if(grp_soc_q_k < 0.5f)
+		{
+			grp_soc_q_k = 0.5f;
+		}
+		GRP_Q = GRP_Q_3*grp_soc_q_k;
+	}
+	if(abnormalPackSOC)
+	{
+		GRP_Q = GRP_Q_4;
+	}
+	cal_grp_soc_p=grp_soc_p + GRP_Q;
 
 
-        // when soc increasing, soc upper limit 99%, when soc decreasing, soc lower limit 1%
-        if(cal_grp_soc > g_grpSOC)
-        {
-            if(cal_grp_soc > 99)
-            {
-                cal_grp_soc = 99;
-            }
-        }else if (cal_grp_soc < g_grpSOC)
-        {
-            if(cal_grp_soc < 1){
-                cal_grp_soc = 1;
-            }
-        }
+	float H[2][1] = {
+		{1}, 
+		{1}
+	};
+	float H_t[1][2] = {
+		{1, 1}
+	};
+	float Z[2][1] = {
+		{minSOC}, 
+		{maxSOC}
+	};
+	float R[2][2] = {    
+		{minSOC_R, 0        },
+		{0       , maxSOC_R },
+	};
+	float S[2][2] = {0};
+	float H_P[2][1] = {
+		{cal_grp_soc_p}, 
+		{cal_grp_soc_p}
+	};
+	matrix_multiply((float *)H_P, (float *)H_t, (float *)S, 2, 1, 2);
+	for(int i=0; i<2; i++)
+	{
+		for(int j=0; j<2; j++)
+		{
+			S[i][j] = S[i][j] + R[i][j];
+		}
 
-        // avoid soc abnormal reverse jump
-        if(CHARGING(g_cur) && cal_grp_soc < g_grpSOC)
-        {
-            return;
-        }
-        if(DISCHARGING(g_cur) && cal_grp_soc > g_grpSOC)
-        {
-            return; 
-        }
+	}
 
-            
+	float S_i[2][2] = {0};
+	inverse_matrix_2x2(S, S_i);
+
+	float P_H_t[1][2] = {
+		{cal_grp_soc_p, cal_grp_soc_p}
+	};
+
+	float K[1][2] = {0};
+	matrix_multiply((float *)P_H_t, (float *)S_i, (float *)K, 1, 2, 2);
+
+
+	float Z_H[2][1] = {0};
+	float H_x[2][1] = {
+		{cal_grp_soc}, 
+		{cal_grp_soc}
+	};
+	for(int i=0; i<2; i++)
+	{
+		Z_H[i][0] = Z[i][0] - H_x[i][0];
+	}
+
+	float x_k = 0;
+	matrix_multiply((float *)K, (float *)Z_H, &x_k, 1, 2, 1);
+
+	cal_grp_soc = cal_grp_soc + x_k;
+
+	float K_H = 0;
+	matrix_multiply((float *)K, (float *)H, &K_H, 1, 2, 1);
+	grp_soc_p = (1-K_H)*cal_grp_soc_p;
+
+
+	// when soc increasing, soc upper limit 99%, when soc decreasing, soc lower limit 1%
+	if(cal_grp_soc > g_grpSOC)
+	{
+		if(cal_grp_soc > 99)
+		{
+			cal_grp_soc = 99;
+		}
+	}else if (cal_grp_soc < g_grpSOC)
+	{
+		if(cal_grp_soc < 1){
+			cal_grp_soc = 1;
+		}
+	}
+
+	// avoid soc abnormal reverse jump
+	if(CHARGING(g_cur) && cal_grp_soc < g_grpSOC)
+	{
+		return;
+	}
+	if(DISCHARGING(g_cur) && cal_grp_soc > g_grpSOC)
+	{
+		return; 
+	}
+
+		
 #if SOC_FAKE_SMOOTH_ENABLE
-        static uint32_t smooth_count = 0;
-        float smooth_soc = g_grpSOC;
-        if(fabsf(cal_grp_soc - g_grpSOC)>=2)
-        {        
-            if(timebase_get_time_s()-smooth_count > (uint32_t)2)
-            {
-                smooth_count = timebase_get_time_s();
-                if(cal_grp_soc > g_grpSOC)
-                {
-                    smooth_soc++;
-                }else{
-                    smooth_soc--;
-                }
-                if(smooth_soc > 99)
-                {
-                    smooth_soc = 99;
-                }else if(smooth_soc < 1){
-                    smooth_soc = 1;
-                }
-                g_grpSOC = smooth_soc;
+	static uint32_t smooth_count = 0;
+	float smooth_soc = g_grpSOC;
+	if(fabsf(cal_grp_soc - g_grpSOC)>=2)
+	{        
+		if(timebase_get_time_s()-smooth_count > (uint32_t)2)
+		{
+			smooth_count = timebase_get_time_s();
+			if(cal_grp_soc > g_grpSOC)
+			{
+				smooth_soc++;
+			}else{
+				smooth_soc--;
+			}
+			if(smooth_soc > 99)
+			{
+				smooth_soc = 99;
+			}else if(smooth_soc < 1){
+				smooth_soc = 1;
+			}
+			g_grpSOC = smooth_soc;
 
-            }
-        }else{
-            g_grpSOC = cal_grp_soc;
-        }
+		}
+	}else{
+		g_grpSOC = cal_grp_soc;
+	}
 #else
-        g_grpSOC = cal_grp_soc;
+	g_grpSOC = cal_grp_soc;
 #endif
 
-        if(maxSOC-g_grpSOC < 5 || g_grpSOC-minSOC < 5)
-        {
-            abnormalPackSOC = false;
-        }
-    }
-    
-
+	if(maxSOC-g_grpSOC < 5 || g_grpSOC-minSOC < 5)
+	{
+		abnormalPackSOC = false;
+	}
+	return;
 }
 
 /**
@@ -1242,9 +1243,10 @@ void soc_task(bool full, bool empty)
     callCount++;
     UNUSED(callCount);      // avoid warning in debug mode
 #endif
+	int16_t avg_temp;
     for (size_t i = 0; i < CELL_NUMS; i++)
     {
-
+		avg_temp += g_celTmp[i];
         mysoc(&g_socInfo[i], g_cur, g_celVol[i], g_celTmp[i], g_celSOH[i]);
 
         // output soc
@@ -1266,7 +1268,7 @@ void soc_task(bool full, bool empty)
     
     }
 
-
+	avg_temp /= CELL_NUMS;
     
     if(state == GROUP_STATE_standby)
     {
@@ -1291,7 +1293,7 @@ void soc_task(bool full, bool empty)
     }
 	
 	// XXX grp soc maybe need a mux lock when in rtos
-    gropuSOC();
+    gropuSOC(g_cur, avg_temp);
 	
 	if(full)
     {
