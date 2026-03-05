@@ -379,6 +379,12 @@ enum GroupState check_current_group_state(float cur)
 void mysoc_pureAH(struct SOC_Info *SOCinfo, 
                 float cur, uint16_t vol, int16_t tempra, float soh)
 {
+	if(cur == 0)
+		return;
+	if(SOCinfo->soc >= 99 && cur > 0)
+		return;
+	if(SOCinfo->soc <= 1 && cur < 0)
+		return;
     UNUSED(vol);
     const uint16_t cap = get_cap(cur, tempra);
     // calculate capacity with temperature compensation, and consider soh impact
@@ -388,18 +394,17 @@ void mysoc_pureAH(struct SOC_Info *SOCinfo,
     float SOCcal = SOCinfo->soc + diffAH;
     float SOCer2Cal = SOCinfo->socEr2 + EKF_Q(diffAH,capf, cur);
     // limit
-	if(( g_cur > (RATED_CAP_AH/-30) && g_cur < 0 && g_grpSOC > 99)
-	|| ( g_cur > 0 && g_cur < (RATED_CAP_AH/30 && g_grpSOC < 1))){
-        if(g_grpSOC > MAX_SHOW_SOC_PERCENTAGE)
-			g_grpSOC = MAX_SHOW_SOC_PERCENTAGE;
-		if(g_grpSOC < MIN_SHOW_SOC_PERCENTAGE)
-			g_grpSOC = MIN_SHOW_SOC_PERCENTAGE;
-    }else{
+	if(SOCcal >= 1 && SOCcal <= 99){
         if(SOCcal < MIN_CAL_SOC_LIMIT_PERCENTAGE)
             SOCcal = MIN_CAL_SOC_LIMIT_PERCENTAGE;
         else if(SOCcal > MAX_CAL_SOC_LIMIT_PERCENTAGE)
             SOCcal = MAX_CAL_SOC_LIMIT_PERCENTAGE;
-    }
+    }else{
+		if(SOCcal < MIN_SHOW_SOC_PERCENTAGE)
+            SOCcal = MIN_SHOW_SOC_PERCENTAGE;
+        else if(SOCcal > MAX_SHOW_SOC_PERCENTAGE)
+            SOCcal = MAX_SHOW_SOC_PERCENTAGE;
+	}
     SOCinfo->soc = SOCcal;
     SOCinfo->socEr2 = SOCer2Cal;
     return;
@@ -547,6 +552,10 @@ void mysocEKF(struct SOC_Info *SOCinfo, float cur, uint16_t vol, int16_t tempra,
     UNUSED(callCount);      // avoid warning in debug mode
     UNUSED(pureAHSUM);      // avoid warning in debug mode
 #endif   
+	if(SOCinfo->soc >= 99 && cur > 0)
+		return;
+	if(SOCinfo->soc <= 1 && cur < 0)
+		return;
 
     const uint16_t *curve = get_curve_v(cur, tempra);
     const int16_t *curveK = get_curve_k(cur, tempra);
@@ -684,12 +693,23 @@ void mysocEKF(struct SOC_Info *SOCinfo, float cur, uint16_t vol, int16_t tempra,
 
 
 
-
-void mysoc(struct SOC_Info *SOCinfo, float cur, uint16_t vol, int16_t tempra, float soh)
+/**
+ * @note 删掉cur参数，使用全局变量g_cur , 节省传参个数
+ */
+void mysoc(struct SOC_Info *SOCinfo, 
+			float cur, uint16_t vol, int16_t tempra, float soh)
 {
+	if(cur == 0)
+		return;
+	if((cur < 0 && g_grpSOC > 99) || (cur > 0 && g_grpSOC < 1)){
+		mysoc_pureAH(SOCinfo, cur, vol, tempra, soh);
+		return;
+	}
     if(fabsf(cur) > CUR_WINDOW_A)
     {
-        if((tempra<0 && tempra > -200) || (tempra < PURE_AH_LOCK_TEMP_THRESHOLD && cur < -PURE_AH_LOCK_CUR_THRESHOLD)){
+        if((tempra<0 && tempra > -200) 
+		|| (tempra < PURE_AH_LOCK_TEMP_THRESHOLD 
+										&& cur < -PURE_AH_LOCK_CUR_THRESHOLD)){
             SOCinfo->pureAH_lock = true;
         }
         if(SOCinfo->pureAH_lock)
@@ -704,7 +724,7 @@ void mysoc(struct SOC_Info *SOCinfo, float cur, uint16_t vol, int16_t tempra, fl
                 mysocEKF(SOCinfo, cur, vol, tempra, soh);                   // Ampere-hour Integration + EKF
             }
         }
-    }else if (cur != 0){
+    }else{
         mysoc_pureAH(SOCinfo, cur, vol, tempra, soh);
     }
 
@@ -743,6 +763,10 @@ static void gropuSOC(float cur, int16_t tempra)
     UNUSED(callCount);      // avoid warning in debug mode
 #endif 
 	if(g_cur == 0)
+		return;
+	if(g_cur > 0 && g_grpSOC >= 99)
+		return;
+	if(g_cur < 0 && g_grpSOC <= 1)
 		return;
 	float unsortedSOC[CELL_NUMS];
 	bool pureAH_lock = false;
@@ -960,7 +984,8 @@ static void gropuSOC(float cur, int16_t tempra)
 	grp_soc_p = (1-K_H)*cal_grp_soc_p;
 
 
-	// when soc increasing, soc upper limit 99%, when soc decreasing, soc lower limit 1%
+	// when soc increasing, soc upper limit 99%, when soc decreasing, soc lower\
+limit 1%
 	if(cal_grp_soc > g_grpSOC)
 	{
 		if(cal_grp_soc > 99)
@@ -1320,6 +1345,7 @@ void soc_task(bool full, bool empty)
             g_socInfo[i].swith_curve_time = 0;
             g_socInfo[i].last_curve = NULL;
         }
+		s_grp_soc_init = false;
     }
     if(empty)
     {
@@ -1346,6 +1372,7 @@ void soc_task(bool full, bool empty)
             g_socInfo[i].swith_curve_time = 0;
             g_socInfo[i].last_curve = NULL;
         }
+		s_grp_soc_init = false;
     }
 	// XXX grp soc maybe need a mux unlock when in rtos
 
@@ -1365,6 +1392,7 @@ int8_t sox_manual_set_soc(float soc)
 		}
     }
     g_grpSOC = (uint16_t)soc;
+	// 同步soc计算函数的初始化状态
     s_grp_soc_init = false;
     soc_save(true);
     return 0;
