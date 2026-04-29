@@ -394,17 +394,12 @@ void mysoc_pureAH(struct SOC_Info *SOCinfo,
     float SOCcal = SOCinfo->soc + diffAH;
     float SOCer2Cal = SOCinfo->socEr2 + EKF_Q(diffAH,capf, cur);
     // limit
-	if(SOCcal >= 1 && SOCcal <= 99){
-        if(SOCcal < MIN_CAL_SOC_LIMIT_PERCENTAGE)
-            SOCcal = MIN_CAL_SOC_LIMIT_PERCENTAGE;
-        else if(SOCcal > MAX_CAL_SOC_LIMIT_PERCENTAGE)
-            SOCcal = MAX_CAL_SOC_LIMIT_PERCENTAGE;
-    }else{
-		if(SOCcal < MIN_SHOW_SOC_PERCENTAGE)
-            SOCcal = MIN_SHOW_SOC_PERCENTAGE;
-        else if(SOCcal > MAX_SHOW_SOC_PERCENTAGE)
-            SOCcal = MAX_SHOW_SOC_PERCENTAGE;
-	}
+
+    if(SOCcal < MIN_SHOW_SOC_PERCENTAGE)
+        SOCcal = MIN_SHOW_SOC_PERCENTAGE;
+    else if(SOCcal > MAX_SHOW_SOC_PERCENTAGE)
+        SOCcal = MAX_SHOW_SOC_PERCENTAGE;
+
     SOCinfo->soc = SOCcal;
     SOCinfo->socEr2 = SOCer2Cal;
     return;
@@ -737,8 +732,8 @@ static bool s_grp_soc_init = false;
 
 #define GRP_Q_MAX               25
 #define GRP_Q_Min               1
-#define GRP_Q_1                   0.0005f
-#define GRP_Q_2                   0.0005f
+#define GRP_Q_1                   0.008f
+#define GRP_Q_2                   0.001f
 #define GRP_Q_3                   0.0001f
 #define GRP_Q_4                   0.15f                         // TODO this value need fine tune(not tested yet)
 
@@ -902,10 +897,10 @@ static void gropuSOC(float cur, int16_t tempra)
 	static float grp_soc_p = 0.1f;
 	float cal_grp_soc_p;
 	float GRP_Q;
-	if(CHARGING(g_cur) && maxSOC >= 95)
+	if(CHARGING(g_cur) && maxSOC >= 90)
 	{
 		GRP_Q = GRP_Q_1;
-	}else if(DISCHARGING(g_cur) && minSOC <= 10)
+	}else if(DISCHARGING(g_cur) && minSOC <= 5)
 	{
 		GRP_Q = GRP_Q_2;
 	}else{
@@ -998,6 +993,15 @@ limit 1%
 			cal_grp_soc = 1;
 		}
 	}
+
+    if(CHARGING(g_cur) && cal_grp_soc < minSOC)
+    {
+        cal_grp_soc = minSOC;
+    }
+    if(DISCHARGING(g_cur) && cal_grp_soc > maxSOC)
+    {        
+        cal_grp_soc = maxSOC;
+    }
 
 	// avoid soc abnormal reverse jump
 	if(CHARGING(g_cur) && cal_grp_soc < g_grpSOC)
